@@ -1,9 +1,69 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useCart } from '../context/CartContext';
+import { useUser } from '../context/UserContext';
+import { useToast } from '../context/ToastContext';
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: string;
+  originalPrice: string;
+  rating: number;
+  reviews: number;
+  image: string;
+  features: string[];
+  badge: string;
+  badgeColor: string;
+}
 
 export default function FeaturedProducts() {
   const [activeFilter, setActiveFilter] = useState('all');
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, isLoggedIn } = useUser();
+  const { success, warning } = useToast();
+
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: parseInt(product.price.slice(1).replace(',', '')),
+      originalPrice: parseInt(product.originalPrice.slice(1).replace(',', '')),
+      image: product.image,
+      category: product.category,
+      features: product.features
+    });
+    success('تمت الإضافة للسلة', `تم إضافة ${product.name} إلى سلة التسوق`);
+  };
+
+  const handleWishlistToggle = (product: Product) => {
+    if (!isLoggedIn) {
+      warning('تسجيل الدخول مطلوب', 'يرجى تسجيل الدخول أولاً لإضافة المنتجات لقائمة الأمنيات');
+      return;
+    }
+
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      success('تمت الإزالة بنجاح', 'تم إزالة المنتج من قائمة الأمنيات');
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        image: product.image,
+        category: product.category,
+        rating: product.rating,
+        reviews: product.reviews,
+        badge: product.badge,
+        badgeColor: product.badgeColor
+      });
+      success('تمت الإضافة بنجاح', 'تم إضافة المنتج لقائمة الأمنيات');
+    }
+  };
 
   const products = [
     {
@@ -149,7 +209,12 @@ export default function FeaturedProducts() {
                 </div>
                 <div className="text-6xl mb-4">{product.image}</div>
                 <div className="absolute top-4 right-4">
-                  <button className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors">
+                  <button 
+                    onClick={() => handleWishlistToggle(product)}
+                    className={`w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center transition-colors ${
+                      isInWishlist(product.id) ? 'text-red-600' : 'text-gray-400 hover:text-red-600'
+                    }`}
+                  >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
@@ -203,15 +268,21 @@ export default function FeaturedProducts() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <button className="flex-1 gradient-red text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 shadow-md">
+                  <button 
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 gradient-red text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 shadow-md"
+                  >
                     Add to Cart
                   </button>
-                  <button className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-red-500 hover:text-red-600 transition-all duration-300">
+                  <Link 
+                    href={`/products/${product.id}`}
+                    className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-red-500 hover:text-red-600 transition-all duration-300 flex items-center justify-center"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

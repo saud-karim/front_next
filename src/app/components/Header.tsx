@@ -2,9 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useCart } from '../context/CartContext';
+import { useUser } from '../context/UserContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { getTotalItems } = useCart();
+  const { user, isLoggedIn, logout } = useUser();
+  const totalItems = getTotalItems();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect">
@@ -55,15 +61,99 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-            <button className="text-gray-800 hover:text-red-600 p-2 rounded-md transition-colors relative">
+            {/* Wishlist Button */}
+            <Link href="/wishlist" className="text-gray-800 hover:text-red-600 p-2 rounded-md transition-colors relative">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              {isLoggedIn && user && user.wishlist && user.wishlist.length > 0 && (
+                <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {user.wishlist.length}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart Button */}
+            <Link href="/cart" className="text-gray-800 hover:text-red-600 p-2 rounded-md transition-colors relative">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H21M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8" />
               </svg>
-              <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-            </button>
-            <button className="gradient-red text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-300 shadow-md">
-              Get Quote
-            </button>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+            
+            {/* User Menu */}
+            {isLoggedIn ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 text-gray-800 hover:text-red-600 p-2 rounded-md transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {user?.name.charAt(0).toUpperCase()}
+                  </div>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                      <p className="text-xs text-gray-600">{user?.email}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <span className="mr-2">📊</span>
+                        لوحة التحكم
+                      </div>
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        // Navigate to wishlist tab
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="mr-2">❤️</span>
+                        قائمة الأمنيات ({user?.wishlist.length || 0})
+                      </div>
+                    </Link>
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <span className="mr-2">🚪</span>
+                          تسجيل الخروج
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link 
+                href="/auth"
+                className="gradient-red text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-300 shadow-md"
+              >
+                تسجيل الدخول
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -92,6 +182,12 @@ export default function Header() {
               </Link>
               <Link href="/products" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
                 Products
+              </Link>
+              <Link href="/wishlist" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
+                Wishlist {isLoggedIn && user && user.wishlist ? `(${user.wishlist.length})` : ''}
+              </Link>
+              <Link href="/cart" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
+                Cart {totalItems > 0 ? `(${totalItems})` : ''}
               </Link>
               <Link href="/categories" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
                 Categories
