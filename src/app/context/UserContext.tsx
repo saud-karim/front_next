@@ -79,7 +79,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       const userData = JSON.parse(savedUser);
-      setUser(userData);
+      // Ensure wishlist and orders are arrays
+      const safeUserData = {
+        ...userData,
+        orders: Array.isArray(userData.orders) ? userData.orders : [],
+        wishlist: Array.isArray(userData.wishlist) ? userData.wishlist : []
+      };
+      setUser(safeUserData);
       setIsLoggedIn(true);
     }
   }, []);
@@ -110,8 +116,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         company: existingUser.company,
         address: existingUser.address,
         joinDate: existingUser.joinDate,
-        orders: existingUser.orders || [],
-        wishlist: existingUser.wishlist || []
+        orders: Array.isArray(existingUser.orders) ? existingUser.orders : [],
+        wishlist: Array.isArray(existingUser.wishlist) ? existingUser.wishlist : []
       };
       
       setUser(userData);
@@ -185,9 +191,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dateAdded: new Date().toISOString()
     };
     
+    const currentWishlist = user.wishlist || [];
     const updatedUser = {
       ...user,
-      wishlist: [...user.wishlist, wishlistItem]
+      wishlist: [...currentWishlist, wishlistItem]
     };
     
     setUser(updatedUser);
@@ -196,16 +203,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromWishlist = (id: number) => {
     if (!user) return;
     
+    const currentWishlist = user.wishlist || [];
     const updatedUser = {
       ...user,
-      wishlist: user.wishlist.filter(item => item.id !== id)
+      wishlist: currentWishlist.filter(item => item.id !== id)
     };
     
     setUser(updatedUser);
   };
 
   const isInWishlist = (id: number): boolean => {
-    if (!user) return false;
+    if (!user || !user.wishlist || !Array.isArray(user.wishlist)) return false;
     return user.wishlist.some(item => item.id === id);
   };
 

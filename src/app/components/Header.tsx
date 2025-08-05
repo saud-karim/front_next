@@ -66,7 +66,7 @@ export default function Header() {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              {isLoggedIn && user && user.wishlist && user.wishlist.length > 0 && (
+              {isLoggedIn && user && Array.isArray(user.wishlist) && user.wishlist.length > 0 && (
                 <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {user.wishlist.length}
                 </span>
@@ -126,7 +126,7 @@ export default function Header() {
                     >
                       <div className="flex items-center">
                         <span className="mr-2">❤️</span>
-                        قائمة الأمنيات ({user?.wishlist.length || 0})
+                        قائمة الأمنيات ({Array.isArray(user?.wishlist) ? user.wishlist.length : 0})
                       </div>
                     </Link>
                     <div className="border-t border-gray-100 mt-2 pt-2">
@@ -184,7 +184,7 @@ export default function Header() {
                 Products
               </Link>
               <Link href="/wishlist" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
-                Wishlist {isLoggedIn && user && user.wishlist ? `(${user.wishlist.length})` : ''}
+                Wishlist {isLoggedIn && user && Array.isArray(user.wishlist) ? `(${user.wishlist.length})` : ''}
               </Link>
               <Link href="/cart" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
                 Cart {totalItems > 0 ? `(${totalItems})` : ''}
