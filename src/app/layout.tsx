@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import { UserProvider } from "./context/UserContext";
 import { ToastProvider } from "./context/ToastContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,17 +27,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ar">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ToastProvider>
-          <UserProvider>
-            <CartProvider>
-              {children}
-            </CartProvider>
-          </UserProvider>
-        </ToastProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <UserProvider>
+              <CartProvider>
+                {children}
+              </CartProvider>
+            </UserProvider>
+          </ToastProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

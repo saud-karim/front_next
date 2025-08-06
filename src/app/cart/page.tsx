@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface CartItem {
   id: number;
@@ -26,6 +28,7 @@ interface PromoCode {
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, addToCart } = useCart();
   const { success, error, info } = useToast();
+  const { t } = useLanguage();
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
 
@@ -62,19 +65,19 @@ export default function CartPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-12 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <section className="pt-24 pb-12 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-4">
             🛒 Shopping Cart
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Your <span className="text-gradient">Cart</span>
+            {t('cart.title')}
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            Review your selected construction tools and equipment before checkout.
+            {t('cart.subtitle')}
           </p>
           <div className="text-sm text-gray-400">
-            {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
+            {cartItems.length} {t('cart.items')}
           </div>
         </div>
       </section>
@@ -84,11 +87,11 @@ export default function CartPage() {
         <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
             <div className="text-8xl mb-8">🛒</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-            <p className="text-gray-600 mb-8">Add some professional tools to get started</p>
-            <a href="/products" className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg inline-block">
-              Browse Products
-            </a>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('cart.empty.title')}</h2>
+            <p className="text-gray-600 mb-8">{t('cart.empty.subtitle')}</p>
+            <Link href="/products" className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg inline-block">
+              {t('cart.browse.products')}
+            </Link>
           </div>
         </section>
       ) : (
@@ -170,15 +173,15 @@ export default function CartPage() {
                   
                   {/* Continue Shopping */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
-                    <a 
+                    <Link 
                       href="/products" 
                       className="inline-flex items-center text-red-600 hover:text-red-700 font-semibold"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                       </svg>
-                      Continue Shopping
-                    </a>
+{t('cart.browse.products')}
+                    </Link>
                   </div>
                 </div>
               </div>

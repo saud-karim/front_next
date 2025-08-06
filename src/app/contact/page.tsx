@@ -139,7 +139,7 @@ export default function ContactPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <section className="pt-24 pb-16 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-6">
             📞 Contact Us

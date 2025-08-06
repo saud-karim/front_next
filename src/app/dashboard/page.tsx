@@ -100,7 +100,7 @@ export default function DashboardPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-12 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <section className="pt-24 pb-12 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>

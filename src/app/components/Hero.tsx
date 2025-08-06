@@ -1,4 +1,9 @@
+'use client';
+
+import { useLanguage } from '../context/LanguageContext';
+
 export default function Hero() {
+  const { t, isRTL } = useLanguage();
   return (
     <section className="relative pt-20 pb-16 gradient-bg overflow-hidden">
       {/* Background decorative elements */}
@@ -13,27 +18,26 @@ export default function Hero() {
           {/* Left Content */}
           <div className="text-center lg:text-left">
             <div className="inline-block px-4 py-2 bg-white/20 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
-              🔥 New! Professional Tools Collection 2030
+              {t('hero.badge')}
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Build Tomorrow with 
+              {t('hero.title')} 
               <span className="block text-transparent bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text">
-                Professional Tools
+                {t('hero.title.highlight')}
               </span>
             </h1>
             
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
-              Discover cutting-edge construction tools and equipment designed for the future. 
-              Maximum efficiency meets professional-grade quality in our 2030 collection.
+              {t('hero.description')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <button className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg">
-                🛠️ Explore Tools
+                {t('hero.explore.btn')}
               </button>
               <button className="border-2 border-white/30 text-white px-8 py-4 rounded-xl hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold text-lg">
-                📞 Get Quote
+                {t('hero.quote.btn')}
               </button>
             </div>
 
@@ -41,15 +45,15 @@ export default function Hero() {
             <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20">
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">500+</div>
-                <div className="text-white/80 text-sm">Premium Tools</div>
+                <div className="text-white/80 text-sm">{t('hero.stats.tools')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">50k+</div>
-                <div className="text-white/80 text-sm">Happy Customers</div>
+                <div className="text-white/80 text-sm">{t('hero.stats.customers')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">25+</div>
-                <div className="text-white/80 text-sm">Years Experience</div>
+                <div className="text-white/80 text-sm">{t('hero.stats.experience')}</div>
               </div>
             </div>
           </div>

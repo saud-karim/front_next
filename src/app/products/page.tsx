@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { useUser } from '../context/UserContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Product {
   id: number;
@@ -31,6 +32,7 @@ export default function ProductsPage() {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, isLoggedIn } = useUser();
   const { success, warning } = useToast();
+  const { t } = useLanguage();
 
   // Set initial filter based on URL parameter
   useEffect(() => {
@@ -50,18 +52,18 @@ export default function ProductsPage() {
       category: product.category,
       features: product.features
     });
-    success('تمت الإضافة للسلة', `تم إضافة ${product.name} إلى سلة التسوق`);
+          success(t('toast.cart.added'), t('toast.cart.added.desc'));
   };
 
   const handleWishlistToggle = (product: Product) => {
     if (!isLoggedIn) {
-      warning('تسجيل الدخول مطلوب', 'يرجى تسجيل الدخول أولاً لإضافة المنتجات لقائمة الأمنيات');
+      warning(t('toast.login.required'), t('toast.login.required.desc'));
       return;
     }
 
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
-      success('تمت الإزالة بنجاح', 'تم إزالة المنتج من قائمة الأمنيات');
+      success(t('toast.wishlist.removed'), t('toast.wishlist.removed.desc'));
     } else {
       addToWishlist({
         id: product.id,
@@ -75,7 +77,7 @@ export default function ProductsPage() {
         badge: product.badge,
         badgeColor: product.badgeColor
       });
-      success('تمت الإضافة بنجاح', 'تم إضافة المنتج لقائمة الأمنيات');
+      success(t('toast.wishlist.added'), t('toast.wishlist.added.desc'));
     }
   };
 
@@ -239,12 +241,12 @@ export default function ProductsPage() {
   ];
 
   const filters = [
-    { id: 'all', name: 'All Products', count: allProducts.length },
-    { id: 'power-tools', name: 'Power Tools', count: allProducts.filter(p => p.category === 'power-tools').length },
-    { id: 'hand-tools', name: 'Hand Tools', count: allProducts.filter(p => p.category === 'hand-tools').length },
-    { id: 'safety', name: 'Safety Equipment', count: allProducts.filter(p => p.category === 'safety').length },
-    { id: 'measuring', name: 'Measuring Tools', count: allProducts.filter(p => p.category === 'measuring').length },
-    { id: 'heavy-machinery', name: 'Heavy Machinery', count: allProducts.filter(p => p.category === 'heavy-machinery').length }
+    { id: 'all', name: t('products.filter.all'), count: allProducts.length },
+    { id: 'power-tools', name: t('products.filter.power-tools'), count: allProducts.filter(p => p.category === 'power-tools').length },
+    { id: 'hand-tools', name: t('products.filter.hand-tools'), count: allProducts.filter(p => p.category === 'hand-tools').length },
+    { id: 'safety', name: t('products.filter.safety'), count: allProducts.filter(p => p.category === 'safety').length },
+    { id: 'measuring', name: t('products.filter.measuring'), count: allProducts.filter(p => p.category === 'measuring').length },
+    { id: 'heavy-machinery', name: t('products.filter.heavy-machinery'), count: allProducts.filter(p => p.category === 'heavy-machinery').length }
   ];
 
   // Filter and search products
@@ -286,14 +288,13 @@ export default function ProductsPage() {
             🛠️ Professional Tools
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Construction <span className="text-gradient">Tools Catalog</span>
+            {t('products.title')}
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            Browse our complete collection of professional construction tools, equipment, and safety gear. 
-            Quality products trusted by professionals worldwide.
+            {t('products.subtitle')}
           </p>
           <div className="text-sm text-gray-400">
-            Showing {sortedProducts.length} of {allProducts.length} products
+            {t('products.showing')} {sortedProducts.length} {t('products.of')} {allProducts.length} {t('nav.products')}
           </div>
         </div>
       </section>
@@ -313,7 +314,7 @@ export default function ProductsPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search products..."
+                placeholder={t('common.search')}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
             </div>
@@ -326,11 +327,11 @@ export default function ProductsPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
-                <option value="name">Name</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-                <option value="reviews">Most Reviews</option>
+                <option value="name">{t('products.sort.name')}</option>
+                <option value="price-low">{t('products.sort.price-low')}</option>
+                <option value="price-high">{t('products.sort.price-high')}</option>
+                <option value="rating">{t('products.sort.rating')}</option>
+                <option value="reviews">{t('products.sort.reviews')}</option>
               </select>
             </div>
           </div>
@@ -447,7 +448,7 @@ export default function ProductsPage() {
                         onClick={() => handleAddToCart(product)}
                         className="flex-1 gradient-red text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 shadow-md text-sm"
                       >
-                        Add to Cart
+{t('products.add.cart')}
                       </button>
                       <Link 
                         href={`/products/${product.id}`}

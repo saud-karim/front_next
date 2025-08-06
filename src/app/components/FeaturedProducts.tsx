@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCart } from '../context/CartContext';
 import { useUser } from '../context/UserContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Product {
   id: number;
@@ -25,6 +26,7 @@ export default function FeaturedProducts() {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, isLoggedIn } = useUser();
   const { success, warning } = useToast();
+  const { t } = useLanguage();
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -36,18 +38,18 @@ export default function FeaturedProducts() {
       category: product.category,
       features: product.features
     });
-    success('تمت الإضافة للسلة', `تم إضافة ${product.name} إلى سلة التسوق`);
+    success(t('toast.cart.added'), t('toast.cart.added.desc'));
   };
 
   const handleWishlistToggle = (product: Product) => {
     if (!isLoggedIn) {
-      warning('تسجيل الدخول مطلوب', 'يرجى تسجيل الدخول أولاً لإضافة المنتجات لقائمة الأمنيات');
+      warning(t('toast.login.required'), t('toast.login.required.desc'));
       return;
     }
 
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
-      success('تمت الإزالة بنجاح', 'تم إزالة المنتج من قائمة الأمنيات');
+      success(t('toast.wishlist.removed'), t('toast.wishlist.removed.desc'));
     } else {
       addToWishlist({
         id: product.id,
@@ -61,7 +63,7 @@ export default function FeaturedProducts() {
         badge: product.badge,
         badgeColor: product.badgeColor
       });
-      success('تمت الإضافة بنجاح', 'تم إضافة المنتج لقائمة الأمنيات');
+      success(t('toast.wishlist.added'), t('toast.wishlist.added.desc'));
     }
   };
 
@@ -272,7 +274,7 @@ export default function FeaturedProducts() {
                     onClick={() => handleAddToCart(product)}
                     className="flex-1 gradient-red text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 shadow-md"
                   >
-                    Add to Cart
+                    {t('products.add.cart')}
                   </button>
                   <Link 
                     href={`/products/${product.id}`}

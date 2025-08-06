@@ -84,7 +84,7 @@ export default function AboutPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <section className="pt-24 pb-16 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
