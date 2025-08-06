@@ -47,7 +47,7 @@ export default function About() {
           {/* Left Content */}
           <div>
             <div className="inline-block px-4 py-2 bg-white/20 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
-              🏗️ About BuildTools BS
+              🏗️ {t('about.home.badge')}
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -68,7 +68,7 @@ export default function About() {
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <span>Premium quality tools from leading global brands</span>
+                <span>{t('about.home.features.premium')}</span>
               </div>
               <div className="flex items-center text-white/90">
                 <div className="w-6 h-6 gradient-red rounded-full flex items-center justify-center mr-4">
@@ -76,7 +76,7 @@ export default function About() {
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <span>Competitive pricing with flexible payment options</span>
+                <span>{t('about.home.features.pricing')}</span>
               </div>
               <div className="flex items-center text-white/90">
                 <div className="w-6 h-6 gradient-red rounded-full flex items-center justify-center mr-4">
@@ -84,12 +84,12 @@ export default function About() {
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
-                <span>Expert technical support and consultation services</span>
+                <span>{t('about.home.features.support')}</span>
               </div>
             </div>
 
             <button className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg">
-              Learn More About Us
+              {t('about.contact.us')}
             </button>
           </div>
 
@@ -136,7 +136,7 @@ export default function About() {
         {/* Partnership Section */}
         <div className="mt-20 text-center">
           <h3 className="text-3xl font-bold text-white mb-8">
-            Trusted by Leading Construction Companies
+            {t('featured.trusted.companies')}
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {["🏢", "🏗️", "🏭", "🏬"].map((icon, index) => (
@@ -145,9 +145,31 @@ export default function About() {
                 className="card-hover bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 text-center"
               >
                 <div className="text-4xl mb-2">{icon}</div>
-                <div className="text-white/80 text-sm">Partner {index + 1}</div>
+                <div className="text-white/80 text-sm">{t(`featured.partners.${index + 1}`)}</div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Newsletter Section */}
+        <div className="mt-20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 text-center">
+            <h3 className="text-3xl font-bold text-white mb-4">
+              {t('footer.newsletter')}
+            </h3>
+            <p className="text-white/80 mb-6">
+              {t('footer.newsletter.desc')}
+            </p>
+            <div className="flex max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder={t('footer.email.placeholder')}
+                className="flex-1 px-4 py-3 rounded-l-xl border-0 focus:ring-2 focus:ring-red-500"
+              />
+              <button className="gradient-red text-white px-6 py-3 rounded-r-xl hover:shadow-lg transition-all duration-300 font-semibold">
+                {t('footer.subscribe')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

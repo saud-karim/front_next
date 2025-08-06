@@ -1,71 +1,16 @@
 'use client';
 
+import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { mockCategories } from '../data/mockData';
+import { Category, getLocalizedText } from '../types/multilingual';
 
 export default function Categories() {
-  const { t } = useLanguage();
-  const categories = [
-    {
-      id: 1,
-      name: t('categories.power.title'),
-      description: t('categories.power.desc'),
-      icon: "🔋",
-      count: t('categories.power.count'),
-      color: "from-orange-500 to-red-500",
-      bgColor: "bg-orange-50",
-      items: ["Drills", "Saws", "Grinders", "Sanders"]
-    },
-    {
-      id: 2,
-      name: t('categories.hand.title'),
-      description: t('categories.hand.desc'),
-      icon: "🔨",
-      count: t('categories.hand.count'),
-      color: "from-teal-500 to-cyan-500",
-      bgColor: "bg-teal-50",
-      items: ["Hammers", "Wrenches", "Pliers", "Screwdrivers"]
-    },
-    {
-      id: 3,
-      name: t('categories.safety.title'),
-      description: t('categories.safety.desc'),
-      icon: "🛡️",
-      count: t('categories.safety.count'),
-      color: "from-yellow-500 to-orange-500",
-      bgColor: "bg-yellow-50",
-      items: ["Helmets", "Gloves", "Goggles", "Harnesses"]
-    },
-    {
-      id: 4,
-      name: t('categories.measuring.title'),
-      description: t('categories.measuring.desc'),
-      icon: "📐",
-      count: t('categories.measuring.count'),
-      color: "from-purple-500 to-pink-500",
-      bgColor: "bg-purple-50",
-      items: ["Tape Measures", "Levels", "Calipers", "Laser Tools"]
-    },
-    {
-      id: 5,
-      name: t('categories.materials.title'),
-      description: t('categories.materials.desc'),
-      icon: "🧱",
-      count: t('categories.materials.count'),
-      color: "from-gray-500 to-gray-700",
-      bgColor: "bg-gray-50",
-      items: ["Cement", "Steel", "Blocks", "Pipes"]
-    },
-    {
-      id: 6,
-      name: t('categories.heavy.title'),
-      description: t('categories.heavy.desc'),
-      icon: "🚜",
-      count: t('categories.heavy.count'),
-      color: "from-blue-500 to-indigo-500",
-      bgColor: "bg-blue-50",
-      items: ["Excavators", "Cranes", "Loaders", "Mixers"]
-    }
-  ];
+  const { t, language } = useLanguage();
+  
+  // Use mockCategories directly for now to debug
+  const apiCategories = mockCategories;
+
 
   return (
     <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
@@ -85,7 +30,7 @@ export default function Categories() {
 
         {/* Categories Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category, index) => (
+          {apiCategories.map((category, index) => (
             <div
               key={category.id}
               className={`card-hover group cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-gray-200 ${category.bgColor} hover:shadow-2xl transition-all duration-500`}
@@ -98,8 +43,8 @@ export default function Categories() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
                 <div className="relative z-10">
                   <div className="text-4xl mb-3">{category.icon}</div>
-                  <h3 className="text-xl font-bold mb-2">{category.name}</h3>
-                  <p className="text-white/90 text-sm">{category.description}</p>
+                  <h3 className="text-xl font-bold mb-2">{getLocalizedText(category.name, language)}</h3>
+                  <p className="text-white/90 text-sm">{getLocalizedText(category.description, language)}</p>
                 </div>
               </div>
 
@@ -108,7 +53,7 @@ export default function Categories() {
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-2xl font-bold text-gray-900">{category.count}</span>
                   <div className="flex items-center text-sm text-gray-600">
-                    <span>View All</span>
+                    <span>{t('categories.view.all')}</span>
                     <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -120,14 +65,14 @@ export default function Categories() {
                   {category.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex items-center text-gray-700">
                       <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                      <span className="text-sm">{item}</span>
+                      <span className="text-sm">{getLocalizedText(item, language)}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Action Button */}
                 <button className={`w-full mt-6 bg-gradient-to-r ${category.color} text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105`}>
-                  Browse Category
+  {t('categories.browse')}
                 </button>
               </div>
             </div>
@@ -138,17 +83,17 @@ export default function Categories() {
         <div className="mt-16 text-center">
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto border border-gray-200">
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Can't Find What You're Looking For?
+              {t('featured.cant.find')}
             </h3>
             <p className="text-gray-600 mb-6 text-lg">
-              Our experts are here to help you find the perfect tools for your specific needs.
+              {t('featured.expert.section')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="gradient-red text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold">
-                📞 Contact Expert
+                📞 {t('featured.contact.expert')}
               </button>
               <button className="border-2 border-red-500 text-red-600 px-8 py-3 rounded-xl hover:bg-red-50 transition-all duration-300 font-semibold">
-                📋 Custom Quote
+                📋 {t('featured.custom.quote')}
               </button>
             </div>
           </div>

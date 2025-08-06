@@ -67,16 +67,16 @@ export default function Hero() {
                   <div className="w-12 h-12 gradient-red rounded-xl flex items-center justify-center mb-4">
                     <span className="text-2xl">🔨</span>
                   </div>
-                  <h3 className="text-white font-semibold mb-2">Power Tools</h3>
-                  <p className="text-white/70 text-sm">Professional grade drills, saws, and more</p>
+                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.power.title')}</h3>
+                  <p className="text-white/70 text-sm">{t('hero.tools.power.desc')}</p>
                 </div>
                 
                 <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                   <div className="w-12 h-12 metallic-effect rounded-xl flex items-center justify-center mb-4">
                     <span className="text-2xl">⚡</span>
                   </div>
-                  <h3 className="text-white font-semibold mb-2">Smart Tools</h3>
-                  <p className="text-white/70 text-sm">IoT-enabled construction equipment</p>
+                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.smart.title')}</h3>
+                  <p className="text-white/70 text-sm">{t('hero.tools.smart.desc')}</p>
                 </div>
               </div>
 
@@ -85,16 +85,16 @@ export default function Hero() {
                   <div className="w-12 h-12 metallic-effect rounded-xl flex items-center justify-center mb-4">
                     <span className="text-2xl">🛡️</span>
                   </div>
-                  <h3 className="text-white font-semibold mb-2">Safety Gear</h3>
-                  <p className="text-white/70 text-sm">Advanced protection equipment</p>
+                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.safety.title')}</h3>
+                  <p className="text-white/70 text-sm">{t('hero.tools.safety.desc')}</p>
                 </div>
                 
                 <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                   <div className="w-12 h-12 gradient-red rounded-xl flex items-center justify-center mb-4">
                     <span className="text-2xl">📐</span>
                   </div>
-                  <h3 className="text-white font-semibold mb-2">Precision Tools</h3>
-                  <p className="text-white/70 text-sm">Laser-guided measuring tools</p>
+                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.precision.title')}</h3>
+                  <p className="text-white/70 text-sm">{t('hero.tools.precision.desc')}</p>
                 </div>
               </div>
             </div>

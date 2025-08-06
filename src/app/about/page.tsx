@@ -44,42 +44,42 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: 'Ahmed Hassan',
-      role: 'Founder & CEO',
-      experience: '20+ years in construction',
+      name: t('about.team.ahmed.name'),
+      role: t('about.team.ahmed.role'),
+      experience: t('about.team.ahmed.experience'),
       image: '👨‍💼',
-      specialty: 'Heavy Machinery Expert'
+      specialty: t('about.team.ahmed.specialty')
     },
     {
-      name: 'Sarah Mohammed',
-      role: 'Head of Operations',
-      experience: '15+ years in logistics',
+      name: t('about.team.sarah.name'),
+      role: t('about.team.sarah.role'),
+      experience: t('about.team.sarah.experience'),
       image: '👩‍💼',
-      specialty: 'Supply Chain Management'
+      specialty: t('about.team.sarah.specialty')
     },
     {
-      name: 'Omar Ali',
-      role: 'Technical Director',
-      experience: '18+ years in engineering',
+      name: t('about.team.omar.name'),
+      role: t('about.team.omar.role'),
+      experience: t('about.team.omar.experience'),
       image: '👨‍🔧',
-      specialty: 'Power Tools Specialist'
+      specialty: t('about.team.omar.specialty')
     },
     {
-      name: 'Fatima Ahmed',
-      role: 'Customer Success Manager',
-      experience: '12+ years in customer service',
+      name: t('about.team.fatima.name'),
+      role: t('about.team.fatima.role'),
+      experience: t('about.team.fatima.experience'),
       image: '👩‍💻',
-      specialty: 'Client Relations'
+      specialty: t('about.team.fatima.specialty')
     }
   ];
 
   const milestones = [
-    { year: '2009', event: 'BS Construction Tools founded', description: 'Started as a small family business' },
-    { year: '2012', event: 'First major contract', description: 'Supplied tools for mega construction project' },
-    { year: '2015', event: 'Expanded product line', description: 'Added safety equipment and measuring tools' },
-    { year: '2018', event: 'Digital transformation', description: 'Launched online platform and e-commerce' },
-    { year: '2021', event: 'International expansion', description: 'Started serving customers across the region' },
-    { year: '2024', event: 'Innovation hub launch', description: 'Opened R&D center for new technologies' }
+    { year: '2009', event: t('about.milestones.2009.event'), description: t('about.milestones.2009.desc') },
+    { year: '2012', event: t('about.milestones.2012.event'), description: t('about.milestones.2012.desc') },
+    { year: '2015', event: t('about.milestones.2015.event'), description: t('about.milestones.2015.desc') },
+    { year: '2018', event: t('about.milestones.2018.event'), description: t('about.milestones.2018.desc') },
+    { year: '2021', event: t('about.milestones.2021.event'), description: t('about.milestones.2021.desc') },
+    { year: '2024', event: t('about.milestones.2024.event'), description: t('about.milestones.2024.desc') }
   ];
 
   return (
@@ -92,7 +92,7 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-6">
-                🏢 About BS Construction Tools
+                🏢 {t('about.badge')}
               </div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6">
                 {t('about.title')}
@@ -150,23 +150,17 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Our <span className="text-gradient">Story</span>
+                {t('about.story.title')} <span className="text-gradient">{t('about.story.highlight')}</span>
               </h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Founded in 2009 by a team of construction industry veterans, BS Construction Tools 
-                  began with a simple vision: to provide builders with access to the highest quality 
-                  tools and equipment available.
+                  {t('about.story.paragraph1')}
                 </p>
                 <p>
-                  What started as a small family business has grown into a leading supplier of 
-                  construction tools, serving thousands of contractors, builders, and DIY enthusiasts 
-                  across the region.
+                  {t('about.story.paragraph2')}
                 </p>
                 <p>
-                  Today, we continue to uphold our founding principles of quality, reliability, and 
-                  exceptional customer service while embracing innovation and new technologies that 
-                  help our customers work more efficiently and safely.
+                  {t('about.story.paragraph3')}
                 </p>
               </div>
             </div>
@@ -174,19 +168,19 @@ export default function AboutPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-red-100 to-orange-100 rounded-xl p-6 text-center">
                   <div className="text-3xl mb-2">🔨</div>
-                  <div className="font-semibold text-gray-900">Premium Tools</div>
+                  <div className="font-semibold text-gray-900">{t('about.story.features.premium')}</div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl p-6 text-center">
                   <div className="text-3xl mb-2">🛡️</div>
-                  <div className="font-semibold text-gray-900">Safety First</div>
+                  <div className="font-semibold text-gray-900">{t('about.story.features.safety')}</div>
                 </div>
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl p-6 text-center">
                   <div className="text-3xl mb-2">⚡</div>
-                  <div className="font-semibold text-gray-900">Innovation</div>
+                  <div className="font-semibold text-gray-900">{t('about.story.features.innovation')}</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-6 text-center">
                   <div className="text-3xl mb-2">🎯</div>
-                  <div className="font-semibold text-gray-900">Excellence</div>
+                  <div className="font-semibold text-gray-900">{t('about.story.features.excellence')}</div>
                 </div>
               </div>
             </div>
@@ -199,11 +193,10 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Our Core <span className="text-gradient">Values</span>
+              {t('about.values.title')} <span className="text-gradient">{t('about.values.highlight')}</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              These principles guide everything we do and shape our relationships with customers, 
-              partners, and the communities we serve.
+              {t('about.values.description')}
             </p>
           </div>
 
@@ -228,10 +221,10 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Our <span className="text-gradient">Journey</span>
+              {t('about.journey.title')} <span className="text-gradient">{t('about.journey.highlight')}</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Key milestones that have shaped our company and defined our path to excellence
+              {t('about.journey.description')}
             </p>
           </div>
 
@@ -263,10 +256,10 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Meet Our <span className="text-gradient">Team</span>
+              {t('about.team.title')} <span className="text-gradient">{t('about.team.highlight')}</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Experienced professionals dedicated to providing you with the best tools and service
+              {t('about.team.description')}
             </p>
           </div>
 
@@ -293,19 +286,19 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              Certifications & <span className="text-gradient">Partnerships</span>
+              {t('about.certifications.title')} <span className="text-gradient">{t('about.certifications.highlight')}</span>
             </h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
-              We maintain the highest industry standards and partner with leading manufacturers
+              {t('about.certifications.description')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { name: 'ISO 9001:2015', description: 'Quality Management', icon: '🏅' },
-              { name: 'OSHA Certified', description: 'Safety Standards', icon: '🛡️' },
-              { name: 'DeWalt Partner', description: 'Authorized Dealer', icon: '🤝' },
-              { name: 'Industry Leader', description: 'Excellence Award', icon: '⭐' }
+              { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
+              { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
+              { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
+              { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
             ].map((cert, index) => (
               <div key={index} className="bg-white/10 rounded-xl p-6 text-center backdrop-blur-sm">
                 <div className="text-4xl mb-3">{cert.icon}</div>
@@ -321,23 +314,23 @@ export default function AboutPage() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Ready to Start Your Next Project?
+            {t('about.cta.title')}
           </h2>
           <p className="text-gray-600 mb-8">
-            Join thousands of satisfied customers who trust BS Construction Tools for their projects
+            {t('about.cta.description')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/products"
               className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold"
             >
-              Shop Now
+              {t('about.cta.shop')}
             </Link>
             <Link 
               href="/categories"
               className="border-2 border-red-500 text-red-600 px-8 py-4 rounded-xl hover:bg-red-50 transition-all duration-300 font-semibold"
             >
-              Browse Categories
+              {t('about.cta.browse')}
             </Link>
           </div>
         </div>

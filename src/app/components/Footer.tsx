@@ -21,31 +21,31 @@ export default function Footer() {
     {
       title: t('footer.services'),
       links: [
-        { name: "Tool Rental", href: "/services/rental" },
-        { name: "Equipment Maintenance", href: "/services/maintenance" },
-        { name: "Technical Support", href: "/services/support" },
-        { name: "Training Programs", href: "/services/training" },
-        { name: "Custom Solutions", href: "/services/custom" }
+        { name: t('footer.services.rental'), href: "/services/rental" },
+        { name: t('footer.services.maintenance'), href: "/services/maintenance" },
+        { name: t('footer.services.support'), href: "/services/support" },
+        { name: t('footer.services.training'), href: "/services/training" },
+        { name: t('footer.services.custom'), href: "/services/custom" }
       ]
     },
     {
       title: t('footer.company'),
       links: [
         { name: t('footer.about.us'), href: "/about" },
-        { name: "Our Story", href: "/story" },
-        { name: "Careers", href: "/careers" },
-        { name: "News & Updates", href: "/news" },
-        { name: "Partnerships", href: "/partnerships" }
+        { name: t('footer.company.story'), href: "/story" },
+        { name: t('footer.company.careers'), href: "/careers" },
+        { name: t('footer.company.news'), href: "/news" },
+        { name: t('footer.company.partnerships'), href: "/partnerships" }
       ]
     },
     {
       title: t('footer.support'),
       links: [
         { name: t('footer.contact.us'), href: "/contact" },
-        { name: "Help Center", href: "/help" },
-        { name: "Returns & Exchanges", href: "/returns" },
-        { name: "Warranty Claims", href: "/warranty" },
-        { name: "Track Your Order", href: "/track" }
+        { name: t('footer.support.help'), href: "/help" },
+        { name: t('footer.support.returns'), href: "/returns" },
+        { name: t('footer.support.warranty'), href: "/warranty" },
+        { name: t('footer.support.track'), href: "/track" }
       ]
     }
   ];
@@ -65,19 +65,19 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
-              <h3 className="text-3xl font-bold mb-4 text-white">Stay Updated</h3>
+              <h3 className="text-3xl font-bold mb-4 text-white">{t('footer.newsletter')}</h3>
               <p className="text-white/90 text-lg">
-                Get the latest updates on new products, special offers, and industry insights.
+                {t('footer.newsletter.desc')}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('footer.email.placeholder')}
                 className="flex-1 px-6 py-3 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <button className="gradient-red text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold">
-                Subscribe
+                {t('footer.subscribe')}
               </button>
             </div>
           </div>
@@ -105,22 +105,21 @@ export default function Footer() {
               </div>
               
               <p className="text-gray-300 mb-6 leading-relaxed">
-                Your trusted partner for professional construction tools and equipment. 
-                Building excellence, one project at a time since 1998.
+                {t('footer.company.desc')}
               </p>
 
               <div className="space-y-3">
                 <div className="flex items-center text-gray-300">
                   <span className="text-xl mr-3">📍</span>
-                  <span>123 Construction Blvd, Industrial City</span>
+                  <span>{t('footer.address')}</span>
                 </div>
                 <div className="flex items-center text-gray-300">
                   <span className="text-xl mr-3">📞</span>
-                  <span>+1 (555) 123-4567</span>
+                  <span>{t('footer.phone')}</span>
                 </div>
                 <div className="flex items-center text-gray-300">
                   <span className="text-xl mr-3">✉️</span>
-                  <span>info@buildtools-bs.com</span>
+                  <span>{t('footer.email')}</span>
                 </div>
               </div>
 
@@ -165,21 +164,21 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © {currentYear} BuildTools BS. All rights reserved.
+              © {currentYear} BuildTools BS. {t('footer.rights')}
             </div>
             
             <div className="flex flex-wrap gap-6 text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-red-400 transition-colors">
-                Privacy Policy
+                {t('footer.privacy')}
               </Link>
               <Link href="/terms" className="text-gray-400 hover:text-red-400 transition-colors">
-                Terms of Service
+                {t('footer.terms')}
               </Link>
               <Link href="/cookies" className="text-gray-400 hover:text-red-400 transition-colors">
-                Cookie Policy
+                {t('footer.cookies')}
               </Link>
               <Link href="/sitemap" className="text-gray-400 hover:text-red-400 transition-colors">
-                Sitemap
+                {t('footer.sitemap')}
               </Link>
             </div>
           </div>

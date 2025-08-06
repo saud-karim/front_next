@@ -51,27 +51,27 @@ export default function ContactPage() {
 
   const contactInfo = [
     {
-      title: 'Main Office',
+      title: t('contact.info.office.title'),
       details: [
-        '123 Construction Street',
-        'Building District, City 12345',
-        'Egypt'
+        t('contact.info.office.street'),
+        t('contact.info.office.district'),
+        t('contact.info.office.country')
       ],
       icon: '📍',
       color: 'from-red-500 to-orange-500'
     },
     {
-      title: 'Phone Numbers',
+      title: t('contact.info.phone.title'),
       details: [
         '+20 123 456 7890',
         '+20 987 654 3210',
-        'Toll Free: 800-TOOLS'
+        t('contact.info.phone.toll')
       ],
       icon: '📞',
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      title: 'Email Addresses',
+      title: t('contact.info.email.title'),
       details: [
         'info@bstools.com',
         'sales@bstools.com',
@@ -81,11 +81,11 @@ export default function ContactPage() {
       color: 'from-green-500 to-emerald-500'
     },
     {
-      title: 'Business Hours',
+      title: t('contact.info.hours.title'),
       details: [
-        'Monday - Friday: 8:00 AM - 6:00 PM',
-        'Saturday: 9:00 AM - 4:00 PM',
-        'Sunday: Closed'
+        t('contact.info.hours.weekdays'),
+        t('contact.info.hours.saturday'),
+        t('contact.info.hours.sunday')
       ],
       icon: '🕒',
       color: 'from-purple-500 to-indigo-500'
@@ -94,32 +94,32 @@ export default function ContactPage() {
 
   const departments = [
     {
-      name: 'Sales Department',
-      description: 'Product inquiries, quotes, and orders',
+      name: t('contact.departments.sales.name'),
+      description: t('contact.departments.sales.desc'),
       phone: '+20 123 456 7891',
       email: 'sales@bstools.com',
       icon: '💼',
       color: 'bg-blue-500'
     },
     {
-      name: 'Technical Support',
-      description: 'Product guidance and technical assistance',
+      name: t('contact.departments.support.name'),
+      description: t('contact.departments.support.desc'),
       phone: '+20 123 456 7892',
       email: 'support@bstools.com',
       icon: '🔧',
       color: 'bg-green-500'
     },
     {
-      name: 'Customer Service',
-      description: 'General inquiries and customer care',
+      name: t('contact.departments.service.name'),
+      description: t('contact.departments.service.desc'),
       phone: '+20 123 456 7893',
       email: 'service@bstools.com',
       icon: '👥',
       color: 'bg-purple-500'
     },
     {
-      name: 'Partnerships',
-      description: 'Business partnerships and collaborations',
+      name: t('contact.departments.partnerships.name'),
+      description: t('contact.departments.partnerships.desc'),
       phone: '+20 123 456 7894',
       email: 'partners@bstools.com',
       icon: '🤝',
@@ -144,7 +144,7 @@ export default function ContactPage() {
       <section className="pt-24 pb-16 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-6">
-            📞 Contact Us
+            📞 {t('contact.badge')}
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             {t('contact.title')}
@@ -259,7 +259,7 @@ export default function ContactPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Type
+                      {t('contact.form.project')}
                     </label>
                     <select
                       name="projectType"
@@ -267,17 +267,17 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     >
-                      <option value="residential">Residential</option>
-                      <option value="commercial">Commercial</option>
-                      <option value="industrial">Industrial</option>
-                      <option value="infrastructure">Infrastructure</option>
-                      <option value="renovation">Renovation</option>
-                      <option value="other">Other</option>
+                      <option value="residential">{t('contact.form.project.residential')}</option>
+                      <option value="commercial">{t('contact.form.project.commercial')}</option>
+                      <option value="industrial">{t('contact.form.project.industrial')}</option>
+                      <option value="infrastructure">{t('contact.form.project.infrastructure')}</option>
+                      <option value="renovation">{t('contact.form.project.renovation')}</option>
+                      <option value="other">{t('contact.form.project.other')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subject *
+                      {t('contact.form.subject')} *
                     </label>
                     <input
                       type="text"
@@ -286,14 +286,14 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="How can we help you?"
+                      placeholder={t('contact.form.subject.placeholder')}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message *
+                    {t('contact.form.message')} *
                   </label>
                   <textarea
                     name="message"
@@ -302,7 +302,7 @@ export default function ContactPage() {
                     required
                     rows={6}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Tell us about your project requirements..."
+                    placeholder={t('contact.form.message.placeholder')}
                   ></textarea>
                 </div>
 
@@ -330,7 +330,7 @@ export default function ContactPage() {
             {/* Contact Information */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Contact <span className="text-gradient">Information</span>
+                {t('contact.info.title')} <span className="text-gradient">{t('contact.info.highlight')}</span>
               </h2>
               
               <div className="space-y-6">
@@ -355,8 +355,8 @@ export default function ContactPage() {
               <div className="mt-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl h-64 flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-4xl mb-2">🗺️</div>
-                  <div className="text-gray-700 font-semibold">Interactive Map</div>
-                  <div className="text-gray-600 text-sm">Find us on the map</div>
+                  <div className="text-gray-700 font-semibold">{t('contact.map.title')}</div>
+                  <div className="text-gray-600 text-sm">{t('contact.map.desc')}</div>
                 </div>
               </div>
             </div>
@@ -369,10 +369,10 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Contact by <span className="text-gradient">Department</span>
+              {t('contact.departments.title')} <span className="text-gradient">{t('contact.departments.highlight')}</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Reach out to the right department for faster and more specialized assistance
+              {t('contact.departments.description')}
             </p>
           </div>
 
@@ -407,30 +407,30 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Frequently Asked <span className="text-gradient">Questions</span>
+              {t('contact.faq.title')} <span className="text-gradient">{t('contact.faq.highlight')}</span>
             </h2>
             <p className="text-gray-600">
-              Quick answers to common questions about our products and services
+              {t('contact.faq.description')}
             </p>
           </div>
 
           <div className="space-y-6">
             {[
               {
-                question: "What is your return policy?",
-                answer: "We offer a 30-day return policy for unused items in original packaging. Professional tools have a 90-day warranty period."
+                question: t('contact.faq.return.question'),
+                answer: t('contact.faq.return.answer')
               },
               {
-                question: "Do you offer bulk discounts?",
-                answer: "Yes, we provide competitive bulk pricing for contractors and businesses. Contact our sales team for custom quotes."
+                question: t('contact.faq.bulk.question'),
+                answer: t('contact.faq.bulk.answer')
               },
               {
-                question: "How long does shipping take?",
-                answer: "Standard shipping takes 3-5 business days. Express shipping is available for urgent orders within 1-2 business days."
+                question: t('contact.faq.shipping.question'),
+                answer: t('contact.faq.shipping.answer')
               },
               {
-                question: "Do you provide technical support?",
-                answer: "Yes, our technical team provides full support for all products including installation guidance and troubleshooting."
+                question: t('contact.faq.support.question'),
+                answer: t('contact.faq.support.answer')
               }
             ].map((faq, index) => (
               <div key={index} className="bg-gray-50 rounded-xl p-6">
@@ -447,10 +447,10 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              Connect with <span className="text-gradient">Us</span>
+              {t('contact.social.title')} <span className="text-gradient">{t('contact.social.highlight')}</span>
             </h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
-              Follow us on social media for updates, tips, and the latest construction industry news
+              {t('contact.social.description')}
             </p>
           </div>
 
@@ -462,25 +462,25 @@ export default function ContactPage() {
                 className={`${social.color} rounded-xl p-6 text-center hover:scale-105 transition-transform duration-300`}
               >
                 <div className="text-4xl mb-3">{social.icon}</div>
-                <div className="font-semibold">Follow us on {social.name}</div>
+                <div className="font-semibold">{t('contact.social.follow')} {social.name}</div>
               </a>
             ))}
           </div>
 
           <div className="text-center">
-            <h3 className="text-xl font-bold mb-4">Need Immediate Assistance?</h3>
+            <h3 className="text-xl font-bold mb-4">{t('contact.cta.title')}</h3>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
                 href="tel:+201234567890"
                 className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold"
               >
-                📞 Call Now: +20 123 456 7890
+                📞 {t('contact.cta.call')}: +20 123 456 7890
               </a>
               <a 
                 href="mailto:info@bstools.com"
                 className="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-gray-900 transition-all duration-300 font-semibold"
               >
-                ✉️ Email: info@bstools.com
+                ✉️ {t('contact.cta.email')}: info@bstools.com
               </a>
             </div>
           </div>

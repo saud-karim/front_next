@@ -9,6 +9,8 @@ import { useUser } from '../context/UserContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import { mockProducts } from '../data/mockData';
+import { Product, getLocalizedText } from '../types/multilingual';
 
 export default function WishlistPage() {
   const { user, isLoggedIn, removeFromWishlist } = useUser();

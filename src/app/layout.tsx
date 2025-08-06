@@ -35,7 +35,7 @@ export default function RootLayout({
           <ToastProvider>
             <UserProvider>
               <CartProvider>
-                {children}
+        {children}
               </CartProvider>
             </UserProvider>
           </ToastProvider>

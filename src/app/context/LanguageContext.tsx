@@ -22,6 +22,7 @@ const translations = {
     'nav.categories': 'الفئات',
     'nav.about': 'عن الشركة',
     'nav.contact': 'اتصل بنا',
+    'nav.search': 'البحث',
     'nav.cart': 'السلة',
     'nav.wishlist': 'قائمة الأمنيات',
     'nav.login': 'تسجيل الدخول',
@@ -54,6 +55,16 @@ const translations = {
     'hero.stats.tools': 'أداة متميزة',
     'hero.stats.customers': 'عميل سعيد',
     'hero.stats.experience': 'سنة خبرة',
+    
+    // Hero Tool Cards
+    'hero.tools.power.title': 'الأدوات الكهربائية',
+    'hero.tools.power.desc': 'مثاقب ومناشير احترافية والمزيد',
+    'hero.tools.smart.title': 'الأدوات الذكية',
+    'hero.tools.smart.desc': 'معدات البناء المزودة بإنترنت الأشياء',
+    'hero.tools.safety.title': 'معدات الأمان',
+    'hero.tools.safety.desc': 'معدات حماية متقدمة',
+    'hero.tools.precision.title': 'أدوات الدقة',
+    'hero.tools.precision.desc': 'أدوات قياس موجهة بالليزر',
 
     // Products
     'products.title': 'كتالوج أدوات البناء',
@@ -61,6 +72,17 @@ const translations = {
     'products.showing': 'عرض',
     'products.of': 'من',
     'products.load.more': 'تحميل المزيد',
+    
+    // Product Details
+    'product.not.found': 'المنتج غير موجود',
+    'product.not.found.desc': 'المنتج الذي تبحث عنه غير موجود.',
+    'product.back.to.products': 'العودة للمنتجات',
+    'product.reviews': 'تقييم',
+    'product.save': 'وفر',
+    'product.features': 'المميزات',
+    'product.quantity': 'الكمية',
+    'product.specifications': 'المواصفات',
+    'product.related': 'منتجات مماثلة',
     'products.no.results': 'لا توجد نتائج',
     'products.filter.all': 'الكل',
     'products.filter.power-tools': 'الأدوات الكهربائية',
@@ -96,6 +118,55 @@ const translations = {
     'cart.promo.success.desc': 'حصلت على خصم 10% على طلبك',
     'cart.promo.error': 'كوبون غير صالح',
     'cart.promo.error.desc': 'الرجاء التحقق من رمز الكوبون والمحاولة مرة أخرى',
+    'cart.recommended.title': 'قد يعجبك أيضاً',
+    'cart.recommended.subtitle': 'أكمل صندوق أدواتك بهذه العناصر الموصى بها',
+    'cart.badge': 'عربة التسوق',
+    
+    // Cart Items
+    'cart.items.title': 'منتجات العربة',
+    'cart.save': 'وفر',
+    
+    // Order Summary
+    'cart.summary.title': 'ملخص الطلب',
+    'cart.summary.subtotal': 'المجموع الفرعي',
+    'cart.summary.savings': 'توفر',
+    'cart.summary.promo': 'خصم الكوبون',
+    'cart.summary.tax': 'الضريبة',
+    'cart.summary.shipping': 'الشحن',
+    'cart.summary.free': 'مجاني',
+    'cart.summary.total': 'المجموع الكلي',
+    'cart.summary.free.shipping': 'شحن مجاني للطلبات التي تزيد عن 500 دولار',
+    
+    // Promo Code
+    'cart.promo.label': 'كود الخصم',
+    'cart.promo.applied': 'مُطبق',
+    
+    // Checkout
+    'cart.checkout.button': 'متابعة الدفع',
+    'cart.checkout.secure': 'دفع آمن مضمون',
+    'cart.checkout.accept': 'نقبل',
+
+    // Featured Products
+    'featured.badge': 'المنتجات المميزة',
+    'featured.title': 'مجموعة الأدوات',
+    'featured.subtitle': 'اكتشف مجموعتنا المختارة يدوياً من أدوات البناء المتميزة، التي يثق بها المحترفون في جميع أنحاء العالم لجودتها وأدائها',
+    
+    // Featured Filters
+    'featured.filters.all': 'جميع المنتجات',
+    'featured.filters.power': 'الأدوات الكهربائية',
+    'featured.filters.hand': 'الأدوات اليدوية',
+    'featured.filters.safety': 'معدات الأمان',
+    'featured.cant.find': 'لا تجد ما تبحث عنه؟',
+    'featured.expert.section': 'خبراءنا هنا لمساعدتك في العثور على الأدوات المثالية لاحتياجاتك المحددة',
+    'featured.custom.quote': 'عرض سعر مخصص',
+    'featured.contact.expert': 'اتصل بخبير',
+    
+    // Partners
+    'featured.partners.1': 'شريك 1',
+    'featured.partners.2': 'شريك 2', 
+    'featured.partners.3': 'شريك 3',
+    'featured.partners.4': 'شريك 4',
+    'featured.trusted.companies': 'موثوق به من قبل شركات البناء الرائدة',
 
     // Auth
     'auth.login.title': 'مرحباً بك',
@@ -131,6 +202,88 @@ const translations = {
     'about.values.reliability.desc': 'اعتمد علينا للحصول على جودة ثابتة وتسليم في الوقت المحدد وخدمة يمكن الاعتماد عليها.',
     'about.explore.products': 'استكشف منتجاتنا',
     'about.contact.us': 'اتصل بنا',
+    'about.badge': 'عن شركة BS لأدوات البناء',
+    
+    // Team Members
+    'about.team.ahmed.name': 'أحمد حسن',
+    'about.team.ahmed.role': 'المؤسس والمدير التنفيذي',
+    'about.team.ahmed.experience': '20+ سنة في البناء',
+    'about.team.ahmed.specialty': 'خبير المعدات الثقيلة',
+    
+    'about.team.sarah.name': 'سارة محمد',
+    'about.team.sarah.role': 'رئيس العمليات',
+    'about.team.sarah.experience': '15+ سنة في اللوجستيات',
+    'about.team.sarah.specialty': 'إدارة سلسلة التوريد',
+    
+    'about.team.omar.name': 'عمر علي',
+    'about.team.omar.role': 'المدير التقني',
+    'about.team.omar.experience': '18+ سنة في الهندسة',
+    'about.team.omar.specialty': 'متخصص الأدوات الكهربائية',
+    
+    'about.team.fatima.name': 'فاطمة أحمد',
+    'about.team.fatima.role': 'مدير نجاح العملاء',
+    'about.team.fatima.experience': '12+ سنة في خدمة العملاء',
+    'about.team.fatima.specialty': 'علاقات العملاء',
+    
+    // Milestones
+    'about.milestones.2009.event': 'تأسيس شركة BS لأدوات البناء',
+    'about.milestones.2009.desc': 'بدأت كشركة عائلية صغيرة',
+    'about.milestones.2012.event': 'أول عقد كبير',
+    'about.milestones.2012.desc': 'توريد أدوات لمشروع إنشائي ضخم',
+    'about.milestones.2015.event': 'توسيع خط الإنتاج',
+    'about.milestones.2015.desc': 'إضافة معدات السلامة وأدوات القياس',
+    'about.milestones.2018.event': 'التحول الرقمي',
+    'about.milestones.2018.desc': 'إطلاق المنصة الإلكترونية والتجارة الإلكترونية',
+    'about.milestones.2021.event': 'التوسع الدولي',
+    'about.milestones.2021.desc': 'بدء خدمة العملاء في جميع أنحاء المنطقة',
+    'about.milestones.2024.event': 'إطلاق مركز الابتكار',
+    'about.milestones.2024.desc': 'افتتاح مركز البحث والتطوير للتقنيات الجديدة',
+    
+    // Story Section
+    'about.story.title': 'قصتنا',
+    'about.story.highlight': 'الخاصة',
+    'about.story.paragraph1': 'تأسست شركة BS لأدوات البناء في عام 2009 من قبل فريق من خبراء صناعة البناء، بدأت برؤية بسيطة: توفير أدوات ومعدات عالية الجودة للبنائين.',
+    'about.story.paragraph2': 'ما بدأ كشركة عائلية صغيرة نما ليصبح مورداً رائداً لأدوات البناء، يخدم آلاف المقاولين والبنائين وعشاق الأعمال اليدوية في جميع أنحاء المنطقة.',
+    'about.story.paragraph3': 'اليوم، نواصل التمسك بمبادئنا التأسيسية في الجودة والموثوقية وخدمة العملاء الاستثنائية مع احتضان الابتكار والتقنيات الجديدة التي تساعد عملائنا على العمل بكفاءة وأمان أكبر.',
+    'about.story.features.premium': 'أدوات ممتازة',
+    'about.story.features.safety': 'السلامة أولاً',
+    'about.story.features.innovation': 'الابتكار',
+    'about.story.features.excellence': 'التميز',
+    
+    // Values Section  
+    'about.values.title': 'قيمنا',
+    'about.values.highlight': 'الأساسية',
+    'about.values.description': 'هذه المبادئ توجه كل ما نقوم به وتشكل علاقاتنا مع العملاء والشركاء والمجتمعات التي نخدمها.',
+    
+    // Journey Section
+    'about.journey.title': 'رحلتنا',
+    'about.journey.highlight': 'التاريخية',
+    'about.journey.description': 'المعالم الرئيسية التي شكلت شركتنا وحددت مسارنا نحو التميز',
+    
+    // Team Section
+    'about.team.title': 'تعرف على',
+    'about.team.highlight': 'فريقنا',
+    'about.team.description': 'مختصون ذوو خبرة ملتزمون بتزويدك بأفضل الأدوات والخدمات',
+    
+    // Certifications Section
+    'about.certifications.title': 'الشهادات و',
+    'about.certifications.highlight': 'الشراكات',
+    'about.certifications.description': 'نحافظ على أعلى المعايير الصناعية ونتشارك مع الشركات المصنعة الرائدة',
+    'about.certifications.iso.name': 'ISO 9001:2015',
+    'about.certifications.iso.desc': 'إدارة الجودة',
+    'about.certifications.osha.name': 'معتمد OSHA',
+    'about.certifications.osha.desc': 'معايير السلامة',
+    'about.certifications.dewalt.name': 'شريك DeWalt',
+    'about.certifications.dewalt.desc': 'وكيل معتمد',
+    'about.certifications.leader.name': 'رائد الصناعة',
+    'about.certifications.leader.desc': 'جائزة التميز',
+    
+    // CTA Section
+    'about.cta.title': 'هل أنت مستعد لبدء مشروعك القادم؟',
+    'about.cta.description': 'انضم إلى آلاف العملاء الراضين الذين يثقون في أدوات BS للبناء لمشاريعهم',
+    'about.cta.shop': 'تسوق الآن',
+    'about.cta.browse': 'تصفح الفئات',
+    'about.home.badge': 'عن شركة BuildTools BS',
     'about.home.title': 'بناء الغد مع',
     'about.home.highlight': 'الأدوات المهنية',
     'about.home.desc': 'منذ أكثر من 25 عاماً، نوفر أدوات البناء عالية الجودة للمهنيين في جميع أنحاء العالم. شريكك الموثوق في كل مشروع.',
@@ -147,6 +300,11 @@ const translations = {
     'about.home.payment.desc': 'خيارات دفع متعددة بما في ذلك التقسيط للطلبات الكبيرة',
     'about.home.expert.title': 'دعم خبراء',
     'about.home.expert.desc': 'استشارة مهنية ودعم فني من خبرائنا',
+    
+    // About Home Features  
+    'about.home.features.premium': 'أدوات عالية الجودة من أفضل العلامات التجارية العالمية',
+    'about.home.features.pricing': 'أسعار تنافسية مع خيارات دفع مرنة ومتنوعة',
+    'about.home.features.support': 'دعم فني متخصص وخدمات استشارية احترافية',
 
     // Categories
     'categories.title': 'فئات المنتجات',
@@ -173,6 +331,13 @@ const translations = {
     'categories.heavy.desc': 'معدات صناعية للمشاريع الكبيرة',
     'categories.heavy.count': '40+ آلة',
     'categories.explore.title': 'استكشف فئات الأدوات',
+    'categories.smart.title': 'أدوات ذكية',
+    'categories.smart.desc': 'معدات بناء مزودة بتقنية إنترنت الأشياء',
+    'categories.precision.title': 'أدوات دقيقة',
+    'categories.precision.desc': 'أدوات قياس موجهة بالليزر',
+    'categories.browse': 'تصفح الفئة',
+    'categories.featured.products': 'منتجات مميزة',
+    'categories.view.all.products': 'عرض جميع المنتجات',
 
     // Contact
     'contact.title': 'تواصل معنا',
@@ -198,7 +363,83 @@ const translations = {
     'contact.form.phone.placeholder': 'رقم هاتفك',
     'contact.form.company.placeholder': 'اسم شركتك',
     'contact.form.success': 'شكراً لك! تم إرسال رسالتك بنجاح. سنعود إليك قريباً.',
+    'contact.badge': 'اتصل بنا',
+    
+    // Contact Info
+    'contact.info.office.title': 'المكتب الرئيسي',
+    'contact.info.office.street': 'شارع البناء 123',
+    'contact.info.office.district': 'حي البناء، المدينة 12345',
+    'contact.info.office.country': 'مصر',
+    'contact.info.phone.title': 'أرقام الهاتف',
+    'contact.info.phone.toll': 'مجاني: 800-TOOLS',
+    'contact.info.email.title': 'عناوين البريد الإلكتروني',
+    'contact.info.hours.title': 'ساعات العمل',
+    'contact.info.hours.weekdays': 'الاثنين - الجمعة: 8:00 ص - 6:00 م',
+    'contact.info.hours.saturday': 'السبت: 9:00 ص - 4:00 م',
+    'contact.info.hours.sunday': 'الأحد: مغلق',
+    
+    // Departments
+    'contact.departments.sales.name': 'قسم المبيعات',
+    'contact.departments.sales.desc': 'استفسارات المنتجات وعروض الأسعار والطلبات',
+    'contact.departments.support.name': 'الدعم الفني',
+    'contact.departments.support.desc': 'إرشادات المنتج والمساعدة التقنية',
+    'contact.departments.service.name': 'خدمة العملاء',
+    'contact.departments.service.desc': 'الاستفسارات العامة ورعاية العملاء',
+    'contact.departments.partnerships.name': 'الشراكات',
+    'contact.departments.partnerships.desc': 'الشراكات التجارية والتعاون',
+    
+    // Form Fields
+    'contact.form.project': 'نوع المشروع',
+    'contact.form.subject': 'الموضوع',
+    'contact.form.message': 'الرسالة',
+    'contact.form.subject.placeholder': 'كيف يمكننا مساعدتك؟',
+    'contact.form.project.residential': 'سكني',
+    'contact.form.project.commercial': 'تجاري',
+    'contact.form.project.industrial': 'صناعي',
+    'contact.form.project.infrastructure': 'بنية تحتية',
+    'contact.form.project.renovation': 'تجديد',
+    'contact.form.project.other': 'أخرى',
+    'contact.form.message.placeholder': 'أخبرنا عن متطلبات مشروعك...',
+    
+    // Contact Info Section
+    'contact.info.title': 'معلومات',
+    'contact.info.highlight': 'الاتصال',
+    
+    // Map Section
+    'contact.map.title': 'خريطة تفاعلية',
+    'contact.map.desc': 'اعثر علينا على الخريطة',
+    
+    // Departments Section  
+    'contact.departments.title': 'اتصل حسب',
+    'contact.departments.highlight': 'القسم',
+    'contact.departments.description': 'تواصل مع القسم المناسب للحصول على مساعدة أسرع وأكثر تخصصاً',
+    
+    // FAQ Section
+    'contact.faq.title': 'الأسئلة',
+    'contact.faq.highlight': 'الشائعة',
+    'contact.faq.description': 'إجابات سريعة على الأسئلة الشائعة حول منتجاتنا وخدماتنا',
+    'contact.faq.return.question': 'ما هي سياسة الإرجاع؟',
+    'contact.faq.return.answer': 'نقدم سياسة إرجاع لمدة 30 يوماً للعناصر غير المستخدمة في العبوة الأصلية. الأدوات المهنية لها فترة ضمان 90 يوماً.',
+    'contact.faq.bulk.question': 'هل تقدمون خصومات للكميات الكبيرة؟',
+    'contact.faq.bulk.answer': 'نعم، نقدم أسعار تنافسية للكميات الكبيرة للمقاولين والشركات. اتصل بفريق المبيعات للحصول على عروض أسعار مخصصة.',
+    'contact.faq.shipping.question': 'كم يستغرق الشحن؟',
+    'contact.faq.shipping.answer': 'الشحن العادي يستغرق 3-5 أيام عمل. الشحن السريع متاح للطلبات العاجلة خلال 1-2 يوم عمل.',
+    'contact.faq.support.question': 'هل تقدمون دعماً فنياً؟',
+    'contact.faq.support.answer': 'نعم، فريقنا التقني يقدم دعماً كاملاً لجميع المنتجات بما في ذلك إرشادات التركيب وحل المشاكل.',
+    
+    // Social Media Section
+    'contact.social.title': 'تواصل',
+    'contact.social.highlight': 'معنا',
+    'contact.social.description': 'تابعنا على وسائل التواصل الاجتماعي للحصول على التحديثات والنصائح وآخر أخبار صناعة البناء',
+    'contact.social.follow': 'تابعنا على',
+    
+    // CTA Section
+    'contact.cta.title': 'تحتاج مساعدة فورية؟',
+    'contact.cta.call': 'اتصل الآن',
+    'contact.cta.email': 'البريد الإلكتروني',
     'contact.form.sending': 'جاري الإرسال...',
+
+
 
     // Language Toggle
     'language.current': 'العربية',
@@ -225,9 +466,34 @@ const translations = {
     'footer.subscribe': 'اشترك',
     'footer.rights': 'جميع الحقوق محفوظة',
     'footer.privacy': 'سياسة الخصوصية',
-    'footer.terms': 'الشروط والأحكام',
+    'footer.terms': 'شروط الخدمة',
+    'footer.cookies': 'سياسة ملفات تعريف الارتباط',
+    'footer.sitemap': 'خريطة الموقع',
     'footer.about.us': 'عن الشركة',
     'footer.contact.us': 'اتصل بنا',
+    'footer.company.desc': 'شريكك الموثوق للأدوات والمعدات الإنشائية المتخصصة. نبني التميز، مشروع واحد في كل مرة منذ عام 1998.',
+    'footer.address': 'شارع البناء رقم 123، المدينة الصناعية',
+    'footer.phone': '4567-123 (555) 1+',
+    'footer.email': 'info@buildtools-bs.com',
+    
+    // Services
+    'footer.services.rental': 'تأجير الأدوات',
+    'footer.services.maintenance': 'صيانة المعدات',
+    'footer.services.support': 'الدعم الفني',
+    'footer.services.training': 'برامج التدريب',
+    'footer.services.custom': 'حلول مخصصة',
+    
+    // Company
+    'footer.company.story': 'قصتنا',
+    'footer.company.careers': 'الوظائف',
+    'footer.company.news': 'الأخبار والتحديثات',
+    'footer.company.partnerships': 'الشراكات',
+    
+    // Support
+    'footer.support.help': 'مركز المساعدة',
+    'footer.support.returns': 'المرتجعات والاستبدال',
+    'footer.support.warranty': 'مطالبات الضمان',
+    'footer.support.track': 'تتبع طلبك',
   },
   en: {
     // Navigation
@@ -236,6 +502,7 @@ const translations = {
     'nav.categories': 'Categories',
     'nav.about': 'About',
     'nav.contact': 'Contact',
+    'nav.search': 'Search',
     'nav.cart': 'Cart',
     'nav.wishlist': 'Wishlist',
     'nav.login': 'Login',
@@ -268,6 +535,38 @@ const translations = {
     'hero.stats.tools': 'Premium Tools',
     'hero.stats.customers': 'Happy Customers',
     'hero.stats.experience': 'Years Experience',
+    
+    // Hero Tool Cards
+    'hero.tools.power.title': 'Power Tools',
+    'hero.tools.power.desc': 'Professional grade drills, saws, and more',
+    'hero.tools.smart.title': 'Smart Tools',
+    'hero.tools.smart.desc': 'IoT-enabled construction equipment',
+    'hero.tools.safety.title': 'Safety Gear',
+    'hero.tools.safety.desc': 'Advanced protection equipment',
+    'hero.tools.precision.title': 'Precision Tools',
+    'hero.tools.precision.desc': 'Laser-guided measuring tools',
+
+    // Featured Products
+    'featured.badge': 'Featured Products',
+    'featured.title': 'Professional Tools',
+    'featured.subtitle': 'Discover our hand-picked collection of premium construction tools, trusted by professionals worldwide for their quality and performance',
+    
+    // Featured Filters
+    'featured.filters.all': 'All Products',
+    'featured.filters.power': 'Power Tools',
+    'featured.filters.hand': 'Hand Tools',
+    'featured.filters.safety': 'Safety',
+    'featured.cant.find': 'Can\'t find what you\'re looking for?',
+    'featured.expert.section': 'Our experts are here to help you find the perfect tools for your specific needs',
+    'featured.custom.quote': 'Custom Quote',
+    'featured.contact.expert': 'Contact Expert',
+    
+    // Partners
+    'featured.partners.1': 'Partner 1',
+    'featured.partners.2': 'Partner 2',
+    'featured.partners.3': 'Partner 3',
+    'featured.partners.4': 'Partner 4',
+    'featured.trusted.companies': 'Trusted by Leading Construction Companies',
 
     // Products
     'products.title': 'Construction Tools Catalog',
@@ -275,6 +574,17 @@ const translations = {
     'products.showing': 'Showing',
     'products.of': 'of',
     'products.load.more': 'Load More',
+    
+    // Product Details
+    'product.not.found': 'Product Not Found',
+    'product.not.found.desc': 'The product you are looking for does not exist.',
+    'product.back.to.products': 'Back to Products',
+    'product.reviews': 'reviews',
+    'product.save': 'Save',
+    'product.features': 'Features',
+    'product.quantity': 'Quantity',
+    'product.specifications': 'Specifications',
+    'product.related': 'Related Products',
     'products.no.results': 'No Results Found',
     'products.filter.all': 'All',
     'products.filter.power-tools': 'Power Tools',
@@ -310,6 +620,33 @@ const translations = {
     'cart.promo.success.desc': 'You got 10% discount on your order',
     'cart.promo.error': 'Invalid Promo Code',
     'cart.promo.error.desc': 'Please check the promo code and try again',
+    'cart.recommended.title': 'You might also like',
+    'cart.recommended.subtitle': 'Complete your toolkit with these recommended items',
+    'cart.badge': 'Shopping Cart',
+    
+    // Cart Items
+    'cart.items.title': 'Cart Items',
+    'cart.save': 'Save',
+    
+    // Order Summary
+    'cart.summary.title': 'Order Summary',
+    'cart.summary.subtotal': 'Subtotal',
+    'cart.summary.savings': 'You Save',
+    'cart.summary.promo': 'Promo Discount',
+    'cart.summary.tax': 'Tax',
+    'cart.summary.shipping': 'Shipping',
+    'cart.summary.free': 'FREE',
+    'cart.summary.total': 'Total',
+    'cart.summary.free.shipping': 'Free shipping on orders over $500',
+    
+    // Promo Code
+    'cart.promo.label': 'Promo Code',
+    'cart.promo.applied': 'applied',
+    
+    // Checkout
+    'cart.checkout.button': 'Proceed to Checkout',
+    'cart.checkout.secure': 'Secure checkout guaranteed',
+    'cart.checkout.accept': 'We accept',
 
     // Auth
     'auth.login.title': 'Welcome Back',
@@ -345,6 +682,88 @@ const translations = {
     'about.values.reliability.desc': 'Count on us for consistent quality, timely delivery, and dependable service.',
     'about.explore.products': 'Explore Our Products',
     'about.contact.us': 'Contact Us',
+    'about.badge': 'About BS Construction Tools',
+    
+    // Team Members  
+    'about.team.ahmed.name': 'Ahmed Hassan',
+    'about.team.ahmed.role': 'Founder & CEO',
+    'about.team.ahmed.experience': '20+ years in construction',
+    'about.team.ahmed.specialty': 'Heavy Machinery Expert',
+    
+    'about.team.sarah.name': 'Sarah Mohammed',
+    'about.team.sarah.role': 'Head of Operations',
+    'about.team.sarah.experience': '15+ years in logistics',
+    'about.team.sarah.specialty': 'Supply Chain Management',
+    
+    'about.team.omar.name': 'Omar Ali',
+    'about.team.omar.role': 'Technical Director',
+    'about.team.omar.experience': '18+ years in engineering',
+    'about.team.omar.specialty': 'Power Tools Specialist',
+    
+    'about.team.fatima.name': 'Fatima Ahmed',
+    'about.team.fatima.role': 'Customer Success Manager',
+    'about.team.fatima.experience': '12+ years in customer service',
+    'about.team.fatima.specialty': 'Client Relations',
+    
+    // Milestones
+    'about.milestones.2009.event': 'BS Construction Tools founded',
+    'about.milestones.2009.desc': 'Started as a small family business',
+    'about.milestones.2012.event': 'First major contract',
+    'about.milestones.2012.desc': 'Supplied tools for mega construction project',
+    'about.milestones.2015.event': 'Expanded product line',
+    'about.milestones.2015.desc': 'Added safety equipment and measuring tools',
+    'about.milestones.2018.event': 'Digital transformation',
+    'about.milestones.2018.desc': 'Launched online platform and e-commerce',
+    'about.milestones.2021.event': 'International expansion',
+    'about.milestones.2021.desc': 'Started serving customers across the region',
+    'about.milestones.2024.event': 'Innovation hub launch',
+    'about.milestones.2024.desc': 'Opened R&D center for new technologies',
+    
+    // Story Section
+    'about.story.title': 'Our',
+    'about.story.highlight': 'Story',
+    'about.story.paragraph1': 'Founded in 2009 by a team of construction industry veterans, BS Construction Tools began with a simple vision: to provide builders with access to the highest quality tools and equipment available.',
+    'about.story.paragraph2': 'What started as a small family business has grown into a leading supplier of construction tools, serving thousands of contractors, builders, and DIY enthusiasts across the region.',
+    'about.story.paragraph3': 'Today, we continue to uphold our founding principles of quality, reliability, and exceptional customer service while embracing innovation and new technologies that help our customers work more efficiently and safely.',
+    'about.story.features.premium': 'Premium Tools',
+    'about.story.features.safety': 'Safety First',
+    'about.story.features.innovation': 'Innovation',
+    'about.story.features.excellence': 'Excellence',
+    
+    // Values Section  
+    'about.values.title': 'Our Core',
+    'about.values.highlight': 'Values',
+    'about.values.description': 'These principles guide everything we do and shape our relationships with customers, partners, and the communities we serve.',
+    
+    // Journey Section
+    'about.journey.title': 'Our',
+    'about.journey.highlight': 'Journey',
+    'about.journey.description': 'Key milestones that have shaped our company and defined our path to excellence',
+    
+    // Team Section
+    'about.team.title': 'Meet Our',
+    'about.team.highlight': 'Team',
+    'about.team.description': 'Experienced professionals dedicated to providing you with the best tools and service',
+    
+    // Certifications Section
+    'about.certifications.title': 'Certifications &',
+    'about.certifications.highlight': 'Partnerships',
+    'about.certifications.description': 'We maintain the highest industry standards and partner with leading manufacturers',
+    'about.certifications.iso.name': 'ISO 9001:2015',
+    'about.certifications.iso.desc': 'Quality Management',
+    'about.certifications.osha.name': 'OSHA Certified',
+    'about.certifications.osha.desc': 'Safety Standards',
+    'about.certifications.dewalt.name': 'DeWalt Partner',
+    'about.certifications.dewalt.desc': 'Authorized Dealer',
+    'about.certifications.leader.name': 'Industry Leader',
+    'about.certifications.leader.desc': 'Excellence Award',
+    
+    // CTA Section
+    'about.cta.title': 'Ready to Start Your Next Project?',
+    'about.cta.description': 'Join thousands of satisfied customers who trust BS Construction Tools for their projects',
+    'about.cta.shop': 'Shop Now',
+    'about.cta.browse': 'Browse Categories',
+    'about.home.badge': 'About BuildTools BS',
     'about.home.title': 'Building Tomorrow with',
     'about.home.highlight': 'Professional Tools',
     'about.home.desc': 'For over 25 years, we have been providing high-quality construction tools to professionals worldwide. Your trusted partner in every project.',
@@ -361,6 +780,11 @@ const translations = {
     'about.home.payment.desc': 'Multiple payment options including installments for bulk orders',
     'about.home.expert.title': 'Expert Support',
     'about.home.expert.desc': 'Professional consultation and technical support from our experts',
+    
+    // About Home Features
+    'about.home.features.premium': 'Premium quality tools from leading global brands',
+    'about.home.features.pricing': 'Competitive pricing with flexible payment options',
+    'about.home.features.support': 'Expert technical support and consultation services',
 
     // Categories
     'categories.title': 'Product Categories',
@@ -387,6 +811,30 @@ const translations = {
     'categories.heavy.desc': 'Industrial equipment for large projects',
     'categories.heavy.count': '40+ Machines',
     'categories.explore.title': 'Explore Our Tool Categories',
+    'categories.smart.title': 'Smart Tools',
+    'categories.smart.desc': 'IoT-enabled construction equipment',
+    'categories.precision.title': 'Precision Tools',
+    'categories.precision.desc': 'Laser-guided measuring tools',
+    'categories.browse': 'Browse Category',
+    'categories.featured.products': 'Featured Products',
+    'categories.view.all.products': 'View All Products',
+
+    // Featured Products
+    'featured.title': 'Professional Tool Collection',
+    'featured.subtitle': 'Discover our hand-picked selection of premium construction tools, trusted by professionals worldwide for their quality and performance',
+    'featured.cant.find': 'Can\'t Find What You\'re Looking For',
+    'featured.expert.section': 'Our experts are here to help you find the perfect tools for your specific needs',
+    'featured.custom.quote': 'Custom Quote',
+    'featured.contact.expert': 'Contact Expert',
+    
+    // Partners
+    'featured.partners.1': 'Partner 1',
+    'featured.partners.2': 'Partner 2',
+    'featured.partners.3': 'Partner 3', 
+    'featured.partners.4': 'Partner 4',
+    'featured.trusted.companies': 'Trusted by Leading Construction Companies',
+
+
 
     // Contact
     'contact.title': 'Get in Touch',
@@ -412,6 +860,80 @@ const translations = {
     'contact.form.phone.placeholder': 'Your phone number',
     'contact.form.company.placeholder': 'Your company name',
     'contact.form.success': 'Thank you! Your message has been sent successfully. We\'ll get back to you soon.',
+    'contact.badge': 'Contact Us',
+    
+    // Contact Info
+    'contact.info.office.title': 'Main Office',
+    'contact.info.office.street': '123 Construction Street',
+    'contact.info.office.district': 'Building District, City 12345',
+    'contact.info.office.country': 'Egypt',
+    'contact.info.phone.title': 'Phone Numbers',
+    'contact.info.phone.toll': 'Toll Free: 800-TOOLS',
+    'contact.info.email.title': 'Email Addresses',
+    'contact.info.hours.title': 'Business Hours',
+    'contact.info.hours.weekdays': 'Monday - Friday: 8:00 AM - 6:00 PM',
+    'contact.info.hours.saturday': 'Saturday: 9:00 AM - 4:00 PM',
+    'contact.info.hours.sunday': 'Sunday: Closed',
+    
+    // Departments
+    'contact.departments.sales.name': 'Sales Department',
+    'contact.departments.sales.desc': 'Product inquiries, quotes, and orders',
+    'contact.departments.support.name': 'Technical Support',
+    'contact.departments.support.desc': 'Product guidance and technical assistance',
+    'contact.departments.service.name': 'Customer Service',
+    'contact.departments.service.desc': 'General inquiries and customer care',
+    'contact.departments.partnerships.name': 'Partnerships',
+    'contact.departments.partnerships.desc': 'Business partnerships and collaborations',
+    
+    // Form Fields
+    'contact.form.project': 'Project Type',
+    'contact.form.subject': 'Subject',
+    'contact.form.message': 'Message',
+    'contact.form.subject.placeholder': 'How can we help you?',
+    'contact.form.project.residential': 'Residential',
+    'contact.form.project.commercial': 'Commercial',
+    'contact.form.project.industrial': 'Industrial',
+    'contact.form.project.infrastructure': 'Infrastructure',
+    'contact.form.project.renovation': 'Renovation',
+    'contact.form.project.other': 'Other',
+    'contact.form.message.placeholder': 'Tell us about your project requirements...',
+    
+    // Contact Info Section
+    'contact.info.title': 'Contact',
+    'contact.info.highlight': 'Information',
+    
+    // Map Section
+    'contact.map.title': 'Interactive Map',
+    'contact.map.desc': 'Find us on the map',
+    
+    // Departments Section  
+    'contact.departments.title': 'Contact by',
+    'contact.departments.highlight': 'Department',
+    'contact.departments.description': 'Reach out to the right department for faster and more specialized assistance',
+    
+    // FAQ Section
+    'contact.faq.title': 'Frequently Asked',
+    'contact.faq.highlight': 'Questions',
+    'contact.faq.description': 'Quick answers to common questions about our products and services',
+    'contact.faq.return.question': 'What is your return policy?',
+    'contact.faq.return.answer': 'We offer a 30-day return policy for unused items in original packaging. Professional tools have a 90-day warranty period.',
+    'contact.faq.bulk.question': 'Do you offer bulk discounts?',
+    'contact.faq.bulk.answer': 'Yes, we provide competitive bulk pricing for contractors and businesses. Contact our sales team for custom quotes.',
+    'contact.faq.shipping.question': 'How long does shipping take?',
+    'contact.faq.shipping.answer': 'Standard shipping takes 3-5 business days. Express shipping is available for urgent orders within 1-2 business days.',
+    'contact.faq.support.question': 'Do you provide technical support?',
+    'contact.faq.support.answer': 'Yes, our technical team provides full support for all products including installation guidance and troubleshooting.',
+    
+    // Social Media Section
+    'contact.social.title': 'Connect with',
+    'contact.social.highlight': 'Us',
+    'contact.social.description': 'Follow us on social media for updates, tips, and the latest construction industry news',
+    'contact.social.follow': 'Follow us on',
+    
+    // CTA Section
+    'contact.cta.title': 'Need Immediate Assistance?',
+    'contact.cta.call': 'Call Now',
+    'contact.cta.email': 'Email',
     'contact.form.sending': 'Sending Message...',
 
     // Language Toggle
@@ -439,9 +961,34 @@ const translations = {
     'footer.subscribe': 'Subscribe',
     'footer.rights': 'All rights reserved',
     'footer.privacy': 'Privacy Policy',
-    'footer.terms': 'Terms & Conditions',
+    'footer.terms': 'Terms of Service',
+    'footer.cookies': 'Cookie Policy',
+    'footer.sitemap': 'Sitemap',
     'footer.about.us': 'About Us',
     'footer.contact.us': 'Contact Us',
+    'footer.company.desc': 'Your trusted partner for professional construction tools and equipment. Building excellence, one project at a time since 1998.',
+    'footer.address': 'Construction Blvd, Industrial City 123',
+    'footer.phone': '123-4567 (555) 1+',
+    'footer.email': 'info@buildtools-bs.com',
+    
+    // Services
+    'footer.services.rental': 'Tool Rental',
+    'footer.services.maintenance': 'Equipment Maintenance',
+    'footer.services.support': 'Technical Support',
+    'footer.services.training': 'Training Programs',
+    'footer.services.custom': 'Custom Solutions',
+    
+    // Company
+    'footer.company.story': 'Our Story',
+    'footer.company.careers': 'Careers',
+    'footer.company.news': 'News & Updates',
+    'footer.company.partnerships': 'Partnerships',
+    
+    // Support
+    'footer.support.help': 'Help Center',
+    'footer.support.returns': 'Returns & Exchanges',
+    'footer.support.warranty': 'Warranty Claims',
+    'footer.support.track': 'Track Your Order',
   }
 };
 

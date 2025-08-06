@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import { mockProducts } from '../data/mockData';
+import { Product, getLocalizedText } from '../types/multilingual';
 
 interface CartItem {
   id: number;
@@ -28,9 +30,15 @@ interface PromoCode {
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, addToCart } = useCart();
   const { success, error, info } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    // Load recommended products from API (using first 4 products as recommendations)
+    setRecommendedProducts(mockProducts.slice(0, 4));
+  }, []);
 
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -68,7 +76,7 @@ export default function CartPage() {
       <section className="pt-24 pb-12 gradient-bg text-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-4">
-            🛒 Shopping Cart
+            🛒 {t('cart.badge')}
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             {t('cart.title')}
@@ -103,7 +111,7 @@ export default function CartPage() {
               {/* Cart Items */}
               <div className="lg:col-span-2">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Cart Items</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('cart.items.title')}</h2>
                   
                   <div className="space-y-6">
                     {cartItems.map((item) => (
@@ -133,7 +141,7 @@ export default function CartPage() {
                               <span className="text-xl font-bold text-gray-900">${item.price}</span>
                               <span className="text-sm text-gray-500 line-through">${item.originalPrice}</span>
                               <span className="text-xs text-green-600 font-semibold">
-                                Save ${item.originalPrice - item.price}
+                                {t('cart.save')} ${item.originalPrice - item.price}
                               </span>
                             </div>
                             
@@ -189,29 +197,29 @@ export default function CartPage() {
               {/* Order Summary */}
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 sticky top-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('cart.summary.title')}</h2>
                   
                   {/* Promo Code */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Promo Code</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('cart.promo.label')}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Enter code"
+                        placeholder={t('cart.promo.placeholder')}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       />
                       <button
                         onClick={applyPromoCode}
                         className="px-4 py-2 gradient-red text-white rounded-lg hover:shadow-lg transition-all duration-300 font-semibold"
                       >
-                        Apply
+                        {t('cart.promo.apply')}
                       </button>
                     </div>
                     {appliedPromo && (
                       <div className="mt-2 text-sm text-green-600 font-semibold">
-                        ✓ {appliedPromo.code} applied - {appliedPromo.description}
+                        ✓ {appliedPromo.code} {t('cart.promo.applied')} - {appliedPromo.description}
                       </div>
                     )}
                   </div>
@@ -219,41 +227,41 @@ export default function CartPage() {
                   {/* Price Breakdown */}
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-gray-600">
-                      <span>Subtotal</span>
+                      <span>{t('cart.summary.subtotal')}</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
                     
                     <div className="flex justify-between text-green-600">
-                      <span>You Save</span>
+                      <span>{t('cart.summary.savings')}</span>
                       <span>-${savings.toFixed(2)}</span>
                     </div>
                     
                     {appliedPromo && (
                       <div className="flex justify-between text-green-600">
-                        <span>Promo Discount</span>
+                        <span>{t('cart.summary.promo')}</span>
                         <span>-${promoDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     
                     <div className="flex justify-between text-gray-600">
-                      <span>Tax</span>
+                      <span>{t('cart.summary.tax')}</span>
                       <span>${tax.toFixed(2)}</span>
                     </div>
                     
                     <div className="flex justify-between text-gray-600">
-                      <span>Shipping</span>
-                      <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                      <span>{t('cart.summary.shipping')}</span>
+                      <span>{shipping === 0 ? t('cart.summary.free') : `$${shipping.toFixed(2)}`}</span>
                     </div>
                     
                     {shipping > 0 && (
                       <div className="text-xs text-gray-500">
-                        Free shipping on orders over $500
+                        {t('cart.summary.free.shipping')}
                       </div>
                     )}
                     
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between text-lg font-bold text-gray-900">
-                        <span>Total</span>
+                        <span>{t('cart.summary.total')}</span>
                         <span>${finalTotal.toFixed(2)}</span>
                       </div>
                     </div>
@@ -261,7 +269,7 @@ export default function CartPage() {
                   
                   {/* Checkout Button */}
                   <button className="w-full gradient-red text-white py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg mb-4">
-                    Proceed to Checkout
+                    {t('cart.checkout.button')}
                   </button>
                   
                   {/* Security Info */}
@@ -269,12 +277,12 @@ export default function CartPage() {
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    Secure checkout guaranteed
+                    {t('cart.checkout.secure')}
                   </div>
                   
                   {/* Payment Methods */}
                   <div className="mt-4 text-center">
-                    <p className="text-xs text-gray-500 mb-2">We accept</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('cart.checkout.accept')}</p>
                     <div className="flex justify-center space-x-2">
                       <div className="w-8 h-6 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">V</div>
                       <div className="w-8 h-6 bg-red-600 rounded text-white text-xs flex items-center justify-center font-bold">M</div>
@@ -295,38 +303,34 @@ export default function CartPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                You might also <span className="text-gradient">like</span>
+                {t('cart.recommended.title')}
               </h2>
-              <p className="text-gray-600">Complete your toolkit with these recommended items</p>
+              <p className="text-gray-600">{t('cart.recommended.subtitle')}</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { name: "Laser Distance Meter", price: "$89", image: "📐", badge: "Hot Deal" },
-                { name: "Heavy Duty Gloves", price: "$29", image: "🧤", badge: "Essential" },
-                { name: "Digital Multimeter", price: "$79", image: "📊", badge: "Tech" },
-                { name: "Industrial Wrench Set", price: "$159", image: "🔧", badge: "Complete" }
-              ].map((product, index) => (
-                <div key={index} className="card-hover bg-white rounded-xl shadow-lg p-4 text-center border border-gray-200">
+              {recommendedProducts.map((product, index) => (
+                <div key={product.id} className="card-hover bg-white rounded-xl shadow-lg p-4 text-center border border-gray-200">
                   <div className="text-4xl mb-3">{product.image}</div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{product.name}</h3>
-                  <div className="text-lg font-bold text-red-600 mb-3">{product.price}</div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{getLocalizedText(product.name, language)}</h3>
+                  <div className="text-lg font-bold text-red-600 mb-3">${product.price}</div>
                   <button 
                     onClick={() => {
                       // Add recommended product to cart
                       addToCart({
-                        id: Math.floor(Math.random() * 1000) + 100, // Generate unique ID
-                        name: product.name,
-                        price: parseInt(product.price.slice(1)),
-                        originalPrice: parseInt(product.price.slice(1)) + 20,
+                        id: product.id,
+                        name: getLocalizedText(product.name, language),
+                        price: product.price,
+                        originalPrice: product.originalPrice,
                         image: product.image,
-                        category: 'Tools',
-                        features: ['Professional Grade', 'Durable']
+                        category: product.category,
+                        features: product.features.map(f => getLocalizedText(f, language))
                       });
+                      success(t('toast.cart.added'), t('toast.cart.added.desc'));
                     }}
                     className="w-full gradient-red text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                   >
-                    Add to Cart
+                    {t('products.add.cart')}
                   </button>
                 </div>
               ))}
