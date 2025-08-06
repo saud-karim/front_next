@@ -92,6 +92,10 @@ const translations = {
     'cart.promo.placeholder': 'ادخل كود الخصم',
     'cart.promo.apply': 'تطبيق',
     'cart.checkout': 'إتمام الشراء',
+    'cart.promo.success': 'تم تطبيق الكوبون بنجاح',
+    'cart.promo.success.desc': 'حصلت على خصم 10% على طلبك',
+    'cart.promo.error': 'كوبون غير صالح',
+    'cart.promo.error.desc': 'الرجاء التحقق من رمز الكوبون والمحاولة مرة أخرى',
 
     // Auth
     'auth.login.title': 'مرحباً بك',
@@ -113,6 +117,25 @@ const translations = {
     'about.subtitle': 'لأكثر من 15 عاماً، كنا الشريك الموثوق للمهنيين في مجال البناء، ونقدم أدوات ومعدات متميزة تدعم أكثر المشاريع طموحاً في العالم.',
     'about.mission': 'مهمتنا',
     'about.mission.text': 'تمكين البناة والمقاولين بأدوات عالمية المستوى وخدمة استثنائية، مما يمكنهم من إنشاء هياكل رائعة تصمد أمام اختبار الزمن.',
+    'about.stats.experience': 'سنة خبرة',
+    'about.stats.customers': 'عميل سعيد',
+    'about.stats.projects': 'مشروع مكتمل',
+    'about.stats.support': 'دعم فني',
+    'about.values.quality.title': 'الجودة أولاً',
+    'about.values.quality.desc': 'نحصل على أفضل أدوات البناء من أوثق المصنعين في العالم.',
+    'about.values.support.title': 'دعم خبراء',
+    'about.values.support.desc': 'فريقنا من خبراء البناء يوفر الإرشاد المتخصص لجميع مشاريعك.',
+    'about.values.innovation.title': 'الابتكار',
+    'about.values.innovation.desc': 'نواكب اتجاهات الصناعة لنقدم لك أحدث تقنيات البناء.',
+    'about.values.reliability.title': 'الموثوقية',
+    'about.values.reliability.desc': 'اعتمد علينا للحصول على جودة ثابتة وتسليم في الوقت المحدد وخدمة يمكن الاعتماد عليها.',
+    'about.explore.products': 'استكشف منتجاتنا',
+    'about.contact.us': 'اتصل بنا',
+
+    // Categories
+    'categories.title': 'فئات المنتجات',
+    'categories.subtitle': 'تصفح مجموعتنا الواسعة من أدوات البناء المنظمة حسب الفئات للعثور على ما تحتاجه بسهولة.',
+    'categories.view.all': 'عرض جميع المنتجات',
 
     // Contact
     'contact.title': 'تواصل معنا',
@@ -215,6 +238,10 @@ const translations = {
     'cart.promo.placeholder': 'Enter promo code',
     'cart.promo.apply': 'Apply',
     'cart.checkout': 'Proceed to Checkout',
+    'cart.promo.success': 'Promo Code Applied',
+    'cart.promo.success.desc': 'You got 10% discount on your order',
+    'cart.promo.error': 'Invalid Promo Code',
+    'cart.promo.error.desc': 'Please check the promo code and try again',
 
     // Auth
     'auth.login.title': 'Welcome Back',
@@ -236,6 +263,25 @@ const translations = {
     'about.subtitle': 'For over 15 years, we\'ve been the trusted partner for construction professionals, providing premium tools and equipment that power the world\'s most ambitious projects.',
     'about.mission': 'Our Mission',
     'about.mission.text': 'To empower builders and contractors with world-class tools and exceptional service, enabling them to create remarkable structures that stand the test of time.',
+    'about.stats.experience': 'Years Experience',
+    'about.stats.customers': 'Happy Customers',
+    'about.stats.projects': 'Projects Completed',
+    'about.stats.support': 'Customer Support',
+    'about.values.quality.title': 'Quality First',
+    'about.values.quality.desc': 'We source only the finest construction tools from trusted manufacturers worldwide.',
+    'about.values.support.title': 'Expert Support',
+    'about.values.support.desc': 'Our team of construction professionals provides expert guidance for all your projects.',
+    'about.values.innovation.title': 'Innovation',
+    'about.values.innovation.desc': 'We stay ahead of industry trends, bringing you the latest in construction technology.',
+    'about.values.reliability.title': 'Reliability',
+    'about.values.reliability.desc': 'Count on us for consistent quality, timely delivery, and dependable service.',
+    'about.explore.products': 'Explore Our Products',
+    'about.contact.us': 'Contact Us',
+
+    // Categories
+    'categories.title': 'Product Categories',
+    'categories.subtitle': 'Browse our extensive collection of construction tools organized by category to easily find what you need.',
+    'categories.view.all': 'View All Products',
 
     // Contact
     'contact.title': 'Get in Touch',

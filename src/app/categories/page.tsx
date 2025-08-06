@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 interface Category {
   id: string;
@@ -30,6 +32,8 @@ interface Product {
 
 export default function CategoriesPage() {
   const { addToCart } = useCart();
+  const { t } = useLanguage();
+  const { success } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const handleAddToCart = (product: Product) => {

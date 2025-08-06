@@ -3,37 +3,40 @@
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AboutPage() {
+  const { t } = useLanguage();
+  
   const stats = [
-    { value: '15+', label: 'Years Experience', icon: '🏆' },
-    { value: '50K+', label: 'Happy Customers', icon: '👥' },
-    { value: '1000+', label: 'Projects Completed', icon: '🏗️' },
-    { value: '24/7', label: 'Customer Support', icon: '🛟' }
+    { value: '15+', label: t('about.stats.experience'), icon: '🏆' },
+    { value: '50K+', label: t('about.stats.customers'), icon: '👥' },
+    { value: '1000+', label: t('about.stats.projects'), icon: '🏗️' },
+    { value: '24/7', label: t('about.stats.support'), icon: '🛟' }
   ];
 
   const values = [
     {
-      title: 'Quality First',
-      description: 'We source only the finest construction tools from trusted manufacturers worldwide.',
+      title: t('about.values.quality.title'),
+      description: t('about.values.quality.desc'),
       icon: '⭐',
       color: 'from-yellow-500 to-orange-500'
     },
     {
-      title: 'Expert Support',
-      description: 'Our team of construction professionals provides expert guidance for all your projects.',
+      title: t('about.values.support.title'),
+      description: t('about.values.support.desc'),
       icon: '🎯',
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      title: 'Innovation',
-      description: 'We stay ahead of industry trends, bringing you the latest in construction technology.',
+      title: t('about.values.innovation.title'),
+      description: t('about.values.innovation.desc'),
       icon: '🚀',
       color: 'from-purple-500 to-pink-500'
     },
     {
-      title: 'Reliability',
-      description: 'Count on us for consistent quality, timely delivery, and dependable service.',
+      title: t('about.values.reliability.title'),
+      description: t('about.values.reliability.desc'),
       icon: '🛡️',
       color: 'from-green-500 to-emerald-500'
     }
@@ -92,21 +95,20 @@ export default function AboutPage() {
                 🏢 About BS Construction Tools
               </div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                Building <span className="text-gradient">Excellence</span> Together
+                {t('about.title')}
               </h1>
               <p className="text-xl text-gray-300 mb-8">
-                For over 15 years, we've been the trusted partner for construction professionals, 
-                providing premium tools and equipment that power the world's most ambitious projects.
+                {t('about.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link 
                   href="/products"
                   className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-center"
                 >
-                  Explore Our Products
+                  {t('about.explore.products')}
                 </Link>
                 <button className="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-gray-900 transition-all duration-300 font-semibold">
-                  Contact Us
+                  {t('about.contact.us')}
                 </button>
               </div>
             </div>
@@ -114,10 +116,9 @@ export default function AboutPage() {
               <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-2xl p-8 backdrop-blur-sm border border-white/10">
                 <div className="text-center">
                   <div className="text-6xl mb-4">🏗️</div>
-                  <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
+                  <h3 className="text-2xl font-bold mb-4">{t('about.mission')}</h3>
                   <p className="text-gray-300">
-                    To empower builders and contractors with world-class tools and exceptional service, 
-                    enabling them to create remarkable structures that stand the test of time.
+                    {t('about.mission.text')}
                   </p>
                 </div>
               </div>

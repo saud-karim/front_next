@@ -54,9 +54,9 @@ export default function CartPage() {
   const applyPromoCode = () => {
     if (promoCode.toUpperCase() === 'SAVE10') {
       setAppliedPromo({ code: 'SAVE10', discount: 0.1, description: '10% Off' });
-      success('تم تطبيق الكوبون بنجاح', 'حصلت على خصم 10% على طلبك');
+      success(t('cart.promo.success'), t('cart.promo.success.desc'));
     } else {
-      error('كوبون غير صالح', 'الرجاء التحقق من رمز الكوبون والمحاولة مرة أخرى');
+      error(t('cart.promo.error'), t('cart.promo.error.desc'));
     }
   };
 

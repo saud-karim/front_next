@@ -8,11 +8,13 @@ import Footer from '../components/Footer';
 import { useUser } from '../context/UserContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function WishlistPage() {
   const { user, isLoggedIn, removeFromWishlist } = useUser();
   const { addToCart } = useCart();
   const { success } = useToast();
+  const { t } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {

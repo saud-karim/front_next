@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useUser } from '../context/UserContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,6 +15,7 @@ export default function AuthPage() {
   const [success, setSuccess] = useState('');
   
   const { login, register } = useUser();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [loginData, setLoginData] = useState({
