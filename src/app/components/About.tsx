@@ -1,31 +1,36 @@
+'use client';
+
+import { useLanguage } from '../context/LanguageContext';
+
 export default function About() {
+  const { t } = useLanguage();
   const stats = [
-    { number: "25+", label: "Years Experience", icon: "🏆" },
-    { number: "50K+", label: "Happy Customers", icon: "😊" },
-    { number: "500+", label: "Premium Tools", icon: "🔧" },
-    { number: "24/7", label: "Customer Support", icon: "📞" }
+    { number: "25+", label: t('about.home.stats.experience'), icon: "🏆" },
+    { number: "50K+", label: t('about.home.stats.customers'), icon: "😊" },
+    { number: "500+", label: t('about.home.stats.tools'), icon: "🔧" },
+    { number: "24/7", label: t('about.home.stats.support'), icon: "📞" }
   ];
 
   const features = [
     {
       icon: "🚚",
-      title: "Fast Delivery",
-      description: "Same-day delivery available for orders placed before 2 PM"
+      title: t('about.home.delivery.title'),
+      description: t('about.home.delivery.desc')
     },
     {
       icon: "🛡️",
-      title: "Quality Guarantee",
-      description: "All tools come with manufacturer warranty and our quality promise"
+      title: t('about.home.quality.title'),
+      description: t('about.home.quality.desc')
     },
     {
       icon: "💳",
-      title: "Flexible Payment",
-      description: "Multiple payment options including installments for bulk orders"
+      title: t('about.home.payment.title'),
+      description: t('about.home.payment.desc')
     },
     {
       icon: "🔧",
-      title: "Expert Support",
-      description: "Professional consultation and technical support from our experts"
+      title: t('about.home.expert.title'),
+      description: t('about.home.expert.desc')
     }
   ];
 
@@ -46,16 +51,14 @@ export default function About() {
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Building Tomorrow with 
-                          <span className="block text-transparent bg-gradient-to-r from-red-300 to-red-500 bg-clip-text">
-              Professional Excellence
-            </span>
+              {t('about.home.title')} 
+              <span className="block text-transparent bg-gradient-to-r from-red-300 to-red-500 bg-clip-text">
+                {t('about.home.highlight')}
+              </span>
             </h2>
 
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              For over 25 years, we've been the trusted partner for construction professionals 
-              across the Middle East and North Africa. Our commitment to quality, innovation, 
-              and customer satisfaction drives everything we do.
+              {t('about.home.desc')}
             </p>
 
             <div className="space-y-4 mb-8">

@@ -147,27 +147,26 @@ export default function ContactPage() {
             📞 Contact Us
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Get in <span className="text-gradient">Touch</span>
+            {t('contact.title')}
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            Have questions about our products or need expert advice for your project? 
-            Our team is here to help you find the perfect tools and solutions.
+            {t('contact.subtitle')}
           </p>
           <div className="grid md:grid-cols-3 gap-6 mt-12">
             <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
               <div className="text-3xl mb-2">⚡</div>
-              <div className="font-bold mb-1">Quick Response</div>
-              <div className="text-sm text-gray-300">Within 2 hours</div>
+              <div className="font-bold mb-1">{t('contact.hero.quick')}</div>
+              <div className="text-sm text-gray-300">{t('contact.hero.quick.desc')}</div>
             </div>
             <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
               <div className="text-3xl mb-2">🎯</div>
-              <div className="font-bold mb-1">Expert Advice</div>
-              <div className="text-sm text-gray-300">Professional guidance</div>
+              <div className="font-bold mb-1">{t('contact.hero.expert')}</div>
+              <div className="text-sm text-gray-300">{t('contact.hero.expert.desc')}</div>
             </div>
             <div className="bg-white/10 rounded-xl p-6 backdrop-blur-sm">
               <div className="text-3xl mb-2">🛡️</div>
-              <div className="font-bold mb-1">Reliable Support</div>
-              <div className="text-sm text-gray-300">Always here to help</div>
+              <div className="font-bold mb-1">{t('contact.hero.support')}</div>
+              <div className="text-sm text-gray-300">{t('contact.hero.support.desc')}</div>
             </div>
           </div>
         </div>
@@ -181,18 +180,17 @@ export default function ContactPage() {
             {/* Contact Form */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Send us a <span className="text-gradient">Message</span>
+                {t('contact.form.title')}
               </h2>
               <p className="text-gray-600 mb-8">
-                Fill out the form below and we'll get back to you as soon as possible. 
-                For urgent matters, please call us directly.
+                {t('contact.form.subtitle')}
               </p>
 
               {submitStatus === 'success' && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
                   <div className="flex items-center">
                     <span className="mr-2">✅</span>
-                    Thank you! Your message has been sent successfully. We'll get back to you soon.
+{t('contact.form.success')}
                   </div>
                 </div>
               )}
@@ -201,7 +199,7 @@ export default function ContactPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name *
+                      {t('contact.form.name')} *
                     </label>
                     <input
                       type="text"
@@ -210,12 +208,12 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="Your full name"
+                      placeholder={t('contact.form.name.placeholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address *
+                      {t('contact.form.email')} *
                     </label>
                     <input
                       type="email"
@@ -224,7 +222,7 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="your.email@example.com"
+                      placeholder={t('contact.form.email.placeholder')}
                     />
                   </div>
                 </div>
@@ -232,7 +230,7 @@ export default function ContactPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
+                      {t('contact.form.phone')}
                     </label>
                     <input
                       type="tel"
@@ -240,12 +238,12 @@ export default function ContactPage() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="+20 123 456 7890"
+                      placeholder={t('contact.form.phone.placeholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company (Optional)
+                      {t('contact.form.company')}
                     </label>
                     <input
                       type="text"
@@ -253,7 +251,7 @@ export default function ContactPage() {
                       value={formData.company}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="Your company name"
+                      placeholder={t('contact.form.company.placeholder')}
                     />
                   </div>
                 </div>
@@ -320,10 +318,10 @@ export default function ContactPage() {
                   {isSubmitting ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Sending Message...
+                      {t('contact.form.sending')}
                     </div>
                   ) : (
-                    'Send Message'
+                    t('contact.send')
                   )}
                 </button>
               </form>

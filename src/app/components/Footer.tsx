@@ -1,21 +1,25 @@
+'use client';
+
 import Link from 'next/link';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const footerSections = [
     {
-      title: "Products",
+      title: t('footer.products'),
       links: [
-        { name: "Power Tools", href: "/products/power-tools" },
-        { name: "Hand Tools", href: "/products/hand-tools" },
-        { name: "Safety Equipment", href: "/products/safety" },
-        { name: "Measuring Tools", href: "/products/measuring" },
-        { name: "Construction Materials", href: "/products/materials" }
+        { name: t('categories.power.title'), href: "/products/power-tools" },
+        { name: t('categories.hand.title'), href: "/products/hand-tools" },
+        { name: t('categories.safety.title'), href: "/products/safety" },
+        { name: t('categories.measuring.title'), href: "/products/measuring" },
+        { name: t('categories.materials.title'), href: "/products/materials" }
       ]
     },
     {
-      title: "Services",
+      title: t('footer.services'),
       links: [
         { name: "Tool Rental", href: "/services/rental" },
         { name: "Equipment Maintenance", href: "/services/maintenance" },
@@ -25,9 +29,9 @@ export default function Footer() {
       ]
     },
     {
-      title: "Company",
+      title: t('footer.company'),
       links: [
-        { name: "About Us", href: "/about" },
+        { name: t('footer.about.us'), href: "/about" },
         { name: "Our Story", href: "/story" },
         { name: "Careers", href: "/careers" },
         { name: "News & Updates", href: "/news" },
@@ -35,9 +39,9 @@ export default function Footer() {
       ]
     },
     {
-      title: "Support",
+      title: t('footer.support'),
       links: [
-        { name: "Contact Us", href: "/contact" },
+        { name: t('footer.contact.us'), href: "/contact" },
         { name: "Help Center", href: "/help" },
         { name: "Returns & Exchanges", href: "/returns" },
         { name: "Warranty Claims", href: "/warranty" },

@@ -119,16 +119,13 @@ export default function AuthPage() {
       <section className="pt-24 pb-16 gradient-bg text-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-6">
-            🔐 {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+🔐 {isLogin ? t('auth.login.title') : t('auth.register.title')}
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            {isLogin ? 'مرحباً' : 'انضم'} <span className="text-gradient">بك</span>
+            {isLogin ? t('auth.login.title') : t('auth.register.title')}
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            {isLogin 
-              ? 'سجل دخولك للوصول إلى حسابك وإدارة طلباتك وقائمة الأمنيات'
-              : 'أنشئ حسابك الجديد واستمتع بخدماتنا المتميزة وعروضنا الحصرية'
-            }
+            {isLogin ? t('auth.login.subtitle') : t('auth.register.subtitle')}
           </p>
         </div>
       </section>

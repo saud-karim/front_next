@@ -1,61 +1,66 @@
+'use client';
+
+import { useLanguage } from '../context/LanguageContext';
+
 export default function Categories() {
+  const { t } = useLanguage();
   const categories = [
     {
       id: 1,
-      name: "Power Tools",
-      description: "Professional electric and battery-powered tools",
+      name: t('categories.power.title'),
+      description: t('categories.power.desc'),
       icon: "🔋",
-      count: "120+ Tools",
+      count: t('categories.power.count'),
       color: "from-orange-500 to-red-500",
       bgColor: "bg-orange-50",
       items: ["Drills", "Saws", "Grinders", "Sanders"]
     },
     {
       id: 2,
-      name: "Hand Tools",
-      description: "Essential manual tools for every project",
+      name: t('categories.hand.title'),
+      description: t('categories.hand.desc'),
       icon: "🔨",
-      count: "200+ Tools",
+      count: t('categories.hand.count'),
       color: "from-teal-500 to-cyan-500",
       bgColor: "bg-teal-50",
       items: ["Hammers", "Wrenches", "Pliers", "Screwdrivers"]
     },
     {
       id: 3,
-      name: "Safety Equipment",
-      description: "Advanced protection gear for construction",
+      name: t('categories.safety.title'),
+      description: t('categories.safety.desc'),
       icon: "🛡️",
-      count: "80+ Items",
+      count: t('categories.safety.count'),
       color: "from-yellow-500 to-orange-500",
       bgColor: "bg-yellow-50",
       items: ["Helmets", "Gloves", "Goggles", "Harnesses"]
     },
     {
       id: 4,
-      name: "Measuring Tools",
-      description: "Precision instruments for accurate work",
+      name: t('categories.measuring.title'),
+      description: t('categories.measuring.desc'),
       icon: "📐",
-      count: "50+ Tools",
+      count: t('categories.measuring.count'),
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-purple-50",
       items: ["Tape Measures", "Levels", "Calipers", "Laser Tools"]
     },
     {
       id: 5,
-      name: "Construction Materials",
-      description: "Quality materials for building projects",
+      name: t('categories.materials.title'),
+      description: t('categories.materials.desc'),
       icon: "🧱",
-      count: "300+ Items",
+      count: t('categories.materials.count'),
       color: "from-gray-500 to-gray-700",
       bgColor: "bg-gray-50",
       items: ["Cement", "Steel", "Blocks", "Pipes"]
     },
     {
       id: 6,
-      name: "Heavy Machinery",
-      description: "Industrial equipment for large projects",
+      name: t('categories.heavy.title'),
+      description: t('categories.heavy.desc'),
       icon: "🚜",
-      count: "40+ Machines",
+      count: t('categories.heavy.count'),
       color: "from-blue-500 to-indigo-500",
       bgColor: "bg-blue-50",
       items: ["Excavators", "Cranes", "Loaders", "Mixers"]
@@ -71,11 +76,10 @@ export default function Categories() {
             🏗️ Product Categories
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Explore Our <span className="text-gradient">Tool Categories</span>
+            {t('categories.home.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            From professional power tools to precision instruments, find everything you need 
-            for your construction projects in our comprehensive categories.
+            {t('categories.home.subtitle')}
           </p>
         </div>
 
