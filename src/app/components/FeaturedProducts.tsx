@@ -3,73 +3,138 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '../context/CartContext';
-import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { mockProducts } from '../data/mockData';
-import { Product, getLocalizedText } from '../types/multilingual';
+import { ApiService } from '../services/api';
+import { Product } from '../types/api';
 
 export default function FeaturedProducts() {
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState<number | 'all'>('all');
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<{id: number; name: string}[]>([]);
+  const [wishlist, setWishlist] = useState<number[]>([]);
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist, isLoggedIn } = useUser();
+  const { isAuthenticated } = useAuth();
   const { success, warning } = useToast();
   const { t, language } = useLanguage();
 
   useEffect(() => {
-    // Simulate API call - in real app this would fetch from backend
-    setApiProducts(mockProducts);
-  }, []);
+    fetchFeaturedProducts();
+    fetchCategories();
+    if (isAuthenticated) {
+      fetchWishlist();
+    }
+  }, [isAuthenticated]);
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      name: getLocalizedText(product.name, language),
-      price: product.price,
-      originalPrice: product.originalPrice,
-      image: product.image,
-      category: product.category,
-      features: product.features.map(f => getLocalizedText(f, language))
-    });
-    success(t('toast.cart.added'), t('toast.cart.added.desc'));
+  const fetchFeaturedProducts = async () => {
+    try {
+      const response = await ApiService.getProducts({ per_page: 8 }); // Use regular products API for featured
+      console.log('🌟 Products API Response:', response);
+      
+      // البيانات في response.data مباشرة
+      if (response.data && Array.isArray(response.data)) {
+        console.log('🌟 Products extracted:', response.data.length, 'items');
+        setApiProducts(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch featured products:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleWishlistToggle = (product: Product) => {
-    if (!isLoggedIn) {
+  const fetchCategories = async () => {
+    try {
+      const response = await ApiService.getCategories();
+      console.log('📂 Categories API Response:', response);
+      
+      // Categories - البيانات في response.data مباشرة  
+      if (response.data && Array.isArray(response.data)) {
+        console.log('📂 Categories extracted:', response.data.length, 'items');
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    try {
+      const response = await ApiService.getWishlist();
+      
+      if (response.data && Array.isArray(response.data)) {
+        const wishlistIds = response.data.map((item: any) => item.product_id || item.id);
+        setWishlist(wishlistIds);
+      } else {
+        setWishlist([]);
+      }
+    } catch (error) {
+      setWishlist([]);
+    }
+  };
+
+  const handleAddToCart = async (product: Product) => {
+    if (!isAuthenticated) {
       warning(t('toast.login.required'), t('toast.login.required.desc'));
       return;
     }
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+    
+    const success_cart = await addToCart(product.id, 1);
+    if (success_cart) {
+    success(t('toast.cart.added'), t('toast.cart.added.desc'));
+    }
+  };
+
+  const handleWishlistToggle = async (product: Product) => {
+    if (!isAuthenticated) {
+      warning(t('toast.login.required'), t('toast.login.required.desc'));
+      return;
+    }
+
+    const isInWishlist = wishlist.includes(product.id);
+    
+    try {
+      if (isInWishlist) {
+        await ApiService.removeFromWishlist(product.id);
+        setWishlist(prev => prev.filter(id => id !== product.id));
       success(t('toast.wishlist.removed'), t('toast.wishlist.removed.desc'));
     } else {
-      addToWishlist({
-        id: product.id,
-        name: getLocalizedText(product.name, language),
-        price: `$${product.price}`,
-        originalPrice: `$${product.originalPrice}`,
-        image: product.image,
-        category: product.category,
-        rating: product.rating,
-        reviews: product.reviews,
-        badge: getLocalizedText(product.badge, language),
-        badgeColor: product.badgeColor
-      });
+        await ApiService.addToWishlist(product.id);
+        setWishlist(prev => [...prev, product.id]);
       success(t('toast.wishlist.added'), t('toast.wishlist.added.desc'));
+      }
+    } catch (error) {
+      console.error('Wishlist operation failed:', error);
     }
   };
 
   const filteredProducts = apiProducts.filter(product => 
-    activeFilter === 'all' || product.category === activeFilter
+    activeFilter === 'all' || product.category.id === activeFilter
   );
 
   const filters = [
     { id: 'all', name: t('featured.filters.all'), count: apiProducts.length },
-    { id: 'power-tools', name: t('featured.filters.power'), count: apiProducts.filter(p => p.category === 'power-tools').length },
-    { id: 'hand-tools', name: t('featured.filters.hand'), count: apiProducts.filter(p => p.category === 'hand-tools').length },
-    { id: 'safety', name: t('featured.filters.safety'), count: apiProducts.filter(p => p.category === 'safety').length }
+    ...categories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      count: apiProducts.filter(p => p.category.id === cat.id).length
+    }))
   ];
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading featured products...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-white">
@@ -92,7 +157,7 @@ export default function FeaturedProducts() {
           {filters.map((filter) => (
             <button
               key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
+              onClick={() => setActiveFilter(filter.id as number | 'all')}
               className={`px-6 py-3 rounded-full font-medium text-sm transition-all duration-300 ${
                 activeFilter === filter.id
                   ? 'gradient-red text-white shadow-lg'
@@ -116,15 +181,25 @@ export default function FeaturedProducts() {
             >
               {/* Product Image & Badge */}
               <div className="relative p-8 bg-gradient-to-br from-gray-50 to-gray-100 text-center">
-                <div className={`absolute top-4 left-4 ${product.badgeColor} text-white text-xs font-bold px-3 py-1 rounded-full`}>
-                  {getLocalizedText(product.badge, language)}
+                <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  Featured
                 </div>
-                <div className="text-6xl mb-4">{product.image}</div>
+                <div className="w-32 h-32 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                  {product.images && product.images.length > 0 ? (
+                    <img 
+                      src={product.images[0]} 
+                      alt={product.name}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <span className="text-4xl">📦</span>
+                  )}
+                </div>
                 <div className="absolute top-4 right-4">
                   <button 
                     onClick={() => handleWishlistToggle(product)}
                     className={`w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center transition-colors ${
-                      isInWishlist(product.id) ? 'text-red-600' : 'text-gray-400 hover:text-red-600'
+                      wishlist.includes(product.id) ? 'text-red-600' : 'text-gray-400 hover:text-red-600'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -136,6 +211,18 @@ export default function FeaturedProducts() {
 
               {/* Product Info */}
               <div className="p-6">
+                {/* Category */}
+                {product.category && (
+                  <div className="mb-3">
+                    <Link 
+                      href={`/categories/${product.category.id}`}
+                      className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full hover:bg-blue-200 transition-colors"
+                    >
+                      📂 {product.category.name}
+                    </Link>
+                  </div>
+                )}
+
                 {/* Rating */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center">
@@ -147,32 +234,44 @@ export default function FeaturedProducts() {
                       ))}
                     </div>
                     <span className="text-sm text-gray-600 ml-2">
-                      {product.rating} ({product.reviews})
+                      {product.rating || 5.0} ({product.reviews_count || 0})
                     </span>
                   </div>
                 </div>
 
                 {/* Product Name */}
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors">
-                  {getLocalizedText(product.name, language)}
+                  {product.name}
                 </h3>
 
-                {/* Features */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {product.features.slice(0, 4).map((feature, i) => (
-                    <div key={i} className="flex items-center text-sm text-gray-600">
-                      <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                      {getLocalizedText(feature, language)}
-                    </div>
-                  ))}
+                {/* Description */}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {product.description}
+                  </p>
                 </div>
+
+                {/* Supplier */}
+                {product.supplier && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">المورد:</span>
+                      <span className="text-sm text-gray-700 font-medium">{product.supplier.name}</span>
+                      {product.supplier.rating && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-500 text-sm">⭐</span>
+                          <span className="text-sm text-gray-600">{product.supplier.rating}</span>
+                        </div>
+                      )}
+                    </div>
+                </div>
+                )}
 
                 {/* Price */}
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-2xl font-bold text-gray-900">${product.price}</span>
-                  <span className="text-lg text-gray-500 line-through">${product.originalPrice}</span>
                   <span className="text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
-                    Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                    Stock: {product.stock}
                   </span>
                 </div>
 

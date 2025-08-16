@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { LanguageManager } from '../services/api';
 
 export type Language = 'ar' | 'en';
 
@@ -993,19 +994,22 @@ const translations = {
 };
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('ar');
+  const [language, setLanguage] = useState<Language>(() => {
+    // Initialize from LanguageManager
+    return LanguageManager.getCurrentLang() as Language;
+  });
 
   // Load language from localStorage on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'ar' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
+    const currentLang = LanguageManager.getCurrentLang() as Language;
+    if (currentLang && (currentLang === 'ar' || currentLang === 'en')) {
+      setLanguage(currentLang);
     }
   }, []);
 
   // Save language to localStorage and update document direction
   useEffect(() => {
-    localStorage.setItem('language', language);
+    localStorage.setItem('app_language', language);
     
     // Update document direction and language
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
@@ -1020,9 +1024,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return translations[language][key as keyof typeof translations[typeof language]] || key;
   };
 
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    LanguageManager.setLanguage(lang);
+  };
+
   const value = {
     language,
-    setLanguage,
+    setLanguage: handleSetLanguage,
     t,
     isRTL: language === 'ar'
   };

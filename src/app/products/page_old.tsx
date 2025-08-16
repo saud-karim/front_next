@@ -9,7 +9,6 @@ import { useCart } from '../context/CartContext';
 import { useUser } from '../context/UserContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { mockProducts } from '../data/mockData';
 import { Product as MultilingualProduct, getLocalizedText } from '../types/multilingual';
 
 export default function ProductsPage() {

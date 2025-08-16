@@ -5,66 +5,91 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { mockProducts } from '../data/mockData';
-import { Product, getLocalizedText } from '../types/multilingual';
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice: number;
-  quantity: number;
-  image: string;
-  category: string;
-  features: string[];
-}
-
-interface PromoCode {
-  code: string;
-  discount: number;
-  description: string;
-}
+import { ApiService } from '../services/api';
+import { Product } from '../types/api';
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, addToCart } = useCart();
+  const { cart, loading, updateCartItem, removeFromCart, applyCoupon, removeCoupon, refreshCart, addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const { success, error, info } = useToast();
   const { t, language } = useLanguage();
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Load recommended products from API (using first 4 products as recommendations)
-    setRecommendedProducts(mockProducts.slice(0, 4));
+    fetchRecommendedProducts();
   }, []);
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const originalTotal = cartItems.reduce((sum, item) => sum + (item.originalPrice * item.quantity), 0);
-  const savings = originalTotal - subtotal;
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = subtotal > 500 ? 0 : 29; // Free shipping over $500
-  const promoDiscount = appliedPromo ? subtotal * 0.1 : 0; // 10% promo discount
-  const finalTotal = subtotal + tax + shipping - promoDiscount;
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCart();
+    }
+  }, [isAuthenticated]);
+
+  const fetchRecommendedProducts = async () => {
+    try {
+      const response = await ApiService.getProducts({ per_page: 4 });
+      
+      if (response.data && Array.isArray(response.data)) {
+        setRecommendedProducts(response.data);
+      } else {
+        setRecommendedProducts([]);
+      }
+    } catch (error) {
+      setRecommendedProducts([]);
+    }
+  };
+
+  // Use cart data from API
+  const subtotal = cart?.subtotal || 0;
+  const shipping = cart?.shipping || 0;
+  const total = cart?.total || 0;
+  const discount = cart?.discount || 0;
+  const itemsCount = cart?.items_count || 0;
 
   // Helper function to handle quantity updates
-  const handleQuantityUpdate = (id: number, newQuantity: number) => {
+  const handleQuantityUpdate = async (productId: number, newQuantity: number) => {
+    if (!isAuthenticated) return;
+    
     if (newQuantity <= 0) {
-      removeFromCart(id);
+      const success_remove = await removeFromCart(productId);
+      if (success_remove) {
+        success('تم حذف المنتج من السلة', '');
+      }
       return;
     }
-    updateQuantity(id, newQuantity);
+    
+    const success_update = await updateCartItem(productId, newQuantity);
+    if (success_update) {
+      success('تم تحديث الكمية', '');
+    }
   };
 
   // Apply promo code
-  const applyPromoCode = () => {
-    if (promoCode.toUpperCase() === 'SAVE10') {
-      setAppliedPromo({ code: 'SAVE10', discount: 0.1, description: '10% Off' });
-      success(t('cart.promo.success'), t('cart.promo.success.desc'));
+  const applyPromoCode = async () => {
+    if (!isAuthenticated) {
+      error('يجب تسجيل الدخول أولاً', '');
+      return;
+    }
+
+    const success_coupon = await applyCoupon(promoCode);
+    if (success_coupon) {
+      success('تم تطبيق الكوبون بنجاح', '');
+      setPromoCode('');
     } else {
-      error(t('cart.promo.error'), t('cart.promo.error.desc'));
+      error('كوبون غير صالح', 'تأكد من صحة كود الكوبون');
+    }
+  };
+
+  const removeCouponCode = async () => {
+    if (!isAuthenticated) return;
+    
+    const success_remove = await removeCoupon();
+    if (success_remove) {
+      success('تم إزالة الكوبون', '');
     }
   };
 
@@ -85,12 +110,37 @@ export default function CartPage() {
             {t('cart.subtitle')}
           </p>
           <div className="text-sm text-gray-400">
-            {cartItems.length} {t('cart.items')}
+            {itemsCount} {t('cart.items')}
           </div>
         </div>
       </section>
 
-      {cartItems.length === 0 ? (
+      {!isAuthenticated ? (
+        // Not Logged In
+        <section className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto text-center px-6 lg:px-8">
+            <div className="text-8xl mb-8">🔐</div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">يجب تسجيل الدخول</h2>
+            <p className="text-xl text-gray-600 mb-8">
+              قم بتسجيل الدخول لعرض سلة التسوق الخاصة بك
+            </p>
+            <Link 
+              href="/auth"
+              className="gradient-red text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transition-all duration-300 shadow-md"
+            >
+              تسجيل الدخول
+            </Link>
+          </div>
+        </section>
+      ) : loading ? (
+        // Loading
+        <section className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto text-center px-6 lg:px-8">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">جاري تحميل السلة...</p>
+          </div>
+        </section>
+      ) : !cart || itemsCount === 0 ? (
         // Empty Cart
         <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
@@ -114,41 +164,60 @@ export default function CartPage() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('cart.items.title')}</h2>
                   
                   <div className="space-y-6">
-                    {cartItems.map((item) => (
+                    {cart.items.map((item) => (
                       <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         {/* Product Image */}
-                        <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-3xl">
-                          {item.image}
+                        <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                          {item.product.image ? (
+                            <img 
+                              src={item.product.image} 
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded-xl"
+                            />
+                          ) : (
+                            <span className="text-3xl">📦</span>
+                          )}
                         </div>
                         
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
-                          <p className="text-sm text-gray-600 mb-2">{item.category}</p>
-                          
-                          {/* Features */}
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {item.features.slice(0, 2).map((feature, index) => (
-                              <span key={index} className="text-xs bg-white px-2 py-1 rounded-full text-gray-600">
-                                {feature}
-                              </span>
-                            ))}
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.product.name}</h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-sm text-gray-600">ID: {item.product.id}</p>
+                            {item.product.category && (
+                              <>
+                                <span className="text-gray-400">•</span>
+                                <Link 
+                                  href={`/categories/${item.product.category.id}`}
+                                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                >
+                                  📂 {item.product.category.name}
+                                </Link>
+                              </>
+                            )}
                           </div>
+                          {item.product.supplier && (
+                            <p className="text-xs text-gray-500 mb-2">
+                              المورد: {item.product.supplier.name}
+                              {item.product.supplier.rating && (
+                                <span className="ml-1">⭐ {item.product.supplier.rating}</span>
+                              )}
+                            </p>
+                          )}
                           
                           {/* Price and Quantity */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <span className="text-xl font-bold text-gray-900">${item.price}</span>
-                              <span className="text-sm text-gray-500 line-through">${item.originalPrice}</span>
-                              <span className="text-xs text-green-600 font-semibold">
-                                {t('cart.save')} ${item.originalPrice - item.price}
+                              <span className="text-xl font-bold text-gray-900">${item.product.price}</span>
+                              <span className="text-xs text-gray-600">
+                                × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
                               </span>
                             </div>
                             
                             {/* Quantity Controls */}
                             <div className="flex items-center gap-3">
                               <button
-                                onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
+                                onClick={() => handleQuantityUpdate(item.product_id, item.quantity - 1)}
                                 className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +226,7 @@ export default function CartPage() {
                               </button>
                               <span className="w-8 text-center font-semibold">{item.quantity}</span>
                               <button
-                                onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
+                                onClick={() => handleQuantityUpdate(item.product_id, item.quantity + 1)}
                                 className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +234,7 @@ export default function CartPage() {
                                 </svg>
                               </button>
                               <button
-                                onClick={() => removeFromCart(item.id)}
+                                onClick={() => handleQuantityUpdate(item.product_id, 0)}
                                 className="ml-2 w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,9 +286,9 @@ export default function CartPage() {
                         {t('cart.promo.apply')}
                       </button>
                     </div>
-                    {appliedPromo && (
+                    {discount > 0 && (
                       <div className="mt-2 text-sm text-green-600 font-semibold">
-                        ✓ {appliedPromo.code} {t('cart.promo.applied')} - {appliedPromo.description}
+                        ✓ تم تطبيق الكوبون بنجاح
                       </div>
                     )}
                   </div>
@@ -231,22 +300,12 @@ export default function CartPage() {
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
                     
-                    <div className="flex justify-between text-green-600">
-                      <span>{t('cart.summary.savings')}</span>
-                      <span>-${savings.toFixed(2)}</span>
-                    </div>
-                    
-                    {appliedPromo && (
+                    {discount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>{t('cart.summary.promo')}</span>
-                        <span>-${promoDiscount.toFixed(2)}</span>
+                        <span>خصم الكوبون</span>
+                        <span>-${discount.toFixed(2)}</span>
                       </div>
                     )}
-                    
-                    <div className="flex justify-between text-gray-600">
-                      <span>{t('cart.summary.tax')}</span>
-                      <span>${tax.toFixed(2)}</span>
-                    </div>
                     
                     <div className="flex justify-between text-gray-600">
                       <span>{t('cart.summary.shipping')}</span>
@@ -255,16 +314,31 @@ export default function CartPage() {
                     
                     {shipping > 0 && (
                       <div className="text-xs text-gray-500">
-                        {t('cart.summary.free.shipping')}
+                        شحن مجاني للطلبات أكثر من $500
                       </div>
                     )}
                     
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between text-lg font-bold text-gray-900">
                         <span>{t('cart.summary.total')}</span>
-                        <span>${finalTotal.toFixed(2)}</span>
+                        <span>${total.toFixed(2)}</span>
                       </div>
                     </div>
+
+                    {/* Applied Coupon Display */}
+                    {discount > 0 && (
+                      <div className="mt-2 p-2 bg-green-50 rounded-lg">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-green-600 font-semibold">✓ تم تطبيق الكوبون</span>
+                          <button
+                            onClick={removeCouponCode}
+                            className="text-red-600 hover:text-red-700 font-semibold"
+                          >
+                            إزالة
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Checkout Button */}
@@ -298,39 +372,42 @@ export default function CartPage() {
       )}
       
       {/* Recommended Products */}
-      {cartItems.length > 0 && (
+      {isAuthenticated && itemsCount > 0 && (
         <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                {t('cart.recommended.title')}
+                منتجات مقترحة لك
               </h2>
-              <p className="text-gray-600">{t('cart.recommended.subtitle')}</p>
+              <p className="text-gray-600">منتجات قد تنال إعجابك</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recommendedProducts.map((product, index) => (
+              {recommendedProducts.map((product) => (
                 <div key={product.id} className="card-hover bg-white rounded-xl shadow-lg p-4 text-center border border-gray-200">
-                  <div className="text-4xl mb-3">{product.image}</div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{getLocalizedText(product.name, language)}</h3>
+                  <div className="w-20 h-20 mx-auto mb-3 bg-gray-200 rounded-lg flex items-center justify-center">
+                    {product.images && product.images.length > 0 ? (
+                      <img 
+                        src={product.images[0]} 
+                        alt={product.name}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <span className="text-4xl">📦</span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
                   <div className="text-lg font-bold text-red-600 mb-3">${product.price}</div>
                   <button 
-                    onClick={() => {
-                      // Add recommended product to cart
-                      addToCart({
-                        id: product.id,
-                        name: getLocalizedText(product.name, language),
-                        price: product.price,
-                        originalPrice: product.originalPrice,
-                        image: product.image,
-                        category: product.category,
-                        features: product.features.map(f => getLocalizedText(f, language))
-                      });
-                      success(t('toast.cart.added'), t('toast.cart.added.desc'));
+                    onClick={async () => {
+                      const success_add = await addToCart(product.id, 1);
+                      if (success_add) {
+                        success('تم إضافة المنتج للسلة', '');
+                      }
                     }}
                     className="w-full gradient-red text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                   >
-                    {t('products.add.cart')}
+                    إضافة للسلة
                   </button>
                 </div>
               ))}

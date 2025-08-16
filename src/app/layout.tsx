@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
-import { UserProvider } from "./context/UserContext";
+import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { LanguageProvider } from "./context/LanguageContext";
 
@@ -33,11 +33,11 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <ToastProvider>
-            <UserProvider>
+            <AuthProvider>
               <CartProvider>
         {children}
               </CartProvider>
-            </UserProvider>
+            </AuthProvider>
           </ToastProvider>
         </LanguageProvider>
       </body>

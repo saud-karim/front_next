@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function AuthPage() {
@@ -14,7 +14,7 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const { login, register } = useUser();
+  const { login, register } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
 
@@ -58,12 +58,13 @@ export default function AuthPage() {
       if (success) {
         setSuccess('تم تسجيل الدخول بنجاح!');
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 1500);
       } else {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('حدث خطأ أثناء تسجيل الدخول');
     } finally {
       setIsLoading(false);
@@ -92,19 +93,21 @@ export default function AuthPage() {
         name: registerData.name,
         email: registerData.email,
         password: registerData.password,
+        password_confirmation: registerData.confirmPassword,
         phone: registerData.phone,
-        company: registerData.company
+        address: registerData.company // Using company field as address for now
       });
 
       if (success) {
         setSuccess('تم إنشاء الحساب بنجاح!');
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 1500);
       } else {
         setError('المستخدم موجود بالفعل');
       }
     } catch (err) {
+      console.error('Register error:', err);
       setError('حدث خطأ أثناء إنشاء الحساب');
     } finally {
       setIsLoading(false);

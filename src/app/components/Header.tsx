@@ -1,18 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '../context/CartContext';
-import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { ApiService } from '../services/api';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { getTotalItems } = useCart();
-  const { user, isLoggedIn, logout } = useUser();
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const { itemsCount } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const { language, setLanguage, t, isRTL } = useLanguage();
-  const totalItems = getTotalItems();
+
+  // Fetch wishlist count when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchWishlistCount();
+    } else {
+      setWishlistCount(0);
+    }
+  }, [isAuthenticated]);
+
+  const fetchWishlistCount = async () => {
+    try {
+      const response = await ApiService.getWishlist();
+      
+      if (response.data && Array.isArray(response.data)) {
+        setWishlistCount(response.data.length);
+      } else {
+        setWishlistCount(0);
+      }
+    } catch (error) {
+      setWishlistCount(0);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 dark-glass-effect">
@@ -78,9 +102,9 @@ export default function Header() {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              {isLoggedIn && user && Array.isArray(user.wishlist) && user.wishlist.length > 0 && (
+              {isAuthenticated && wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {user.wishlist.length}
+                  {wishlistCount}
                 </span>
               )}
             </Link>
@@ -90,15 +114,17 @@ export default function Header() {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H21M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8" />
               </svg>
-              {totalItems > 0 && (
+              {itemsCount > 0 && (
                 <span className="absolute -top-1 -right-1 gradient-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {totalItems}
+                  {itemsCount}
                 </span>
               )}
             </Link>
+
+
             
             {/* User Menu */}
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -138,7 +164,7 @@ export default function Header() {
                     >
                       <div className="flex items-center">
                         <span className="mr-2">❤️</span>
-{t('nav.wishlist')} ({Array.isArray(user?.wishlist) ? user.wishlist.length : 0})
+                        {t('nav.wishlist')} ({wishlistCount})
                       </div>
                     </Link>
                     <div className="border-t border-gray-100 mt-2 pt-2">
@@ -199,10 +225,10 @@ export default function Header() {
                 🔍 {t('nav.search')}
               </Link>
               <Link href="/wishlist" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
-                {t('nav.wishlist')} {isLoggedIn && user && Array.isArray(user.wishlist) ? `(${user.wishlist.length})` : ''}
+                {t('nav.wishlist')} {isAuthenticated && wishlistCount > 0 ? `(${wishlistCount})` : ''}
               </Link>
               <Link href="/cart" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
-                {t('nav.cart')} {totalItems > 0 ? `(${totalItems})` : ''}
+                {t('nav.cart')} {itemsCount > 0 ? `(${itemsCount})` : ''}
               </Link>
               <Link href="/categories" className="text-gray-800 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium">
                 {t('nav.categories')}
