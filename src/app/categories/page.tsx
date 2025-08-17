@@ -23,13 +23,13 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (selectedCategory) {
       fetchCategoryProducts(selectedCategory);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, language]);
 
   const fetchCategories = async () => {
     try {

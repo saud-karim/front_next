@@ -26,7 +26,7 @@ export default function FeaturedProducts() {
     if (isAuthenticated) {
       fetchWishlist();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, language]);
 
   const fetchFeaturedProducts = async () => {
     try {

@@ -32,11 +32,11 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     fetchProducts();
-  }, [activeFilter, sortBy, sortOrder, searchTerm, currentPage]);
+  }, [activeFilter, sortBy, sortOrder, searchTerm, currentPage, language]);
 
   useEffect(() => {
     if (isAuthenticated) {

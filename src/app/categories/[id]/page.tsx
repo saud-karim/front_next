@@ -32,7 +32,7 @@ export default function CategoryProductsPage() {
     if (isAuthenticated) {
       fetchWishlist();
     }
-  }, [categoryId, currentPage, isAuthenticated]);
+  }, [categoryId, currentPage, isAuthenticated, language]);
 
   const fetchCategoryProducts = async () => {
     try {

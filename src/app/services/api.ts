@@ -127,6 +127,8 @@ class ApiClient {
       lang: LanguageManager.getCurrentLang(),
       ...params
     };
+    
+    console.log('🌍 API Call:', endpoint, 'مع اللغة:', allParams.lang, 'والمعاملات:', allParams);
 
     const searchParams = new URLSearchParams();
     Object.entries(allParams).forEach(([key, value]) => {
