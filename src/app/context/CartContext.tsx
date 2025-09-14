@@ -42,26 +42,116 @@ export function CartProvider({ children }: CartProviderProps) {
     }
   }, [isAuthenticated, authLoading]);
 
+  // Silent refresh without loading spinner
+  const refreshCartSilent = async (): Promise<void> => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await ApiService.getCart();
+      
+      if (response.success && response.data) {
+        const cartData = response.data.cart || response.data;
+        
+        if (cartData && Array.isArray(cartData.items)) {
+          setCart(cartData);
+        } else {
+          setCart({
+            items: [],
+            items_count: 0,
+            subtotal: '0.00',
+            tax: '0.00',
+            shipping: '0.00',
+            discount: '0.00',
+            total: '0.00',
+            currency: 'EGP'
+          });
+        }
+      } else {
+        setCart({
+          items: [],
+          items_count: 0,
+          subtotal: '0.00',
+          tax: '0.00',
+          shipping: '0.00',
+          discount: '0.00',
+          total: '0.00',
+          currency: 'EGP'
+        });
+      }
+    } catch (error) {
+      console.error('❌ خطأ في تحديث السلة (silent):', error);
+      setCart({
+        items: [],
+        items_count: 0,
+        subtotal: '0.00',
+        tax: '0.00',
+        shipping: '0.00',
+        discount: '0.00',
+        total: '0.00',
+        currency: 'EGP'
+      });
+    }
+  };
+
   const refreshCart = async (): Promise<void> => {
     if (!isAuthenticated) return;
     
     setLoading(true);
     try {
+      console.log('🛒 جاري تحديث السلة...');
       const response = await ApiService.getCart();
+      console.log('🛒 استجابة السلة كاملة:', JSON.stringify(response, null, 2));
       
-      if (response.data) {
-        setCart(response.data);
+      if (response.success && response.data) {
+        // Check if cart is nested under 'cart' property
+        const cartData = response.data.cart || response.data;
+        
+        console.log('🛒 بيانات السلة المستخرجة:', JSON.stringify(cartData, null, 2));
+        
+        if (cartData && Array.isArray(cartData.items)) {
+          console.log('✅ تم تحديث السلة بنجاح:', cartData);
+          console.log('✅ عدد العناصر:', cartData.items.length);
+          setCart(cartData);
+        } else {
+          console.log('⚪ السلة فارغة أو بدون عناصر صالحة');
+          setCart({
+            items: [],
+            items_count: 0,
+            subtotal: '0.00',
+            tax: '0.00',
+            shipping: '0.00',
+            discount: '0.00',
+            total: '0.00',
+            currency: 'EGP'
+          });
+        }
       } else {
+        console.log('⚪ لا توجد بيانات سلة، إنشاء سلة فارغة');
         setCart({
           items: [],
           items_count: 0,
-          subtotal: 0,
-          shipping: 0,
-          total: 0
+          subtotal: '0.00',
+          tax: '0.00',
+          shipping: '0.00',
+          discount: '0.00',
+          total: '0.00',
+          currency: 'EGP'
         });
       }
     } catch (error) {
-      // Silent fail
+      console.error('❌ خطأ في تحديث السلة:', error);
+      console.error('❌ تفاصيل الخطأ:', JSON.stringify(error, null, 2));
+      // Set empty cart instead of null
+      setCart({
+        items: [],
+        items_count: 0,
+        subtotal: '0.00',
+        tax: '0.00',
+        shipping: '0.00',
+        discount: '0.00',
+        total: '0.00',
+        currency: 'EGP'
+      });
     } finally {
       setLoading(false);
     }
@@ -73,15 +163,22 @@ export function CartProvider({ children }: CartProviderProps) {
       return false;
     }
 
+    console.log('🛒 محاولة إضافة منتج للسلة:', { productId, quantity });
+
     try {
       const response = await ApiService.addToCart(productId, quantity);
+      console.log('🛒 استجابة إضافة للسلة:', response);
+      
       if (response.success) {
-        await refreshCart();
+        console.log('✅ تمت إضافة المنتج للسلة بنجاح');
+        await refreshCartSilent();
         return true;
+      } else {
+        console.error('❌ فشل في إضافة المنتج للسلة:', response.message);
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Failed to add to cart:', error);
+      console.error('❌ خطأ في إضافة المنتج للسلة:', error);
       return false;
     }
   };
@@ -89,31 +186,58 @@ export function CartProvider({ children }: CartProviderProps) {
   const updateCartItem = async (productId: number, quantity: number): Promise<boolean> => {
     if (!isAuthenticated) return false;
 
+    console.log('🔄 محاولة تحديث كمية المنتج:', { productId, quantity });
+
     try {
-      const response = await ApiService.updateCart(productId, quantity);
+      const response = await ApiService.updateCartItem(productId, quantity);
+      console.log('🔄 استجابة تحديث السلة كاملة:', JSON.stringify(response, null, 2));
+      
       if (response.success) {
-        await refreshCart();
+        console.log('✅ تم تحديث كمية المنتج بنجاح');
+        await refreshCartSilent();
         return true;
+      } else {
+        console.error('❌ فشل في تحديث كمية المنتج:');
+        console.error('❌ رسالة الخطأ:', response.message);
+        console.error('❌ تفاصيل الاستجابة:', JSON.stringify(response, null, 2));
+        
+        // Check if it's a stock issue
+        if (response.message && response.message.includes('stock')) {
+          console.error('📦 مشكلة في المخزن - الكمية المطلوبة غير متوفرة');
+        }
+        if (response.message && response.message.includes('quantity')) {
+          console.error('📊 مشكلة في الكمية - ربما تجاوزت الحد المسموح');
+        }
+        
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Failed to update cart item:', error);
+      console.error('❌ خطأ في تحديث كمية المنتج:', error);
+      console.error('❌ نوع الخطأ:', typeof error);
+      console.error('❌ تفاصيل الخطأ:', JSON.stringify(error, null, 2));
       return false;
     }
   };
 
-  const removeFromCart = async (productId: number): Promise<boolean> => {
+    const removeFromCart = async (productId: number): Promise<boolean> => {
     if (!isAuthenticated) return false;
+
+    console.log('🗑️ محاولة حذف منتج من السلة باستخدام product_id:', productId);
 
     try {
       const response = await ApiService.removeFromCart(productId);
+      console.log('🗑️ استجابة حذف من السلة:', response);
+      
       if (response.success) {
-        await refreshCart();
+        console.log('✅ تم حذف المنتج من السلة بنجاح');
+        await refreshCartSilent();
         return true;
+      } else {
+        console.error('❌ فشل في حذف المنتج من السلة:', response.message);
+        return false;
       }
-      return false;
     } catch (error) {
-      console.error('Failed to remove from cart:', error);
+      console.error('❌ خطأ في حذف المنتج من السلة:', error);
       return false;
     }
   };

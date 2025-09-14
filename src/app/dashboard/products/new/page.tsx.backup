@@ -1,0 +1,580 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../../context/LanguageContext';
+import { ApiService } from '../../../services/api';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Category } from '../../../types/api';
+
+
+
+
+
+interface ProductForm {
+  name_ar: string;
+  name_en: string;
+  description_ar: string;
+  description_en: string;
+  price: string;
+  original_price: string;
+  stock: string;
+  category_id: string;
+
+
+  status: 'active' | 'inactive';
+  featured: boolean;
+  images: File[];
+  features: string[];
+  specifications: { key: string; value: string }[];
+}
+
+export default function NewProductPage() {
+  const { t, language, getLocalizedText } = useLanguage();
+  const router = useRouter();
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+
+
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  
+  // نموذج المنتج
+  const [form, setForm] = useState<ProductForm>({
+    name_ar: '',
+    name_en: '',
+    description_ar: '',
+    description_en: '',
+    price: '',
+    original_price: '',
+    stock: '',
+    category_id: '',
+    status: 'active',
+    featured: false,
+    images: [],
+    features: [''],
+    specifications: [{ key: '', value: '' }],
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
+
+  // جلب البيانات المرجعية
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const categoriesRes = await ApiService.getAdminCategories({ lang: language });
+
+        console.log('🏷️ Categories Response:', categoriesRes);
+        
+        if (categoriesRes.success) {
+          console.log('✅ Categories data:', categoriesRes.data);
+          setCategories(categoriesRes.data);
+        } else {
+          console.error('❌ Failed to fetch categories:', categoriesRes);
+        }
+      } catch (error) {
+        console.error('خطأ في جلب البيانات:', error);
+      } finally {
+        setLoading(false);
+      }
+      }
+
+    fetchData();
+  }, [language]);
+
+  // تحديث قيم النموذج
+  const updateForm = (field: keyof ProductForm, value: any) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    // إزالة الخطأ عند التعديل
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  // التعامل مع الصور
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 5) {
+      alert('يمكن رفع 5 صور كحد أقصى');
+      return;
+
+    updateForm('images', files);
+
+    // إنشاء معاينة للصور
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreview(previews);
+  };
+
+  // إضافة ميزة جديدة
+  const addFeature = () => {
+    updateForm('features', [...form.features, '']);
+  };
+
+  // حذف ميزة
+  const removeFeature = (index: number) => {
+    const newFeatures = form.features.filter((_, i) => i !== index);
+    updateForm('features', newFeatures);
+  };
+
+  // تحديث ميزة
+  const updateFeature = (index: number, value: string) => {
+    const newFeatures = [...form.features];
+    newFeatures[index] = value;
+    updateForm('features', newFeatures);
+  };
+
+  // إضافة مواصفة جديدة
+  const addSpecification = () => {
+    updateForm('specifications', [...form.specifications, { key: '', value: '' }]);
+  };
+
+  // حذف مواصفة
+  const removeSpecification = (index: number) => {
+    const newSpecs = form.specifications.filter((_, i) => i !== index);
+    updateForm('specifications', newSpecs);
+  };
+
+  // تحديث مواصفة
+  const updateSpecification = (index: number, field: 'key' | 'value', value: string) => {
+    const newSpecs = [...form.specifications];
+    newSpecs[index][field] = value;
+    updateForm('specifications', newSpecs);
+  };
+
+  // التحقق من صحة البيانات
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.name_ar.trim()) newErrors.name_ar = 'اسم المنتج بالعربية مطلوب';
+    if (!form.name_en.trim()) newErrors.name_en = 'اسم المنتج بالإنجليزية مطلوب';
+    if (!form.description_ar.trim()) newErrors.description_ar = 'وصف المنتج بالعربية مطلوب';
+    if (!form.description_en.trim()) newErrors.description_en = 'وصف المنتج بالإنجليزية مطلوب';
+    if (!form.price.trim()) newErrors.price = 'سعر المنتج مطلوب';
+    if (!form.stock.trim()) newErrors.stock = 'كمية المخزون مطلوبة';
+    if (!form.category_id) newErrors.category_id = 'فئة المنتج مطلوبة';
+
+    // التحقق من الأرقام
+    if (form.price && isNaN(Number(form.price))) {
+      newErrors.price = 'السعر يجب أن يكون رقماً';
+    if (form.original_price && isNaN(Number(form.original_price))) {
+      newErrors.original_price = 'السعر الأصلي يجب أن يكون رقماً';
+    if (form.stock && isNaN(Number(form.stock))) {
+      newErrors.stock = 'المخزون يجب أن يكون رقماً';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // إرسال النموذج
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setSubmitLoading(true);
+    try {
+      // إعداد البيانات للإرسال
+      const productData = {
+        name_ar: form.name_ar,
+        name_en: form.name_en,
+        description_ar: form.description_ar,
+        description_en: form.description_en,
+        price: Number(form.price),
+        original_price: form.original_price ? Number(form.original_price) : null,
+        stock: Number(form.stock),
+        category_id: Number(form.category_id),
+        status: form.status,
+        featured: form.featured,
+        features: form.features.filter(f => f.trim()),
+        specifications: form.specifications.filter(s => s.key.trim() && s.value.trim()),
+      };
+
+      // إرسال البيانات للـ API
+      const response = await ApiService.createProduct(productData);
+      console.log('📦 Product created:', response);
+
+      if (response.success) {
+        alert('تم إضافة المنتج بنجاح!');
+        router.push('/dashboard/products');
+      } else {
+        alert('حدث خطأ في إضافة المنتج: ' + (response.message || 'خطأ غير معروف'));
+      }
+    } catch (error) {
+      console.error('خطأ في إضافة المنتج:', error);
+      alert('حدث خطأ في إضافة المنتج');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-200 animate-pulse rounded-lg h-12"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-24"></div>
+          ))}
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">إضافة منتج جديد</h1>
+          <p className="text-gray-600 mt-1">إضافة منتج جديد إلى المتجر</p>
+        </div>
+        <Link
+          href="/dashboard/products"
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          ← العودة للمنتجات
+        </Link>
+      </div>
+
+      {/* النموذج */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* المعلومات الأساسية */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">المعلومات الأساسية</h2>
+            
+            {/* اسم المنتج بالعربية */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                اسم المنتج (العربية) *
+              </label>
+              <input
+                type="text"
+                value={form.name_ar}
+                onChange={(e) => updateForm('name_ar', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.name_ar ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="أدخل اسم المنتج بالعربية"
+              />
+              {errors.name_ar && <p className="text-red-500 text-sm mt-1">{errors.name_ar}</p>}
+            </div>
+
+            {/* اسم المنتج بالإنجليزية */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                اسم المنتج (English) *
+              </label>
+              <input
+                type="text"
+                value={form.name_en}
+                onChange={(e) => updateForm('name_en', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.name_en ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter product name in English"
+              />
+              {errors.name_en && <p className="text-red-500 text-sm mt-1">{errors.name_en}</p>}
+            </div>
+
+            {/* وصف المنتج بالعربية */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                وصف المنتج (العربية) *
+              </label>
+              <textarea
+                value={form.description_ar}
+                onChange={(e) => updateForm('description_ar', e.target.value)}
+                rows={4}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.description_ar ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="أدخل وصف المنتج بالعربية"
+              />
+              {errors.description_ar && <p className="text-red-500 text-sm mt-1">{errors.description_ar}</p>}
+            </div>
+
+            {/* وصف المنتج بالإنجليزية */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                وصف المنتج (English) *
+              </label>
+              <textarea
+                value={form.description_en}
+                onChange={(e) => updateForm('description_en', e.target.value)}
+                rows={4}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.description_en ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter product description in English"
+              />
+              {errors.description_en && <p className="text-red-500 text-sm mt-1">{errors.description_en}</p>}
+            </div>
+          </div>
+
+          {/* الأسعار والمخزون */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">الأسعار والمخزون</h2>
+            
+            {/* السعر */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                السعر (ج.م) *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => updateForm('price', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.price ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="0.00"
+              />
+              {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+            </div>
+
+            {/* السعر الأصلي */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                السعر الأصلي (ج.م) - اختياري
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.original_price}
+                onChange={(e) => updateForm('original_price', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.original_price ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="0.00"
+              />
+              {errors.original_price && <p className="text-red-500 text-sm mt-1">{errors.original_price}</p>}
+            </div>
+
+            {/* المخزون */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                كمية المخزون *
+              </label>
+              <input
+                type="number"
+                value={form.stock}
+                onChange={(e) => updateForm('stock', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.stock ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="0"
+              />
+              {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+            </div>
+
+            {/* الحالة */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                حالة المنتج
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) => updateForm('status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+              </select>
+            </div>
+
+            {/* منتج مميز */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={form.featured}
+                onChange={(e) => updateForm('featured', e.target.checked)}
+                className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              />
+              <label htmlFor="featured" className="text-sm font-medium text-gray-700">
+                منتج مميز
+              </label>
+            </div>
+          </div>
+
+          {/* التصنيفات */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">التصنيفات</h2>
+            
+            {/* الفئة */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                الفئة *
+              </label>
+              <select
+                value={form.category_id}
+                onChange={(e) => updateForm('category_id', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
+                  errors.category_id ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">اختر الفئة</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {getLocalizedText(category, 'name')}
+                  </option>
+                ))}
+              </select>
+              {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
+            </div>
+
+
+          </div>
+
+          {/* الصور */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">صور المنتج</h2>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                رفع الصور (حد أقصى 5 صور)
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+
+            {/* معاينة الصور */}
+            {imagePreview.length > 0 && (
+              <div className="grid grid-cols-2 gap-4">
+                {imagePreview.map((src, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={src}
+                      alt={`معاينة ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newImages = form.images.filter((_, i) => i !== index);
+                        const newPreviews = imagePreview.filter((_, i) => i !== index);
+                        updateForm('images', newImages);
+                        setImagePreview(newPreviews);
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* الميزات */}
+        <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">ميزات المنتج</h2>
+            <button
+              type="button"
+              onClick={addFeature}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
+            >
+              + إضافة ميزة
+            </button>
+          </div>
+          
+          {form.features.map((feature, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="text"
+                value={feature}
+                onChange={(e) => updateFeature(index, e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="أدخل ميزة المنتج"
+              />
+              {form.features.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeFeature(index)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm transition-colors"
+                >
+                  حذف
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* المواصفات */}
+        <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">مواصفات المنتج</h2>
+            <button
+              type="button"
+              onClick={addSpecification}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
+            >
+              + إضافة مواصفة
+            </button>
+          </div>
+          
+          {form.specifications.map((spec, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="text"
+                value={spec.key}
+                onChange={(e) => updateSpecification(index, 'key', e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="اسم المواصفة (مثل: الوزن)"
+              />
+              <input
+                type="text"
+                value={spec.value}
+                onChange={(e) => updateSpecification(index, 'value', e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="قيمة المواصفة (مثل: 2 كيلو)"
+              />
+              {form.specifications.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSpecification(index)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm transition-colors"
+                >
+                  حذف
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* أزرار الإجراءات */}
+        <div className="flex gap-4 justify-end">
+          <Link
+            href="/dashboard/products"
+            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            إلغاء
+          </Link>
+          <button
+            type="submit"
+            disabled={submitLoading}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {submitLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                جاري الحفظ...
+              </>
+            ) : (
+              '💾 حفظ المنتج'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

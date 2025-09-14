@@ -10,12 +10,13 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ApiService } from '../services/api';
 import { Product } from '../types/api';
+import { getBestImageUrl, getImageFallbacks } from '../dashboard/utils/imageUtils';
 
 export default function CartPage() {
   const { cart, loading, updateCartItem, removeFromCart, applyCoupon, removeCoupon, refreshCart, addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { success, error, info } = useToast();
-  const { t, language } = useLanguage();
+  const { t, language, getLocalizedText } = useLanguage();
   const [promoCode, setPromoCode] = useState('');
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
 
@@ -43,44 +44,61 @@ export default function CartPage() {
     }
   };
 
-  // Use cart data from API
-  const subtotal = cart?.subtotal || 0;
-  const shipping = cart?.shipping || 0;
-  const total = cart?.total || 0;
-  const discount = cart?.discount || 0;
+  // Use cart data from API and convert strings to numbers
+  const subtotal = parseFloat(cart?.subtotal || '0');
+  const shipping = parseFloat(cart?.shipping || '0');
+  const total = parseFloat(cart?.total || '0');
+  const discount = parseFloat(cart?.discount || '0');
   const itemsCount = cart?.items_count || 0;
 
   // Helper function to handle quantity updates
   const handleQuantityUpdate = async (productId: number, newQuantity: number) => {
     if (!isAuthenticated) return;
     
+    console.log('🔄 Cart handleQuantityUpdate:', { productId, newQuantity });
+    
     if (newQuantity <= 0) {
       const success_remove = await removeFromCart(productId);
       if (success_remove) {
-        success('تم حذف المنتج من السلة', '');
-      }
+        success(t('toast.cart.removed'), t('toast.cart.removed.desc'));
+              } else {
+          error(t('toast.error'), t('toast.error.desc'));
+        }
+      return;
+    }
+    
+    // Check if quantity is too high (likely stock issue)
+    if (newQuantity > 50) {
+      error(t('cart.quantity.too.high'), t('cart.quantity.max.limit'));
       return;
     }
     
     const success_update = await updateCartItem(productId, newQuantity);
     if (success_update) {
-      success('تم تحديث الكمية', '');
+      success(t('cart.update.success'), '');
+    } else {
+      // More specific error messages
+      if (newQuantity > 15) {
+        error(t('cart.update.failed'), t('cart.update.stock.limit'));
+      } else {
+        error(t('cart.update.failed'), t('toast.error.try.again'));
+      }
     }
   };
 
   // Apply promo code
   const applyPromoCode = async () => {
     if (!isAuthenticated) {
-      error('يجب تسجيل الدخول أولاً', '');
+      error(t('toast.login.required'), '');
       return;
     }
 
     const success_coupon = await applyCoupon(promoCode);
     if (success_coupon) {
-      success('تم تطبيق الكوبون بنجاح', '');
+      success(t('cart.promo.success'), '');
       setPromoCode('');
     } else {
-      error('كوبون غير صالح', 'تأكد من صحة كود الكوبون');
+      error(t('cart.promo.error'), t('cart.promo.error.desc'));
     }
   };
 
@@ -89,27 +107,27 @@ export default function CartPage() {
     
     const success_remove = await removeCoupon();
     if (success_remove) {
-      success('تم إزالة الكوبون', '');
+      success(t('cart.coupon.removed'), '');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-12 gradient-bg text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-4">
+      <section className="pt-24 pb-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded text-sm font-medium mb-4">
             🛒 {t('cart.badge')}
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">
             {t('cart.title')}
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             {t('cart.subtitle')}
           </p>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-gray-500">
             {itemsCount} {t('cart.items')}
           </div>
         </div>
@@ -118,36 +136,36 @@ export default function CartPage() {
       {!isAuthenticated ? (
         // Not Logged In
         <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto text-center px-6 lg:px-8">
-            <div className="text-8xl mb-8">🔐</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">يجب تسجيل الدخول</h2>
-            <p className="text-xl text-gray-600 mb-8">
-              قم بتسجيل الدخول لعرض سلة التسوق الخاصة بك
+          <div className="max-w-4xl mx-auto text-center px-6">
+            <div className="text-6xl mb-8">🔐</div>
+            <h2 className="text-2xl font-bold text-black mb-4">{t('cart.login.required')}</h2>
+            <p className="text-gray-600 mb-8">
+              {t('cart.login.required.desc')}
             </p>
             <Link 
               href="/auth"
-              className="gradient-red text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transition-all duration-300 shadow-md"
+              className="bg-red-500 text-white px-8 py-4 rounded font-medium hover:bg-red-600 transition-colors"
             >
-              تسجيل الدخول
+              {t('cart.login.button')}
             </Link>
           </div>
         </section>
       ) : loading ? (
         // Loading
         <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto text-center px-6 lg:px-8">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">جاري تحميل السلة...</p>
+          <div className="max-w-4xl mx-auto text-center px-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">{t('cart.loading')}</p>
           </div>
         </section>
       ) : !cart || itemsCount === 0 ? (
         // Empty Cart
         <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-            <div className="text-8xl mb-8">🛒</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('cart.empty.title')}</h2>
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <div className="text-6xl mb-8">🛒</div>
+            <h2 className="text-2xl font-bold text-black mb-4">{t('cart.empty.title')}</h2>
             <p className="text-gray-600 mb-8">{t('cart.empty.subtitle')}</p>
-            <Link href="/products" className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg inline-block">
+            <Link href="/products" className="bg-red-500 text-white px-8 py-4 rounded font-medium hover:bg-red-600 transition-colors inline-block">
               {t('cart.browse.products')}
             </Link>
           </div>
@@ -155,50 +173,107 @@ export default function CartPage() {
       ) : (
         // Cart Content
         <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-6">
             <div className="grid lg:grid-cols-3 gap-12">
               
               {/* Cart Items */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('cart.items.title')}</h2>
+                <div className="bg-white rounded border border-gray-200 p-6">
+                  <h2 className="text-xl font-bold text-black mb-6">{t('cart.items.title')}</h2>
                   
                   <div className="space-y-6">
                     {cart.items.map((item) => (
-                      <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                         {/* Product Image */}
-                        <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-                          {item.product.image ? (
-                            <img 
-                              src={item.product.image} 
-                              alt={item.product.name}
-                              className="w-full h-full object-cover rounded-xl"
-                            />
-                          ) : (
-                            <span className="text-3xl">📦</span>
-                          )}
+                        <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded flex items-center justify-center">
+                          {(() => {
+                            let productImage;
+                            let originalImage = '';
+                            
+                            // Handle different image formats
+                            if (Array.isArray(item.product.images) && item.product.images.length > 0) {
+                              originalImage = item.product.images[0];
+                              productImage = getBestImageUrl(item.product.images[0]);
+                            } else if (typeof item.product.images === 'string') {
+                              try {
+                                const parsed = JSON.parse(item.product.images);
+                                const imageSource = Array.isArray(parsed) ? parsed[0] : parsed;
+                                originalImage = imageSource;
+                                productImage = getBestImageUrl(imageSource);
+                              } catch {
+                                originalImage = item.product.images;
+                                productImage = getBestImageUrl(item.product.images);
+                              }
+                            } else if (item.product.images && item.product.images.length > 0) {
+                              originalImage = item.product.images[0];
+                              productImage = getBestImageUrl(item.product.images[0]);
+                            }
+                            
+                            return productImage ? (
+                              <img 
+                                src={productImage} 
+                                alt={getLocalizedText(item.product, 'name')}
+                                className="w-full h-full object-cover rounded-xl"
+                                loading="lazy"
+                                onError={(e) => {
+                                  const currentSrc = e.currentTarget.src;
+                                  
+                                  if (originalImage) {
+                                    const fallbacks = getImageFallbacks(originalImage);
+                                    
+                                    // جرب المسارات البديلة
+                                    for (const fallbackUrl of fallbacks) {
+                                      if (currentSrc !== fallbackUrl && !currentSrc.includes('placeholder')) {
+                                        e.currentTarget.src = fallbackUrl;
+                                        return;
+                                      }
+                                    }
+                                  }
+                                  
+                                  // إذا فشل كل شيء، استخدم placeholder
+                                  if (!currentSrc.includes('placeholder.svg')) {
+                                    e.currentTarget.src = '/placeholder.svg';
+                                    return;
+                                  }
+                                  
+                                  // إذا فشل حتى placeholder، أخفي الصورة واعرض أيقونة
+                                  e.currentTarget.style.display = 'none';
+                                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (nextElement) {
+                                    nextElement.style.display = 'block';
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span className="text-3xl">📦</span>
+                            );
+                          })()}
+                          <span className="text-3xl" style={{ display: 'none' }}>📦</span>
                         </div>
                         
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.product.name}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {getLocalizedText(item.product, 'name')}
+                          </h3>
+                          <p className="text-sm text-gray-500 mb-2 line-clamp-1">
+                            {getLocalizedText(item.product, 'description')}
+                          </p>
                           <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm text-gray-600">ID: {item.product.id}</p>
-                            {item.product.category && (
-                              <>
-                                <span className="text-gray-400">•</span>
-                                <Link 
-                                  href={`/categories/${item.product.category.id}`}
-                                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                                >
-                                  📂 {item.product.category.name}
-                                </Link>
-                              </>
-                            )}
+                                                          {item.product.category && (
+                                <>
+                                  <Link 
+                                    href={`/categories/${item.product.category.id}`}
+                                    className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                  >
+                                    📂 {getLocalizedText(item.product.category, 'name')}
+                                  </Link>
+                                </>
+                              )}
                           </div>
                           {item.product.supplier && (
                             <p className="text-xs text-gray-500 mb-2">
-                              المورد: {item.product.supplier.name}
+                              {t('cart.supplier')}: {getLocalizedText(item.product.supplier, 'name')}
                               {item.product.supplier.rating && (
                                 <span className="ml-1">⭐ {item.product.supplier.rating}</span>
                               )}
@@ -208,9 +283,11 @@ export default function CartPage() {
                           {/* Price and Quantity */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <span className="text-xl font-bold text-gray-900">${item.product.price}</span>
+                              <span className="text-xl font-bold text-gray-900">
+                                {item.product ? `${item.product.price} ج.م` : 'سعر غير متوفر'}
+                              </span>
                               <span className="text-xs text-gray-600">
-                                × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
+                                × {item.quantity} = {item.product ? `${(parseFloat(item.product.price) * item.quantity).toFixed(2)} ج.م` : 'غير محسوب'}
                               </span>
                             </div>
                             
@@ -265,7 +342,7 @@ export default function CartPage() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 sticky top-6">
+                <div className="bg-white rounded border border-gray-200 p-6 sticky top-6">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('cart.summary.title')}</h2>
                   
                   {/* Promo Code */}
@@ -281,14 +358,14 @@ export default function CartPage() {
                       />
                       <button
                         onClick={applyPromoCode}
-                        className="px-4 py-2 gradient-red text-white rounded-lg hover:shadow-lg transition-all duration-300 font-semibold"
+                        className="px-4 py-2 bg-red-500 text-white rounded font-medium hover:bg-red-600 transition-colors"
                       >
                         {t('cart.promo.apply')}
                       </button>
                     </div>
                     {discount > 0 && (
                       <div className="mt-2 text-sm text-green-600 font-semibold">
-                        ✓ تم تطبيق الكوبون بنجاح
+                        ✓ {t('cart.coupon.applied')}
                       </div>
                     )}
                   </div>
@@ -302,7 +379,7 @@ export default function CartPage() {
                     
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>خصم الكوبون</span>
+                        <span>{t('cart.summary.promo')}</span>
                         <span>-${discount.toFixed(2)}</span>
                       </div>
                     )}
@@ -314,7 +391,7 @@ export default function CartPage() {
                     
                     {shipping > 0 && (
                       <div className="text-xs text-gray-500">
-                        شحن مجاني للطلبات أكثر من $500
+                        {t('cart.free.shipping.text')}
                       </div>
                     )}
                     
@@ -329,12 +406,12 @@ export default function CartPage() {
                     {discount > 0 && (
                       <div className="mt-2 p-2 bg-green-50 rounded-lg">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-green-600 font-semibold">✓ تم تطبيق الكوبون</span>
+                          <span className="text-green-600 font-semibold">✓ {t('cart.coupon.applied.success')}</span>
                           <button
                             onClick={removeCouponCode}
                             className="text-red-600 hover:text-red-700 font-semibold"
                           >
-                            إزالة
+                            {t('cart.coupon.remove')}
                           </button>
                         </div>
                       </div>
@@ -342,7 +419,7 @@ export default function CartPage() {
                   </div>
                   
                   {/* Checkout Button */}
-                  <button className="w-full gradient-red text-white py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg mb-4">
+                  <button className="w-full bg-red-500 text-white py-4 rounded font-medium text-lg hover:bg-red-600 transition-colors mb-4">
                     {t('cart.checkout.button')}
                   </button>
                   
@@ -377,9 +454,9 @@ export default function CartPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                منتجات مقترحة لك
+                {t('cart.recommended.title')}
               </h2>
-              <p className="text-gray-600">منتجات قد تنال إعجابك</p>
+              <p className="text-gray-600">{t('cart.recommended.subtitle')}</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -388,26 +465,46 @@ export default function CartPage() {
                   <div className="w-20 h-20 mx-auto mb-3 bg-gray-200 rounded-lg flex items-center justify-center">
                     {product.images && product.images.length > 0 ? (
                       <img 
-                        src={product.images[0]} 
-                        alt={product.name}
+                        src={getBestImageUrl(product.images[0])} 
+                        alt={getLocalizedText(product, 'name')}
                         className="w-full h-full object-cover rounded-lg"
+                        loading="lazy"
+                        onError={(e) => {
+                          const currentSrc = e.currentTarget.src;
+                          const fallbacks = getImageFallbacks(product.images[0]);
+                          
+                          // جرب المسارات البديلة
+                          for (const fallbackUrl of fallbacks) {
+                            if (currentSrc !== fallbackUrl && !currentSrc.includes('placeholder')) {
+                              e.currentTarget.src = fallbackUrl;
+                              return;
+                            }
+                          }
+                          
+                          // إذا فشل كل شيء، استخدم placeholder
+                          if (!currentSrc.includes('placeholder.svg')) {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }
+                        }}
                       />
                     ) : (
                       <span className="text-4xl">📦</span>
                     )}
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {getLocalizedText(product, 'name')}
+                  </h3>
                   <div className="text-lg font-bold text-red-600 mb-3">${product.price}</div>
                   <button 
                     onClick={async () => {
                       const success_add = await addToCart(product.id, 1);
                       if (success_add) {
-                        success('تم إضافة المنتج للسلة', '');
+                        success(t('toast.cart.added'), '');
                       }
                     }}
-                    className="w-full gradient-red text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
+                    className="w-full bg-red-500 text-white py-2 rounded font-semibold hover:bg-red-600 transition-colors"
                   >
-                    إضافة للسلة
+                    {t('cart.add.to.cart')}
                   </button>
                 </div>
               ))}

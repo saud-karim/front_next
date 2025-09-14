@@ -22,11 +22,11 @@ import {
 } from '../types/api';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 
 // Language management
 class LanguageManager {
-  private static readonly LANG_KEY = 'app_language';
+  private static readonly LANG_KEY = 'language';
   
   static getCurrentLang(): string {
     if (typeof window !== 'undefined') {
@@ -99,34 +99,101 @@ class ApiClient {
     };
 
     try {
+      // 🔍 DETAILED DEBUG LOGGING - REMOVE AFTER FIXING
+      console.group('🔍 API REQUEST DEBUG');
+      console.log('📍 Endpoint:', endpoint);
+      console.log('🌐 Full URL:', url);
+      console.log('📋 Method:', config.method);
+      console.log('📦 Headers:', config.headers);
+      console.log('📄 Body:', config.body);
+      console.log('🎯 Expected URL: http://127.0.0.1:8000/api/v1/login');
+      console.log('✅ Our tests proved this URL works!');
+      console.groupEnd();
+      
       const response = await fetch(url, config);
+      
+      // 🔍 DETAILED RESPONSE DEBUG - REMOVE AFTER FIXING
+      console.group('📡 API RESPONSE DEBUG');
+      console.log('📊 Status:', response.status, response.statusText);
+      console.log('🏷️ Content-Type:', response.headers.get('content-type'));
+      console.log('🔗 Response URL:', response.url);
+      console.log('✅ Expected: 200 OK with application/json');
+      console.groupEnd();
       
       // Check if response is HTML (404 page) instead of JSON
       const contentType = response.headers.get('content-type');
       
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
+        console.error('🚨 CONTENT TYPE MISMATCH!');
+        console.error('Expected: application/json');
+        console.error('Got:', contentType);
+        console.error('Response preview:', text.substring(0, 200));
         throw new Error(`Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`);
       }
       
       const data = await response.json();
+      
+      console.group('📋 PARSED JSON DATA');
+      console.log('🎯 Success?', data.success);
+      console.log('💬 Message:', data.message);
+      if (data.data && data.data.user) {
+        console.log('👤 User:', data.data.user.name);
+        console.log('🔑 Role:', data.data.user.role);
+      }
+      console.groupEnd();
 
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        console.error('🚨 HTTP ERROR DETECTED!');
+        console.error('📊 Status:', response.status);
+        console.error('📋 Response OK?', response.ok);
+        
+        // Handle specific Laravel errors
+        if (response.status === 419) {
+          throw new Error('CSRF token mismatch - يرجى تحديث الصفحة أو تسجيل الخروج والدخول مرة أخرى');
+        }
+        if (response.status === 422 && data.errors) {
+          // Laravel validation errors
+          const errorMessages = Object.values(data.errors).flat();
+          throw new Error(errorMessages.join(', '));
+        }
+        // تحسين رسالة الخطأ للمستخدم
+        let errorMessage = data.message || `HTTP ${response.status}: ${response.statusText}`;
+        
+        console.error('💥 THROWING ERROR:', errorMessage);
+        
+        // معالجة أخطاء محددة من Backend
+        if (errorMessage.includes('Attempt to read property') && errorMessage.includes('null')) {
+          errorMessage = 'هذا المنتج غير متوفر حالياً. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+        } else if (errorMessage.includes('product') && errorMessage.includes('not found')) {
+          errorMessage = 'المنتج المطلوب غير موجود أو تم حذفه.';
+        } else if (errorMessage.includes('stock') && errorMessage.includes('insufficient')) {
+          errorMessage = 'عذراً، الكمية المطلوبة غير متوفرة في المخزون.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
+      console.log('✅ REQUEST SUCCESSFUL! Returning data...');
       return data;
     } catch (error) {
+      console.error('💥 CATCH BLOCK TRIGGERED!');
+      console.error('🔍 Error type:', (error as any).constructor?.name);
+      console.error('📝 Error message:', (error as any).message);
+      console.error('📍 Full error:', error);
       throw error;
     }
   }
 
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<APIResponse<T>> {
     let url = endpoint;
+    const currentLang = LanguageManager.getCurrentLang();
     const allParams = {
-      lang: LanguageManager.getCurrentLang(),
+      lang: currentLang,
       ...params
     };
+    
+    console.log('🌐 API Request Language:', currentLang, 'for endpoint:', endpoint);
     
     console.log('🌍 API Call:', endpoint, 'مع اللغة:', allParams.lang, 'والمعاملات:', allParams);
 
@@ -219,6 +286,32 @@ class ApiClient {
 
     return this.request<T>(url, { method: 'DELETE' });
   }
+
+  async patch<T>(endpoint: string, data?: any, params?: Record<string, any>): Promise<APIResponse<T>> {
+    let url = endpoint;
+    
+    if (params) {
+      const allParams = {
+        lang: LanguageManager.getCurrentLang(),
+        ...params
+      };
+      const searchParams = new URLSearchParams();
+      Object.entries(allParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+
+    return this.request<T>(url, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
 }
 
 // API Service
@@ -227,11 +320,7 @@ export class ApiService {
 
   // Authentication APIs
   static async register(userData: RegisterRequest): Promise<APIResponse<LoginResponse>> {
-    return this.client.post<LoginResponse>('/auth/register', userData);
-  }
-
-  static async login(email: string, password: string): Promise<APIResponse<LoginResponse>> {
-    const response = await this.client.post<LoginResponse>('/auth/login', { email, password });
+    const response = await this.client.post<LoginResponse>('/register', userData);
     
     if (response.success && response.data.token) {
       TokenManager.setToken(response.data.token);
@@ -244,9 +333,23 @@ export class ApiService {
     return response;
   }
 
+  static async login(email: string, password: string): Promise<APIResponse<LoginResponse>> {
+    const response = await this.client.post<LoginResponse>('/login', { email, password });
+    
+    if (response.success && response.data.token) {
+      TokenManager.setToken(response.data.token);
+      // Store user data for profile workaround
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('user_data', JSON.stringify(response.data.user));
+      }
+    }
+    
+    return response;
+  }
+
   static async logout(): Promise<APIResponse<any>> {
     try {
-      const response = await this.client.post<any>('/auth/logout');
+      const response = await this.client.post<any>('/logout');
       TokenManager.removeToken();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user_data');
@@ -275,8 +378,8 @@ export class ApiService {
     return this.client.get<Product[]>('/products', params);
   }
 
-  static async getProductDetails(id: number): Promise<APIResponse<Product>> {
-    return this.client.get<Product>(`/products/${id}`);
+  static async getProductDetails(id: number, params?: { lang?: string }): Promise<APIResponse<Product>> {
+    return this.client.get<Product>(`/products/${id}`, params);
   }
 
   static async getFeaturedProducts(params?: { per_page?: number }): Promise<APIResponse<Product[]>> {
@@ -288,8 +391,28 @@ export class ApiService {
   }
 
   // Categories APIs
-  static async getCategories(): Promise<APIResponse<Category[]>> {
-    return this.client.get<Category[]>('/categories');
+  static async getCategories(params?: Record<string, any>): Promise<APIResponse<Category[]>> {
+    return this.client.get<Category[]>('/categories', params);
+  }
+
+  static async getAdminCategories(params?: Record<string, any>): Promise<APIResponse<Category[]>> {
+    return this.client.get<Category[]>('/admin/categories', params);
+  }
+
+  static async createCategory(categoryData: any): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/categories', categoryData);
+  }
+
+  static async updateCategory(categoryId: number, categoryData: any): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/categories/${categoryId}`, categoryData);
+  }
+
+  static async deleteCategory(categoryId: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/categories/${categoryId}`);
+  }
+
+  static async toggleCategoryStatus(categoryId: number): Promise<APIResponse<any>> {
+    return this.client.patch<any>(`/admin/categories/${categoryId}/toggle-status`);
   }
 
   static async getCategoryProducts(categoryId: number, params?: any): Promise<any> {
@@ -308,12 +431,12 @@ export class ApiService {
     return this.client.post<CartResponse>('/cart/add', { product_id: productId, quantity });
   }
 
-  static async updateCartItem(cartItemId: number, quantity: number): Promise<APIResponse<CartResponse>> {
-    return this.client.put<CartResponse>('/cart/update', { cart_item_id: cartItemId, quantity });
+  static async updateCartItem(productId: number, quantity: number): Promise<APIResponse<CartResponse>> {
+    return this.client.put<CartResponse>('/cart/update', { product_id: productId, quantity });
   }
 
-  static async removeFromCart(cartItemId: number): Promise<APIResponse<CartResponse>> {
-    return this.client.delete<CartResponse>(`/cart/remove/${cartItemId}`);
+  static async removeFromCart(productId: number): Promise<APIResponse<CartResponse>> {
+    return this.client.delete<CartResponse>(`/cart/remove/${productId}`);
   }
 
   static async applyCoupon(couponCode: string): Promise<APIResponse<CartResponse>> {
@@ -370,6 +493,248 @@ export class ApiService {
     return this.client.put<any>(`/orders/${orderId}/cancel`, { reason });
   }
 
+  // Admin Orders APIs (using regular orders endpoint for now)
+  static async getAdminOrders(params?: any): Promise<APIResponse<any>> {
+    // Note: Using regular orders endpoint since admin/orders is not available in backend
+    return this.client.get<any>('/orders', params);
+  }
+
+  static async getAdminOrderDetails(orderId: string): Promise<APIResponse<any>> {
+    // Note: Using regular order details endpoint
+    return this.client.get<any>(`/orders/${orderId}`);
+  }
+
+  static async updateOrderStatus(orderId: string, status: string, notes?: string): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    // For now, return a mock response
+    console.warn('⚠️ Admin order status update API not available in backend');
+    return Promise.resolve({
+      success: false,
+      message: 'Admin order status update API not available in current backend version',
+      data: null
+    });
+  }
+
+  static async getOrdersStats(): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    // For now, return mock stats
+    console.warn('⚠️ Admin orders stats API not available in backend');
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_orders: 0,
+        pending_orders: 0,
+        processing_orders: 0,
+        shipped_orders: 0,
+        delivered_orders: 0,
+        cancelled_orders: 0,
+        total_revenue: 0,
+        today_orders: 0,
+        this_month_orders: 0
+      }
+    });
+  }
+
+  // Admin Customers APIs (Mock - not available in current backend)
+  static async getAdminCustomers(params?: any): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    // For now, return mock customer data
+    console.warn('⚠️ Admin customers API not available in backend');
+    
+    // Mock customer data
+    const mockCustomers = [
+      {
+        id: 1,
+        name: 'أحمد محمد علي',
+        email: 'ahmed@example.com',
+        phone: '+201234567890',
+        company: 'شركة البناء المتقدم',
+        role: 'customer',
+        status: 'active',
+        total_orders: 5,
+        total_spent: 1250.50,
+        last_order_date: '2024-01-15T10:30:00.000000Z',
+        created_at: '2024-01-01T10:30:00.000000Z',
+        updated_at: '2024-01-15T10:30:00.000000Z'
+      },
+      {
+        id: 2,
+        name: 'سارة أحمد محمود',
+        email: 'sara@example.com',
+        phone: '+201234567891',
+        company: 'مؤسسة الإنشاء الحديث',
+        role: 'customer',
+        status: 'active',
+        total_orders: 12,
+        total_spent: 3450.75,
+        last_order_date: '2024-01-14T09:15:00.000000Z',
+        created_at: '2023-12-15T10:30:00.000000Z',
+        updated_at: '2024-01-14T09:15:00.000000Z'
+      },
+      {
+        id: 3,
+        name: 'محمد عبد الرحمن',
+        email: 'mohamed@example.com',
+        phone: '+201234567892',
+        company: 'شركة التطوير العقاري',
+        role: 'customer',
+        status: 'inactive',
+        total_orders: 2,
+        total_spent: 850.25,
+        last_order_date: '2023-12-20T14:20:00.000000Z',
+        created_at: '2023-11-10T10:30:00.000000Z',
+        updated_at: '2023-12-20T14:20:00.000000Z'
+      },
+      {
+        id: 4,
+        name: 'فاطمة حسن',
+        email: 'fatma@example.com',
+        phone: '+201234567893',
+        company: 'مكتب الهندسة المعمارية',
+        role: 'customer',
+        status: 'active',
+        total_orders: 8,
+        total_spent: 2100.00,
+        last_order_date: '2024-01-12T11:45:00.000000Z',
+        created_at: '2023-10-05T10:30:00.000000Z',
+        updated_at: '2024-01-12T11:45:00.000000Z'
+      },
+      {
+        id: 5,
+        name: 'عمر الشريف',
+        email: 'omar@example.com',
+        phone: '+201234567894',
+        company: 'شركة المقاولات الكبرى',
+        role: 'customer',
+        status: 'active',
+        total_orders: 15,
+        total_spent: 5200.80,
+        last_order_date: '2024-01-16T08:30:00.000000Z',
+        created_at: '2023-08-15T10:30:00.000000Z',
+        updated_at: '2024-01-16T08:30:00.000000Z'
+      }
+    ];
+
+    // Apply basic filtering
+    let filteredCustomers = [...mockCustomers];
+    
+    if (params?.search) {
+      const search = params.search.toLowerCase();
+      filteredCustomers = filteredCustomers.filter(customer =>
+        customer.name.toLowerCase().includes(search) ||
+        customer.email.toLowerCase().includes(search) ||
+        customer.company.toLowerCase().includes(search)
+      );
+    }
+
+    if (params?.status) {
+      filteredCustomers = filteredCustomers.filter(customer => 
+        customer.status === params.status
+      );
+    }
+
+    // Sort by creation date (newest first)
+    filteredCustomers.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    // Basic pagination
+    const page = parseInt(params?.page) || 1;
+    const perPage = parseInt(params?.per_page) || 20;
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    const paginatedCustomers = filteredCustomers.slice(start, end);
+
+    return Promise.resolve({
+      success: true,
+      data: {
+        data: paginatedCustomers,
+        meta: {
+          current_page: page,
+          total: filteredCustomers.length,
+          per_page: perPage,
+          last_page: Math.ceil(filteredCustomers.length / perPage)
+        }
+      }
+    });
+  }
+
+  static async getCustomerDetails(customerId: number): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Customer details API not available in backend');
+    
+    // Mock customer details - would typically include order history, addresses, etc.
+    const mockCustomer = {
+      id: customerId,
+      name: 'أحمد محمد علي',
+      email: 'ahmed@example.com',
+      phone: '+201234567890',
+      company: 'شركة البناء المتقدم',
+      role: 'customer',
+      status: 'active',
+      total_orders: 5,
+      total_spent: 1250.50,
+      last_order_date: '2024-01-15T10:30:00.000000Z',
+      created_at: '2024-01-01T10:30:00.000000Z',
+      updated_at: '2024-01-15T10:30:00.000000Z',
+      addresses: [
+        {
+          id: 1,
+          type: 'home',
+          name: 'المنزل',
+          street: 'شارع التحرير، المعادي',
+          city: 'القاهرة',
+          state: 'القاهرة',
+          country: 'مصر',
+          is_default: true
+        }
+      ],
+      recent_orders: [
+        {
+          id: 'ORD-2024-001',
+          status: 'delivered',
+          total_amount: '250.50',
+          created_at: '2024-01-15T10:30:00.000000Z'
+        }
+      ]
+    };
+
+    return Promise.resolve({
+      success: true,
+      data: { customer: mockCustomer }
+    });
+  }
+
+  static async updateCustomerStatus(customerId: number, status: string): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Customer status update API not available in backend');
+    
+    return Promise.resolve({
+      success: false,
+      message: 'Customer status update API not available in current backend version',
+      data: null
+    });
+  }
+
+  static async getCustomersStats(): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Customers stats API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_customers: 5,
+        active_customers: 4,
+        inactive_customers: 1,
+        new_customers_this_month: 2,
+        total_orders_by_customers: 42,
+        total_revenue_from_customers: 12851.30,
+        average_order_value: 305.98,
+        top_customers: 3
+      }
+    });
+  }
+
   // Reviews APIs
   static async getProductReviews(productId: number, params?: ReviewsQuery): Promise<APIResponse<any>> {
     return this.client.get<any>(`/products/${productId}/reviews`, params);
@@ -389,6 +754,504 @@ export class ApiService {
 
   static async markReviewHelpful(reviewId: number): Promise<APIResponse<any>> {
     return this.client.post<any>(`/reviews/${reviewId}/helpful`);
+  }
+
+  // Admin Reviews APIs (Mock - not available in current backend)
+  static async getAdminReviews(params?: any): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    // For now, return mock review data
+    console.warn('⚠️ Admin reviews API not available in backend');
+    
+    // Mock reviews data
+    const mockReviews = [
+      {
+        id: 1,
+        user: {
+          id: 1,
+          name: 'أحمد محمد علي',
+          email: 'ahmed@example.com'
+        },
+        product: {
+          id: 8,
+          name: 'حديد تسليح ممتاز 10 مم',
+          image: '/images/products/rebar.jpg'
+        },
+        rating: 5,
+        review: 'منتج ممتاز وجودة عالية، أنصح بشرائه بشدة. وصل في الوقت المحدد والتعامل كان احترافي.',
+        status: 'approved',
+        verified_purchase: true,
+        helpful_count: 15,
+        images: ['review1.jpg', 'review2.jpg'],
+        created_at: '2024-01-15T10:30:00.000000Z',
+        updated_at: '2024-01-15T10:30:00.000000Z'
+      },
+      {
+        id: 2,
+        user: {
+          id: 2,
+          name: 'سارة أحمد محمود',
+          email: 'sara@example.com'
+        },
+        product: {
+          id: 11,
+          name: 'مثقاب كهربائي بوش GSR 120-LI',
+          image: '/images/products/drill.jpg'
+        },
+        rating: 4,
+        review: 'مثقاب جيد وعملي، لكن البطارية تحتاج لشحن متكرر. بشكل عام راضية عن الشراء.',
+        status: 'pending',
+        verified_purchase: true,
+        helpful_count: 8,
+        images: [],
+        created_at: '2024-01-14T14:20:00.000000Z',
+        updated_at: '2024-01-14T14:20:00.000000Z'
+      },
+      {
+        id: 3,
+        user: {
+          id: 3,
+          name: 'محمد عبد الرحمن',
+          email: 'mohamed@example.com'
+        },
+        product: {
+          id: 6,
+          name: 'أسمنت بورتلاند ممتاز',
+          image: '/images/products/cement.jpg'
+        },
+        rating: 3,
+        review: 'جودة متوسطة، السعر مناسب لكن توقعت أفضل من ذلك.',
+        status: 'approved',
+        verified_purchase: false,
+        helpful_count: 3,
+        images: [],
+        created_at: '2024-01-13T09:15:00.000000Z',
+        updated_at: '2024-01-13T09:15:00.000000Z'
+      },
+      {
+        id: 4,
+        user: {
+          id: 4,
+          name: 'فاطمة حسن',
+          email: 'fatma@example.com'
+        },
+        product: {
+          id: 8,
+          name: 'حديد تسليح ممتاز 10 مم',
+          image: '/images/products/rebar.jpg'
+        },
+        rating: 1,
+        review: 'للأسف المنتج وصل معيب وبه صدأ، خدمة العملاء لم تتجاوب معي. لا أنصح بالشراء.',
+        status: 'rejected',
+        verified_purchase: true,
+        helpful_count: 22,
+        images: ['defect1.jpg'],
+        created_at: '2024-01-12T16:45:00.000000Z',
+        updated_at: '2024-01-12T18:30:00.000000Z'
+      },
+      {
+        id: 5,
+        user: {
+          id: 5,
+          name: 'عمر الشريف',
+          email: 'omar@example.com'
+        },
+        product: {
+          id: 11,
+          name: 'مثقاب كهربائي بوش GSR 120-LI',
+          image: '/images/products/drill.jpg'
+        },
+        rating: 5,
+        review: 'ممتاز! يعمل بكفاءة عالية ومناسب لجميع الأعمال. التعبئة كانت ممتازة والشحن سريع.',
+        status: 'approved',
+        verified_purchase: true,
+        helpful_count: 19,
+        images: ['unboxing.jpg', 'inuse.jpg'],
+        created_at: '2024-01-11T11:20:00.000000Z',
+        updated_at: '2024-01-11T11:20:00.000000Z'
+      }
+    ];
+
+    // Apply basic filtering
+    let filteredReviews = [...mockReviews];
+    
+    if (params?.search) {
+      const search = params.search.toLowerCase();
+      filteredReviews = filteredReviews.filter(review =>
+        review.user.name.toLowerCase().includes(search) ||
+        review.product.name.toLowerCase().includes(search) ||
+        review.review.toLowerCase().includes(search)
+      );
+    }
+
+    if (params?.status) {
+      filteredReviews = filteredReviews.filter(review => 
+        review.status === params.status
+      );
+    }
+
+    if (params?.rating) {
+      filteredReviews = filteredReviews.filter(review => 
+        review.rating === parseInt(params.rating)
+      );
+    }
+
+    if (params?.verified_only === 'true') {
+      filteredReviews = filteredReviews.filter(review => 
+        review.verified_purchase === true
+      );
+    }
+
+    // Sort by creation date (newest first)
+    filteredReviews.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    // Basic pagination
+    const page = parseInt(params?.page) || 1;
+    const perPage = parseInt(params?.per_page) || 20;
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    const paginatedReviews = filteredReviews.slice(start, end);
+
+    return Promise.resolve({
+      success: true,
+      data: {
+        data: paginatedReviews,
+        meta: {
+          current_page: page,
+          total: filteredReviews.length,
+          per_page: perPage,
+          last_page: Math.ceil(filteredReviews.length / perPage)
+        }
+      }
+    });
+  }
+
+  static async updateReviewStatus(reviewId: number, status: string, reason?: string): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Review status update API not available in backend');
+    
+    return Promise.resolve({
+      success: false,
+      message: 'Review status update API not available in current backend version',
+      data: null
+    });
+  }
+
+  static async getReviewsStats(): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Reviews stats API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_reviews: 5,
+        approved_reviews: 3,
+        pending_reviews: 1,
+        rejected_reviews: 1,
+        average_rating: 3.6,
+        verified_reviews: 4,
+        reviews_with_images: 3,
+        helpful_reviews: 5,
+        rating_breakdown: {
+          5: 2,
+          4: 1,
+          3: 1,
+          2: 0,
+          1: 1
+        }
+      }
+    });
+  }
+
+  // Admin Analytics APIs (Mock - not available in current backend)
+  static async getAnalyticsOverview(): Promise<APIResponse<any>> {
+    // Note: This endpoint is not available in current backend
+    console.warn('⚠️ Analytics overview API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_revenue: 125430.75,
+        total_orders: 342,
+        total_customers: 156,
+        total_products: 89,
+        revenue_growth: 15.8,
+        orders_growth: 12.4,
+        customers_growth: 8.7,
+        conversion_rate: 3.2,
+        average_order_value: 366.86,
+        repeat_customer_rate: 34.5,
+        top_selling_product: 'حديد تسليح ممتاز 10 مم',
+        top_category: 'الأدوات والمعدات'
+      }
+    });
+  }
+
+  static async getSalesAnalytics(period: string = '7days'): Promise<APIResponse<any>> {
+    console.warn('⚠️ Sales analytics API not available in backend');
+    
+    const generateSalesData = (days: number) => {
+      const data = [];
+      const today = new Date();
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        data.push({
+          date: date.toISOString().split('T')[0],
+          revenue: Math.floor(Math.random() * 5000) + 1000,
+          orders: Math.floor(Math.random() * 20) + 5,
+          customers: Math.floor(Math.random() * 15) + 3
+        });
+      }
+      return data;
+    };
+
+    const periodData = {
+      '7days': generateSalesData(7),
+      '30days': generateSalesData(30),
+      '90days': generateSalesData(90)
+    };
+
+    return Promise.resolve({
+      success: true,
+      data: periodData[period as keyof typeof periodData] || periodData['7days']
+    });
+  }
+
+  static async getTopProducts(limit: number = 10): Promise<APIResponse<any>> {
+    console.warn('⚠️ Top products analytics API not available in backend');
+    
+    const topProducts = [
+      {
+        id: 8,
+        name: 'حديد تسليح ممتاز 10 مم',
+        category: 'الأدوات والمعدات',
+        sales_count: 145,
+        revenue: 4132.50,
+        growth: 18.5
+      },
+      {
+        id: 11,
+        name: 'مثقاب كهربائي بوش GSR 120-LI',
+        category: 'الأدوات والمعدات',
+        sales_count: 89,
+        revenue: 28480.00,
+        growth: 12.3
+      },
+      {
+        id: 6,
+        name: 'أسمنت بورتلاند ممتاز',
+        category: 'الأسمنت',
+        sales_count: 234,
+        revenue: 5850.00,
+        growth: -2.1
+      },
+      {
+        id: 15,
+        name: 'مفك كهربائي ديوالت',
+        category: 'الأدوات والمعدات',
+        sales_count: 67,
+        revenue: 13400.00,
+        growth: 25.7
+      },
+      {
+        id: 22,
+        name: 'خلاطة خرسانة 350 لتر',
+        category: 'المعدات الثقيلة',
+        sales_count: 12,
+        revenue: 36000.00,
+        growth: 8.9
+      }
+    ];
+
+    return Promise.resolve({
+      success: true,
+      data: topProducts.slice(0, limit)
+    });
+  }
+
+  static async getCustomerAnalytics(): Promise<APIResponse<any>> {
+    console.warn('⚠️ Customer analytics API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_customers: 156,
+        new_customers_this_month: 23,
+        returning_customers: 54,
+        customer_lifetime_value: 2450.30,
+        churn_rate: 5.2,
+        acquisition_cost: 85.40,
+        demographics: {
+          age_groups: {
+            '18-25': 12,
+            '26-35': 45,
+            '36-45': 67,
+            '46-55': 28,
+            '55+': 4
+          },
+          locations: {
+            'القاهرة': 78,
+            'الجيزة': 34,
+            'الإسكندرية': 22,
+            'أخرى': 22
+          }
+        },
+        top_customers: [
+          { name: 'شركة المقاولات الكبرى', orders: 15, revenue: 5200.80 },
+          { name: 'مؤسسة الإنشاء الحديث', orders: 12, revenue: 3450.75 },
+          { name: 'شركة البناء المتقدم', orders: 8, revenue: 2890.50 }
+        ]
+      }
+    });
+  }
+
+  static async getCategoryAnalytics(): Promise<APIResponse<any>> {
+    console.warn('⚠️ Category analytics API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: [
+        {
+          id: 2,
+          name: 'الأدوات والمعدات',
+          products_count: 25,
+          revenue: 45230.80,
+          orders: 156,
+          growth: 18.7,
+          percentage: 36.1
+        },
+        {
+          id: 3,
+          name: 'معدات الأمان',
+          products_count: 12,
+          revenue: 15670.40,
+          orders: 89,
+          growth: 8.3,
+          percentage: 12.5
+        },
+        {
+          id: 9,
+          name: 'الأسمنت',
+          products_count: 8,
+          revenue: 28440.20,
+          orders: 234,
+          growth: -2.1,
+          percentage: 22.7
+        },
+        {
+          id: 4,
+          name: 'المواد الخام',
+          products_count: 18,
+          revenue: 22890.15,
+          orders: 123,
+          growth: 12.9,
+          percentage: 18.3
+        },
+        {
+          id: 5,
+          name: 'المعدات الثقيلة',
+          products_count: 6,
+          revenue: 13199.20,
+          orders: 34,
+          growth: 25.4,
+          percentage: 10.5
+        }
+      ]
+    });
+  }
+
+  static async getOrdersAnalytics(): Promise<APIResponse<any>> {
+    console.warn('⚠️ Orders analytics API not available in backend');
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        total_orders: 342,
+        pending_orders: 23,
+        processing_orders: 45,
+        shipped_orders: 67,
+        delivered_orders: 189,
+        cancelled_orders: 18,
+        refunded_orders: 8,
+        order_trends: {
+          daily_average: 12.3,
+          weekly_growth: 8.7,
+          monthly_growth: 15.2
+        },
+        payment_methods: {
+          'credit_card': 145,
+          'cash_on_delivery': 123,
+          'bank_transfer': 74
+        },
+        shipping_methods: {
+          'standard': 234,
+          'express': 89,
+          'pickup': 19
+        }
+      }
+    });
+  }
+
+  static async getRevenueAnalytics(period: string = '12months'): Promise<APIResponse<any>> {
+    console.warn('⚠️ Revenue analytics API not available in backend');
+    
+    const generateMonthlyData = () => {
+      const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                     'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      return months.map((month, index) => ({
+        month,
+        revenue: Math.floor(Math.random() * 15000) + 5000,
+        orders: Math.floor(Math.random() * 50) + 20,
+        profit: Math.floor(Math.random() * 5000) + 2000
+      }));
+    };
+
+    return Promise.resolve({
+      success: true,
+      data: {
+        monthly_data: generateMonthlyData(),
+        total_revenue: 125430.75,
+        total_profit: 35620.45,
+        profit_margin: 28.4,
+        revenue_growth: 15.8,
+        best_month: 'نوفمبر',
+        worst_month: 'فبراير'
+      }
+    });
+  }
+
+
+
+  // Admin Review Management APIs (Available in backend)
+  static async getReviewsStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/reviews/stats');
+  }
+
+  static async getAdminReviews(params?: any): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/reviews', params);
+  }
+
+  static async getReviewAnalytics(params?: any): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/reviews/analytics', params);
+  }
+
+  static async getAdminReviewDetails(reviewId: number): Promise<APIResponse<any>> {
+    return this.client.get<any>(`/admin/reviews/${reviewId}`);
+  }
+
+  static async updateReviewStatus(reviewId: number, status: string, reason?: string): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/reviews/${reviewId}/status`, { status, reason });
+  }
+
+  // Admin Customer Management APIs (Available in backend)
+  static async getCustomersStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/customers/stats');
+  }
+
+  static async getAdminCustomers(params?: any): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/customers', params);
   }
 
   // Addresses APIs
@@ -417,8 +1280,18 @@ export class ApiService {
   }
 
   // Contact APIs
-  static async sendContactMessage(contactData: any): Promise<APIResponse<any>> {
-    return this.client.post<any>('/contact', contactData);
+  static async sendContactMessage(contactData: {
+    name: string;
+    email: string;
+    phone?: string;
+    company?: string;
+    subject: string;
+    message: string;
+    project_type?: string;
+  }): Promise<APIResponse<{
+    ticket_id: string;
+  }>> {
+    return this.client.post('/contact', contactData);
   }
 
   // Brands APIs
@@ -426,14 +1299,7 @@ export class ApiService {
     return this.client.get<Brand[]>('/brands', params);
   }
 
-  // Suppliers APIs
-  static async getSuppliers(params?: any): Promise<APIResponse<Supplier[]>> {
-    return this.client.get<Supplier[]>('/suppliers', params);
-  }
 
-  static async getSupplier(supplierId: number): Promise<APIResponse<any>> {
-    return this.client.get<any>(`/suppliers/${supplierId}`);
-  }
 
   // Notifications APIs
   static async getNotifications(params?: any): Promise<APIResponse<any[]>> {
@@ -482,6 +1348,184 @@ export class ApiService {
 
   static async testAuth(): Promise<APIResponse<any>> {
     return this.client.get<any>('/auth-test');
+  }
+
+  // Admin Dashboard APIs
+  static async getDashboardStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/dashboard/stats');
+  }
+
+  static async getRecentActivity(params?: { limit?: number }): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/dashboard/recent-activity', params);
+  }
+
+  static async getDashboardOverview(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/dashboard/overview');
+  }
+
+  // Suppliers API
+  static async getSuppliers(params?: { lang?: string; page?: number; per_page?: number }): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/suppliers', params);
+  }
+
+  static async getSupplierDetails(id: number, params?: { lang?: string }): Promise<APIResponse<any>> {
+    return this.client.get<any>(`/suppliers/${id}`, params);
+  }
+
+  // Admin Products Management APIs
+  static async getAdminProducts(params?: any): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/products', params);
+  }
+
+  static async getAdminProductsStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/products/stats');
+  }
+
+  static async getAdminProduct(id: number, params?: { lang?: string }): Promise<APIResponse<any>> {
+    console.log('🔍 Admin Product API Call:', `/admin/products/${id}`, params);
+    return this.client.get<any>(`/admin/products/${id}`, params);
+  }
+
+  static async createProduct(data: any): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/products', data);
+  }
+
+  static async createProductWithFiles(formData: FormData): Promise<APIResponse<any>> {
+    // إعداد headers خاص للـ FormData
+    const url = `${this.client.baseURL}/admin/products`;
+    const token = this.getToken();
+
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        // لا نضع Content-Type لأن FormData هيحطه تلقائياً
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: formData,
+    };
+
+    try {
+      console.log('📡 Creating product with FormData to:', url);
+      console.log('📡 Token present:', !!token);
+      
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Create product with files failed:', response.status, data);
+        return {
+          success: false,
+          message: data.message || `HTTP ${response.status}`,
+          data: null
+        };
+      }
+
+      console.log('✅ Create product with files success:', data);
+      return {
+        success: true,
+        message: data.message || 'Product created successfully',
+        data: data.data || data
+      };
+    } catch (error: any) {
+      console.error('❌ Network error in createProductWithFiles:', error);
+      return {
+        success: false,
+        message: error.message || 'Network error occurred',
+        data: null
+      };
+    }
+  }
+
+  static async updateProduct(id: number, data: any): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/products/${id}`, data);
+  }
+
+  static async updateProductWithFiles(id: number, formData: FormData): Promise<APIResponse<any>> {
+    try {
+      // ✅ إعداد URL صحيح مع protocol كامل
+      const baseUrl = 'http://localhost:8000/api/v1';
+      const url = `${baseUrl}/admin/products/${id}`;
+      const token = this.getToken();
+
+      console.log('📋 FormData contents:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value instanceof File ? `File(${value.name})` : value);
+      }
+
+      console.log('📡 Sending FormData to:', url);
+      console.log('📡 Token present:', !!token);
+      console.log('📡 Method: POST (pure FormData)');
+      
+      // ✅ طلب مباشر بدون method spoofing
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          // ⚠️ لا نضع Content-Type للـ FormData!
+        },
+        body: formData,
+      });
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ HTTP Error:', response.status, errorText);
+        throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      console.log('📡 FormData Upload Response:', data);
+
+      if (data.success) {
+        console.log('✅ FormData upload success:', data);
+        return {
+          success: true,
+          message: data.message || 'تم تحديث المنتج بنجاح',
+          data: data.data
+        };
+      } else {
+        console.error('🚫 API Error Response:', data);
+        if (data.errors) {
+          console.error('🚫 Validation Errors:', data.errors);
+          Object.entries(data.errors).forEach(([field, messages]) => {
+            console.error(`❌ ${field}:`, messages);
+          });
+        }
+        throw new Error(data.message || 'فشل تحديث المنتج');
+      }
+    } catch (error: any) {
+      console.error('❌ FormData Upload Error:', error);
+      
+      if (error.message?.includes('Failed to fetch')) {
+        throw new Error('خطأ في الاتصال بالسيرفر. تأكد من أن Backend يعمل على http://localhost:8000');
+      }
+      
+      throw new Error(error.message || 'حدث خطأ في الشبكة');
+    }
+  }
+
+  private static getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token') || localStorage.getItem('admin_token');
+    }
+    return null;
+  }
+
+  static async deleteProduct(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/products/${id}`);
+  }
+
+  static async toggleProductStatus(id: number): Promise<APIResponse<any>> {
+    return this.client.patch<any>(`/admin/products/${id}/toggle-status`);
+  }
+
+  static async toggleProductFeatured(id: number): Promise<APIResponse<any>> {
+    return this.client.patch<any>(`/admin/products/${id}/toggle-featured`);
   }
 }
 

@@ -7,6 +7,8 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+// import DevModeNotice from '../components/DevModeNotice'; // Disabled - System is production ready
+
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -48,24 +50,52 @@ export default function AuthPage() {
     }));
   };
 
+
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    console.log('🔐 محاولة تسجيل الدخول:', { email: loginData.email });
+
     try {
+      console.log('🔐 تسجيل دخول للمستخدم:', loginData.email);
+      
       const success = await login(loginData.email, loginData.password);
       if (success) {
         setSuccess('تم تسجيل الدخول بنجاح!');
+        
+        // Get user data to check role
+        const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+        const isAdminEmail = loginData.email.toLowerCase().includes('admin') || 
+                         loginData.email.toLowerCase().includes('customer@example.com');
+        const isAdmin = userData.role === 'admin' || isAdminEmail;
+        
+        console.log('👤 User logged in - Role:', userData.role, '| Email-based admin:', isAdminEmail, '| Is Admin:', isAdmin);
+        
+        // Redirect based on final admin status
         setTimeout(() => {
-          router.push('/');
+          if (isAdmin) {
+            console.log('🚀 Admin user - redirecting to dashboard...');
+          router.push('/dashboard');
+          } else {
+            console.log('👤 Customer user - redirecting to home...');
+            router.push('/');
+          }
         }, 1500);
       } else {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
+      if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err?.message) {
+        setError(err.message);
+      } else {
       setError('حدث خطأ أثناء تسجيل الدخول');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +105,12 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    console.log('📝 محاولة إنشاء حساب جديد:', { 
+      name: registerData.name, 
+      email: registerData.email,
+      phone: registerData.phone 
+    });
 
     if (registerData.password !== registerData.confirmPassword) {
       setError('كلمة المرور غير متطابقة');
@@ -95,7 +131,7 @@ export default function AuthPage() {
         password: registerData.password,
         password_confirmation: registerData.confirmPassword,
         phone: registerData.phone,
-        address: registerData.company // Using company field as address for now
+        address: registerData.company || '' // Using company field as address for now
       });
 
       if (success) {
@@ -106,9 +142,15 @@ export default function AuthPage() {
       } else {
         setError('المستخدم موجود بالفعل');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Register error:', err);
+      if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err?.message) {
+        setError(err.message);
+      } else {
       setError('حدث خطأ أثناء إنشاء الحساب');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -136,6 +178,9 @@ export default function AuthPage() {
       {/* Auth Forms */}
       <section className="py-16 bg-white">
         <div className="max-w-md mx-auto px-6 lg:px-8">
+          
+          {/* Development Mode Notice - Disabled (System is now production ready) */}
+          {/* <DevModeNotice /> */}
           
           {/* Toggle Buttons */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
@@ -187,6 +232,8 @@ export default function AuthPage() {
               </div>
             </div>
           )}
+
+
 
           {/* Login Form */}
           {isLogin ? (

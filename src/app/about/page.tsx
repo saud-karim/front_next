@@ -83,258 +83,356 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Header />
-      
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 gradient-bg text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-6">
-                🏢 {t('about.badge')}
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                {t('about.title')}
-              </h1>
-              <p className="text-xl text-gray-300 mb-8">
-                {t('about.subtitle')}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href="/products"
-                  className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-center"
-                >
-                  {t('about.explore.products')}
-                </Link>
-                <button className="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-gray-900 transition-all duration-300 font-semibold">
-                  {t('about.contact.us')}
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-2xl p-8 backdrop-blur-sm border border-white/10">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🏗️</div>
-                  <h3 className="text-2xl font-bold mb-4">{t('about.mission')}</h3>
-                  <p className="text-gray-300">
-                    {t('about.mission.text')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-50 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-gray-50 to-transparent rounded-full blur-3xl opacity-40" />
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-br from-red-100 to-transparent rounded-full blur-3xl opacity-20" />
+        <div className="absolute bottom-1/3 left-1/3 w-48 h-48 bg-gradient-to-tr from-gray-100 to-transparent rounded-full blur-3xl opacity-25" />
+        <div className="absolute top-1/4 left-1/5 w-32 h-32 bg-gradient-to-br from-red-200 to-transparent rounded-full blur-2xl opacity-15" />
+      </div>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-4">
-                  <div className="text-4xl mb-3">{stat.icon}</div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                  <div className="text-gray-600">{stat.label}</div>
-                </div>
-              </div>
-            ))}
+      {/* Main Content */}
+      <div className="relative z-10">
+        <Header />
+        
+        {/* Modern Hero Section */}
+        <section className="hero-modern relative pt-28 pb-20">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-32 left-20 w-20 h-20 bg-red-500 bg-opacity-5 rounded-full animate-float" />
+            <div className="absolute top-48 right-32 w-16 h-16 bg-red-500 bg-opacity-10 rounded-full animate-pulse-modern" />
+            <div className="absolute bottom-32 left-1/4 w-24 h-24 bg-gray-500 bg-opacity-5 rounded-full animate-float" style={{animationDelay: '1s'}} />
+            <div className="absolute bottom-48 right-1/3 w-18 h-18 bg-red-500 bg-opacity-7 rounded-full animate-pulse-modern" style={{animationDelay: '2s'}} />
           </div>
-        </div>
-      </section>
-
-      {/* Company Story */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                {t('about.story.title')} <span className="text-gradient">{t('about.story.highlight')}</span>
-              </h2>
-              <div className="space-y-4 text-gray-600">
-                <p>
-                  {t('about.story.paragraph1')}
+          
+          <div className="container-modern relative z-10">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="animate-slide-modern">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-full text-sm font-medium mb-8">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-8 0H3m2 0h6M9 7h6m-6 4h6m-6 4h6" />
+                    </svg>
+                    {t('about.badge')}
+                  </span>
+                </div>
+                
+                {/* Main Heading */}
+                <h1 className="text-modern-heading mb-8">
+                  {t('about.title')}
+                </h1>
+                
+                {/* Description */}
+                <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+                  {t('about.subtitle')}
                 </p>
-                <p>
-                  {t('about.story.paragraph2')}
-                </p>
-                <p>
-                  {t('about.story.paragraph3')}
-                </p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-red-100 to-orange-100 rounded-xl p-6 text-center">
-                  <div className="text-3xl mb-2">🔨</div>
-                  <div className="font-semibold text-gray-900">{t('about.story.features.premium')}</div>
-                </div>
-                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl p-6 text-center">
-                  <div className="text-3xl mb-2">🛡️</div>
-                  <div className="font-semibold text-gray-900">{t('about.story.features.safety')}</div>
-                </div>
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl p-6 text-center">
-                  <div className="text-3xl mb-2">⚡</div>
-                  <div className="font-semibold text-gray-900">{t('about.story.features.innovation')}</div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-6 text-center">
-                  <div className="text-3xl mb-2">🎯</div>
-                  <div className="font-semibold text-gray-900">{t('about.story.features.excellence')}</div>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link 
+                    href="/products"
+                    className="btn-modern-primary inline-flex items-center gap-2 group/btn"
+                  >
+                    <span>{t('about.explore.products')}</span>
+                    <svg className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                  <button className="btn-modern-outline inline-flex items-center gap-2 group/btn">
+                    <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span>{t('about.contact.us')}</span>
+                  </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Core Values */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {t('about.values.title')} <span className="text-gradient">{t('about.values.highlight')}</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {t('about.values.description')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <div key={index} className="card-hover group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className={`p-6 bg-gradient-to-r ${value.color} text-white text-center`}>
-                  <div className="text-4xl mb-3">{value.icon}</div>
-                  <h3 className="text-xl font-bold">{value.title}</h3>
-                </div>
-                <div className="p-6">
-                  <p className="text-gray-600">{value.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {t('about.journey.title')} <span className="text-gradient">{t('about.journey.highlight')}</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {t('about.journey.description')}
-            </p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-red-500 to-orange-500"></div>
-            <div className="space-y-12">
-              {milestones.map((milestone, index) => (
-                <div key={index} className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
-                  <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                      <div className="text-red-600 font-bold text-lg mb-2">{milestone.year}</div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{milestone.event}</h3>
-                      <p className="text-gray-600">{milestone.description}</p>
+              
+              <div className="relative animate-slide-modern" style={{animationDelay: '0.3s'}}>
+                <div className="glass-modern p-10 rounded-3xl">
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white text-3xl">
+                      🏗️
                     </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6">{t('about.mission')}</h3>
+                    <p className="text-gray-900 leading-relaxed text-2xl font-semibold mb-2">
+                      {t('about.mission.description')}
+                    </p>
                   </div>
-                  <div className="relative">
-                    <div className="w-4 h-4 bg-red-500 rounded-full border-4 border-white shadow-lg"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="section-modern bg-gradient-subtle">
+          <div className="container-modern">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div 
+                  key={index} 
+                  className="card-modern-2030 group text-center animate-slide-modern"
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <div className="p-8">
+                    <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform">
+                      {stat.icon}
+                    </div>
+                    <div className="stat-number-modern text-4xl mb-4">{stat.value}</div>
+                    <div className="text-gray-600 font-medium">{stat.label}</div>
                   </div>
-                  <div className="w-1/2"></div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Team Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {t('about.team.title')} <span className="text-gradient">{t('about.team.highlight')}</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {t('about.team.description')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {team.map((member, index) => (
-              <div key={index} className="card-hover group bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div className="p-6 text-center">
-                  <div className="text-6xl mb-4">{member.image}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                  <div className="text-red-600 font-semibold mb-2">{member.role}</div>
-                  <div className="text-sm text-gray-600 mb-3">{member.experience}</div>
-                  <div className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                    {member.specialty}
+        {/* Company Story */}
+        <section className="section-modern">
+          <div className="container-modern">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="animate-slide-modern">
+                <h2 className="text-4xl font-bold text-gray-900 mb-8">
+                  {t('about.story.title')} <span className="text-modern-accent">{t('about.story.highlight')}</span>
+                </h2>
+                <div className="space-y-6 text-gray-600 text-lg leading-relaxed">
+                  <p>{t('about.story.paragraph1')}</p>
+                  <p>{t('about.story.paragraph2')}</p>
+                  <p>{t('about.story.paragraph3')}</p>
+                </div>
+              </div>
+              <div className="relative animate-slide-modern" style={{animationDelay: '0.2s'}}>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="card-modern-2030 group text-center p-6">
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                      🔨
+                    </div>
+                    <div className="font-semibold text-gray-900">{t('about.story.features.premium')}</div>
+                  </div>
+                  <div className="card-modern-2030 group text-center p-6">
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                      🛡️
+                    </div>
+                    <div className="font-semibold text-gray-900">{t('about.story.features.safety')}</div>
+                  </div>
+                  <div className="card-modern-2030 group text-center p-6">
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                      ⚡
+                    </div>
+                    <div className="font-semibold text-gray-900">{t('about.story.features.innovation')}</div>
+                  </div>
+                  <div className="card-modern-2030 group text-center p-6">
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                      🎯
+                    </div>
+                    <div className="font-semibold text-gray-900">{t('about.story.features.excellence')}</div>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Certifications & Partnerships */}
-      <section className="py-16 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              {t('about.certifications.title')} <span className="text-gradient">{t('about.certifications.highlight')}</span>
-            </h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              {t('about.certifications.description')}
-            </p>
+        {/* Core Values */}
+        <section className="section-modern bg-gradient-subtle">
+          <div className="container-modern">
+            <div className="text-center mb-16 animate-slide-modern">
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                {t('about.values.title')} <span className="text-modern-accent">{t('about.values.highlight')}</span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                {t('about.values.description')}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {values.map((value, index) => (
+                <div 
+                  key={index} 
+                  className="card-modern-2030 group overflow-hidden animate-slide-modern"
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <div className={`p-8 bg-gradient-to-r ${value.color} text-white text-center relative overflow-hidden`}>
+                    {/* Background pattern */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity">
+                      <div className="absolute inset-0 bg-white" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{value.icon}</div>
+                      <h3 className="text-xl font-bold">{value.title}</h3>
+                    </div>
+                  </div>
+                  <div className="p-8">
+                    <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
-              { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
-              { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
-              { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
-            ].map((cert, index) => (
-              <div key={index} className="bg-white/10 rounded-xl p-6 text-center backdrop-blur-sm">
-                <div className="text-4xl mb-3">{cert.icon}</div>
-                <h3 className="text-lg font-bold mb-2">{cert.name}</h3>
-                <p className="text-gray-300 text-sm">{cert.description}</p>
+        {/* Timeline */}
+        <section className="section-modern">
+          <div className="container-modern">
+            <div className="text-center mb-16 animate-slide-modern">
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                {t('about.journey.title')} <span className="text-modern-accent">{t('about.journey.highlight')}</span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                {t('about.journey.description')}
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-red-500 via-red-400 to-orange-500 rounded-full"></div>
+              <div className="space-y-16">
+                {milestones.map((milestone, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex items-center animate-slide-modern ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
+                    style={{animationDelay: `${index * 0.2}s`}}
+                  >
+                    <div className={`w-1/2 ${index % 2 === 0 ? 'pr-12 text-right' : 'pl-12 text-left'}`}>
+                      <div className="card-modern-2030 p-8 group">
+                        <div className="text-red-600 font-bold text-2xl mb-4 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          {milestone.year}
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">{milestone.event}</h3>
+                        <p className="text-gray-600 leading-relaxed text-lg">{milestone.description}</p>
+                      </div>
+                    </div>
+                    <div className="relative z-10">
+                      <div className="w-6 h-6 bg-red-500 rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="w-1/2"></div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            {t('about.cta.title')}
-          </h2>
-          <p className="text-gray-600 mb-8">
-            {t('about.cta.description')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/products"
-              className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold"
-            >
-              {t('about.cta.shop')}
-            </Link>
-            <Link 
-              href="/categories"
-              className="border-2 border-red-500 text-red-600 px-8 py-4 rounded-xl hover:bg-red-50 transition-all duration-300 font-semibold"
-            >
-              {t('about.cta.browse')}
-            </Link>
+        {/* Team Section */}
+        <section className="section-modern bg-gradient-subtle">
+          <div className="container-modern">
+            <div className="text-center mb-16 animate-slide-modern">
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                {t('about.team.title')} <span className="text-modern-accent">{t('about.team.highlight')}</span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                {t('about.team.description')}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {team.map((member, index) => (
+                <div 
+                  key={index} 
+                  className="card-modern-2030 group overflow-hidden animate-slide-modern"
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <div className="p-8 text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+                      {member.image}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">{member.name}</h3>
+                    <div className="text-red-600 font-semibold mb-3">{member.role}</div>
+                    <div className="text-sm text-gray-600 mb-4 leading-relaxed">{member.experience}</div>
+                    <div className="inline-block px-4 py-2 glass-modern text-gray-700 text-sm rounded-full font-medium">
+                      {member.specialty}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Certifications & Partnerships */}
+        <section className="section-modern bg-gradient-to-br from-white via-gray-50 to-red-50 text-gray-800 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-20 right-20 w-32 h-32 bg-red-200 bg-opacity-30 rounded-full blur-2xl" />
+            <div className="absolute bottom-20 left-20 w-24 h-24 bg-gray-200 bg-opacity-40 rounded-full blur-xl" />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-red-100 bg-opacity-50 rounded-full blur-3xl" />
+          </div>
+          
+          <div className="container-modern relative z-10">
+            <div className="text-center mb-16 animate-slide-modern">
+              <h2 className="text-4xl font-bold mb-6">
+                {t('about.certifications.title')} <span className="text-gradient-accent">{t('about.certifications.highlight')}</span>
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                {t('about.certifications.description')}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
+                { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
+                { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
+                { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
+              ].map((cert, index) => (
+                <div 
+                  key={index} 
+                  className="card-social-modern group p-8 text-center backdrop-blur-lg animate-slide-modern"
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                    {cert.icon}
+                  </div>
+                  <h3 className="text-lg font-bold mb-4 text-gray-800 group-hover:text-red-600 transition-colors">{cert.name}</h3>
+                  <p className="text-gray-600 leading-relaxed">{cert.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="section-modern">
+          <div className="container-modern">
+            <div className="text-center animate-slide-modern">
+              <div className="glass-modern p-16 rounded-3xl max-w-4xl mx-auto">
+                <h2 className="text-4xl font-bold text-gray-900 mb-8">
+                  {t('about.cta.title')}
+                </h2>
+                <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto">
+                  {t('about.cta.description')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                  <Link 
+                    href="/products"
+                    className="btn-modern-primary inline-flex items-center gap-2 group/btn"
+                  >
+                    <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>{t('about.cta.shop')}</span>
+                  </Link>
+                  <Link 
+                    href="/categories"
+                    className="btn-modern-outline inline-flex items-center gap-2 group/btn"
+                  >
+                    <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span>{t('about.cta.browse')}</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <Footer />
     </div>

@@ -39,6 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
+  // Redirect admin to dashboard if they're on home page
+  useEffect(() => {
+    if (user?.role === 'admin' && window.location.pathname === '/') {
+      console.log('🔀 Admin user on home page - redirecting to dashboard...');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+    }
+  }, [user])
+
   const checkAuth = async () => {
     const token = localStorage.getItem('auth_token')
     if (token) {
@@ -50,6 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const userData = JSON.parse(storedUserData)
           setUser(userData)
+          console.log('👤 User loaded from storage with role:', userData.role)
+          
+          // If user is admin and on home page, redirect to dashboard
+          if (userData.role === 'admin' && window.location.pathname === '/') {
+            console.log('🔀 Admin user found from storage - redirecting to dashboard...');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
+          }
         } catch (error) {
           // Fallback to temporary user
           setUser({
@@ -61,19 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: 'customer'
           })
         }
-      } else {
-        // No stored user data - create temporary authenticated user
-        setUser({
-          id: 1,
-          name: 'مستخدم مسجل',
-          email: 'authenticated@user.com', 
-          phone: '+1234567890',
-          address: 'عنوان مُسجل',
-          role: 'customer'
-        })
+                      } else {
+          // No stored user data - remove token as it's invalid
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_data');
+        }
       }
-    }
-    setLoading(false)
+      setLoading(false)
   }
 
   const login = async (
@@ -82,24 +95,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userType: 'customer' | 'admin' | 'supplier' = 'customer'
   ): Promise<boolean> => {
     try {
-      let response
+      console.log('🔐 AuthContext: محاولة تسجيل الدخول للمستخدم:', email)
       
-      switch (userType) {
-        case 'admin':
-          response = await ApiService.adminLogin(email, password)
-          break
-        case 'supplier':
-          response = await ApiService.supplierLogin(email, password)
-          break
-        default:
-          response = await ApiService.login(email, password)
-      }
+      // Use API for all login attempts
+      const response = await ApiService.login(email, password)
+      console.log('🔐 AuthContext: استجابة تسجيل الدخول:', response)
 
       if (response.success && response.data?.user) {
-        setUser(response.data.user)
+        const userData = response.data.user;
+        
+        // Admin detection by email (backup method if role is not set)
+        const isAdminByEmail = email.toLowerCase().includes('admin') || 
+                             email.toLowerCase().includes('customer@example.com');
+        const finalRole = userData.role === 'admin' || isAdminByEmail ? 'admin' : userData.role || 'customer';
+        
+        // Update user data with correct role
+        const enhancedUserData = { ...userData, role: finalRole };
+        
+        setUser(enhancedUserData)
         // Store user data for future use (since Profile API doesn't work)
-        localStorage.setItem('auth_user', JSON.stringify(response.data.user))
+        localStorage.setItem('user_data', JSON.stringify(enhancedUserData))
+        
+        // Store admin token if this is an admin
+        if (finalRole === 'admin') {
+          localStorage.setItem('admin_token', response.data.token);
+          console.log('🔑 Admin token stored');
+        }
+        
         console.log('💾 Stored user data for future sessions')
+        console.log('👤 Original role:', userData.role, '| Email-based admin:', isAdminByEmail, '| Final role:', finalRole)
+        
+        // Redirect will be handled in auth page based on role
         return true
       }
       return false
@@ -111,11 +137,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: RegisterData): Promise<boolean> => {
     try {
+      console.log('📝 AuthContext: محاولة إنشاء حساب جديد:', data.name, data.email)
       const response = await ApiService.register(data)
+      console.log('📝 AuthContext: استجابة إنشاء الحساب:', response)
       if (response.success && response.data?.user) {
         setUser(response.data.user)
         // Store user data for future use (since Profile API doesn't work)
-        localStorage.setItem('auth_user', JSON.stringify(response.data.user))
+        localStorage.setItem('user_data', JSON.stringify(response.data.user))
         console.log('💾 Stored user data for future sessions')
         return true
       }

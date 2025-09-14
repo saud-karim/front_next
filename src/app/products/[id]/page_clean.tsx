@@ -203,7 +203,7 @@ export default function ProductDetailsPage() {
                     onClick={handleAddToCart}
                     className="flex-1 gradient-red text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300"
                   >
-                    {t('products.add.cart')} - ${(product.price * quantity).toFixed(2)}
+                    {t('products.add.cart')} - ${(parseFloat(product.price) * quantity).toFixed(2)}
                   </button>
                   <button
                     onClick={() => handleWishlistToggle(product)}

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { ApiService } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SimpleCategoriesPage() {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ export default function SimpleCategoriesPage() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-xl">جاري تحميل الفئات...</p>
+          <p className="mt-4 text-xl">{t('common.loading') || 'Loading categories...'}</p>
         </div>
       </div>
     );

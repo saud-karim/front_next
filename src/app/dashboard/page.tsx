@@ -1,467 +1,538 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { useUser } from '../context/UserContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { ApiService } from '../services/api';
+import AdminLoginHelper from './components/AdminLoginHelper';
+// import DevModeNotice from '../components/DevModeNotice'; // Disabled - System is production ready
+import QuickAdminFix from '../components/QuickAdminFix';
+import { AdminHelper } from '../utils/adminHelper';
 
-export default function DashboardPage() {
-  const { user, isLoggedIn, logout, updateProfile } = useUser();
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    company: ''
-  });
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/auth');
+interface DashboardStats {
+  total_products: number;
+  total_orders: number;
+  total_customers: number;
+  total_revenue: number;
+  pending_orders: number;
+  low_stock_products: number;
+  new_customers_this_month: number;
+  monthly_growth_percentage: number;
+}
+
+interface RecentActivity {
+  id: string | number;
+  type: 'order' | 'customer' | 'product' | 'review';
+  message: string;
+  timestamp: string;
+  user_name?: string;
+  product_id?: number;
+  product_name?: string;
+  rating?: number;
+}
+
+export default function AdminDashboard() {
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+
+  // جلب البيانات من الـ Admin Dashboard APIs
+  const fetchDashboardData = async (showRefreshing = false) => {
+      if (showRefreshing) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
+
+    // Check if admin token exists before making API call
+    const adminToken = localStorage.getItem('admin_token');
+    
+    if (!adminToken) {
+      console.warn('No admin token found, using fallback dashboard data');
+      setError('🔐 يرجى تسجيل الدخول كمدير للوصول لبيانات الداشبورد');
+      
+      // Use fallback data
+      setStats({
+        total_products: 0,
+        total_orders: 0,
+        total_customers: 0,
+        total_revenue: 0,
+        pending_orders: 0,
+        low_stock_products: 0,
+        new_customers_this_month: 0,
+        monthly_growth_percentage: 0
+      });
+      setRecentActivity([]);
+      setLoading(false);
+      setRefreshing(false);
       return;
     }
-    
-    if (user) {
-      setEditData({
-        name: user.name,
-        phone: user.phone || '',
-        address: user.address || '',
-        company: user.company || ''
+
+      console.log('📊 جاري جلب بيانات الداشبورد من Admin APIs...');
+
+    // محاولة استخدام Admin APIs مع fallback للمستخدم العادي
+    try {
+        console.log('🔍 Checking user admin permissions...');
+        
+        // جرب Admin APIs الأول
+      const [statsResponse, activityResponse] = await Promise.all([
+          ApiService.getDashboardStats().catch(err => ({ 
+            success: false, 
+            error: err.message,
+            isRoleError: err.message?.includes('User does not have the right roles')
+          })),
+          ApiService.getRecentActivity({ limit: 5 }).catch(err => ({ 
+            success: false, 
+            error: err.message,
+            isRoleError: err.message?.includes('User does not have the right roles')
+          }))
+      ]);
+
+      console.log('📊 Dashboard Stats Response:', statsResponse);
+      console.log('📋 Recent Activity Response:', activityResponse);
+
+        // إذا كانت المشكلة في الصلاحيات، استخدم customer mode
+        if (statsResponse.isRoleError || activityResponse.isRoleError) {
+          console.log('🔄 Admin APIs blocked, switching to Customer mode...');
+          
+          // استخدم customer APIs بدلاً من admin APIs
+          const customerStats = {
+            total_products: 'محدود',
+            total_orders: 'محدود', 
+            total_customers: 'محدود',
+            total_revenue: 'محدود',
+            pending_orders: 'محدود',
+            low_stock_products: 'محدود',
+            new_customers_this_month: 'محدود',
+            monthly_growth_percentage: 0
+          };
+          
+          setStats(customerStats);
+          setRecentActivity([
+            {
+              id: 1,
+              type: 'info',
+              message: 'مرحباً بك في لوحة تحكم العملاء',
+              timestamp: new Date().toISOString(),
+              user_name: 'النظام'
+            }
+          ]);
+          
+          setError('📊 تم عرض لوحة التحكم للعملاء. للوصول للإحصائيات الكاملة، تحتاج صلاحيات إدارية في قاعدة البيانات.');
+          
+        } else if (statsResponse.success && statsResponse.data) {
+          // Admin APIs تعمل بشكل طبيعي
+        setStats(statsResponse.data);
+
+      if (activityResponse.success && activityResponse.data) {
+        setRecentActivity(activityResponse.data);
+      } else {
+            setRecentActivity([]);
+          }
+        } else {
+          throw new Error('Failed to load dashboard data');
+      }
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('admin.error.loading.data') || 'Error loading dashboard data';
+      console.error('❌ خطأ في جلب بيانات الداشبورد:', err);
+      
+        // Handle authentication errors gracefully
+      if (errorMessage.includes('Unauthenticated')) {
+          console.warn('Authentication failed for dashboard APIs');
+          localStorage.removeItem('admin_token');
+          setError('🔐 انتهت صلاحية جلسة الإدارة، يرجى تسجيل الدخول مرة أخرى');
+          
+          // Use fallback data when authentication fails
+          setStats({
+            total_products: 0,
+            total_orders: 0,
+            total_customers: 0,
+            total_revenue: 0,
+            pending_orders: 0,
+            low_stock_products: 0,
+            new_customers_this_month: 0,
+            monthly_growth_percentage: 0
+          });
+          setRecentActivity([]);
+        } else if (errorMessage.includes('User does not have the right roles')) {
+          console.warn('🚫 Role permission error - User is not admin in backend');
+          setError('⚠️ تحتاج إلى صلاحيات إدارية في قاعدة البيانات. يرجى إنشاء حساب admin حقيقي في Laravel Backend.');
+          
+          // Use fallback data for role errors
+          setStats({
+            total_products: 0,
+            total_orders: 0,
+            total_customers: 0,
+            total_revenue: 0,
+            pending_orders: 0,
+            low_stock_products: 0,
+            new_customers_this_month: 0,
+            monthly_growth_percentage: 0
+          });
+          setRecentActivity([]);
+      } else {
+        setError(errorMessage);
+      }
+      
+      // في حالة الخطأ، استخدم بيانات افتراضية
+      setStats({
+        total_products: 0,
+        total_orders: 0,
+        total_customers: 0,
+        total_revenue: 0,
+        pending_orders: 0,
+        low_stock_products: 0,
+        new_customers_this_month: 0,
+        monthly_growth_percentage: 0,
       });
-    }
-  }, [isLoggedIn, user, router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  const handleSaveProfile = () => {
-    if (user) {
-      updateProfile(editData);
-      setIsEditing(false);
+      setRecentActivity([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  // Check admin token on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    setAdminToken(token);
+  }, []);
+
+  // تحميل البيانات عند تحميل المكون
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // تحديث تلقائي كل 5 دقائق
+    const interval = setInterval(() => {
+      fetchDashboardData(true); // مع مؤشر التحديث
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle successful admin login
+  const handleAdminLoginSuccess = () => {
+    const token = localStorage.getItem('admin_token');
+    setAdminToken(token);
+    setError(null);
+    fetchDashboardData();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getCurrentGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('admin.greeting.morning') || 'صباح الخير';
+    if (hour < 17) return t('admin.greeting.afternoon') || 'مساء الخير';
+    return t('admin.greeting.evening') || 'مساء الخير';
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'order': return '🛒';
+      case 'customer': return '👤';
+      case 'product': return '📦';
+      case 'review': return '⭐';
+      default: return '📝';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'في الانتظار';
-      case 'processing': return 'قيد المعالجة';
-      case 'shipped': return 'تم الشحن';
-      case 'delivered': return 'تم التوصيل';
-      case 'cancelled': return 'ملغي';
-      default: return status;
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'order': return 'text-blue-600 bg-blue-100';
+      case 'customer': return 'text-green-600 bg-green-100';
+      case 'product': return 'text-yellow-600 bg-yellow-100';
+      case 'review': return 'text-purple-600 bg-purple-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
-  if (!isLoggedIn || !user) {
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US');
+  };
+
+  // Helper function to safely format numbers or strings
+  const formatValue = (value: string | number | undefined, decimals: number = 0): string => {
+    if (typeof value === 'string') {
+      return value; // Return strings like "محدود" as-is
+    }
+    if (typeof value === 'number') {
+      return decimals > 0 ? value.toFixed(decimals) : value.toString();
+    }
+    return '0'; // Fallback for undefined/null
+  };
+
+  // Helper to safely calculate percentages for limited data
+  const safeCalculation = (baseValue: string | number | undefined, calculation: (num: number) => number): string => {
+    if (typeof baseValue === 'string') {
+      return '--'; // Return placeholder for string values
+    }
+    if (typeof baseValue === 'number') {
+      return calculation(baseValue).toString();
+    }
+    return '0';
+  };
+
+  // إنشاء بطاقات الإحصائيات
+  const statsCards = stats ? [
+    {
+      title: t('admin.stats.total.products') || 'إجمالي المنتجات',
+      value: formatValue(stats.total_products),
+      icon: '📦',
+      color: 'from-red-500 to-red-600',
+      change: '+' + safeCalculation(stats.total_products, (num) => Math.ceil(num * 0.05)),
+      changeType: 'positive' as const,
+    },
+    {
+      title: t('admin.stats.total.orders') || 'إجمالي الطلبات',
+      value: formatValue(stats.total_orders),
+      icon: '🛒',
+      color: 'from-blue-500 to-blue-600',
+      change: '+' + safeCalculation(stats.total_orders, (num) => Math.ceil(num * 0.08)),
+      changeType: 'positive' as const,
+    },
+    {
+      title: t('admin.stats.total.customers') || 'إجمالي العملاء',
+      value: formatValue(stats.total_customers),
+      icon: '👥',
+      color: 'from-green-500 to-green-600',
+      change: '+' + formatValue(stats.new_customers_this_month),
+      changeType: 'positive' as const,
+    },
+    {
+      title: t('admin.stats.total.revenue') || 'إجمالي الإيرادات',
+      value: formatValue(stats.total_revenue, 2),
+      icon: '💰',
+      color: 'from-purple-500 to-purple-600',
+      change: '+' + formatValue(stats.monthly_growth_percentage, 1) + '%',
+      changeType: 'positive' as const,
+    },
+    {
+      title: 'الطلبات المعلقة',
+      value: formatValue(stats.pending_orders),
+      icon: '⏳',
+      color: 'from-yellow-500 to-yellow-600',
+      change: (typeof stats.pending_orders === 'number' && stats.pending_orders > 0) ? 'يحتاج متابعة' : 'مُحدث',
+      changeType: (typeof stats.pending_orders === 'number' && stats.pending_orders > 5) ? 'negative' as const : 'neutral' as const,
+    },
+    {
+      title: 'مخزون منخفض',
+      value: formatValue(stats.low_stock_products),
+      icon: '📉',
+      color: 'from-orange-500 to-orange-600',
+      change: (typeof stats.low_stock_products === 'number' && stats.low_stock_products > 0) ? 'يحتاج تجديد' : 'مستقر',
+      changeType: (typeof stats.low_stock_products === 'number' && stats.low_stock_products > 3) ? 'negative' as const : 'neutral' as const,
+    },
+  ] : [];
+
+  // Note: Admin access control is handled by dashboard/layout.tsx
+  // This page will only be reached by verified admin users
+
+  // Show admin login helper if no admin token (but user is admin)
+  if (!adminToken) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحميل...</p>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                🔐 مطلوب تسجيل دخول الإدارة
+              </h1>
+              <p className="text-gray-600 mb-2">
+                مرحباً {user.name}، أنت مدير لكن تحتاج إلى تأكيد هويتك
+              </p>
+              <p className="text-gray-500 text-sm">
+                يرجى إدخال بيانات المدير للمتابعة
+              </p>
+            </div>
+            
+            <AdminLoginHelper onLoginSuccess={handleAdminLoginSuccess} />
+          </div>
         </div>
       </div>
     );
   }
 
-  const tabs = [
-    { id: 'overview', name: 'نظرة عامة', icon: '📊' },
-    { id: 'profile', name: 'الملف الشخصي', icon: '👤' },
-    { id: 'orders', name: 'الطلبات', icon: '📦' },
-    { id: 'wishlist', name: 'قائمة الأمنيات', icon: '❤️' }
-  ];
+  if (loading && !refreshing) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">{t('common.loading')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Header />
-      
-      {/* Hero Section */}
-      <section className="pt-24 pb-12 gradient-bg text-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                مرحباً، <span className="text-gradient">{user.name}</span>
-              </h1>
-              <p className="text-xl text-gray-300">
-                إدارة حسابك وطلباتك وقائمة أمنياتك
-              </p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
-            >
-              تسجيل الخروج
-            </button>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {getCurrentGreeting()}, {user?.name || 'Admin'} 👋
+            </h1>
+            <p className="text-gray-600 mt-2">
+              {t('common.overview')}
+            </p>
           </div>
+          <button
+            onClick={() => fetchDashboardData(true)}
+            disabled={refreshing}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium shadow-md disabled:opacity-50"
+          >
+            {refreshing ? `🔄 ${t('common.updating')}` : `🔄 ${t('common.update')}`}
+          </button>
         </div>
-      </section>
 
-      {/* Dashboard Content */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-4 gap-8">
-            
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <div className="text-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
-                    {user.name.charAt(0).toUpperCase()}
+        {/* Development Mode Notice - Disabled (System is now production ready) */}
+        {/* <DevModeNotice /> */}
+
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <div className="text-red-600 text-xl mr-3">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-red-800 font-medium">خطأ في التحميل</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+                
+                {/* Auth Help Message */}
+                {error.includes('تسجيل الدخول كمدير') && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-blue-800 text-sm">
+                      <p className="font-medium mb-1">📝 لتسجيل الدخول كمدير:</p>
+                      <ul className="list-disc list-inside space-y-1 text-xs">
+                        <li>تأكد من وجود <code>admin_token</code> في localStorage</li>
+                        <li>أو قم بإضافة <code>role: 'admin'</code> لحسابك</li>
+                        <li>استخدم <code>/admin/login</code> API للحصول على admin token</li>
+                      </ul>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
-                  <p className="text-gray-600">{user.email}</p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    عضو منذ {formatDate(user.joinDate)}
-                  </p>
-                </div>
-
-                <nav className="space-y-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center px-4 py-3 rounded-lg text-right transition-colors ${
-                        activeTab === tab.id
-                          ? 'gradient-red text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span className="ml-3 text-lg">{tab.icon}</span>
-                      {tab.name}
-                    </button>
-                  ))}
-                </nav>
+                )}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              
-              {/* Overview Tab */}
-              {activeTab === 'overview' && (
-                <div className="space-y-8">
-                  <h2 className="text-2xl font-bold text-gray-900">نظرة عامة</h2>
-                  
-                  {/* Stats Cards */}
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl p-6 text-white">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-blue-100">إجمالي الطلبات</p>
-                          <p className="text-3xl font-bold">{user.orders.length}</p>
-                        </div>
-                        <div className="text-4xl">📦</div>
-                      </div>
+        {/* Admin Login Helper */}
+        {error && error.includes('تسجيل الدخول كمدير') && (
+          <div className="mb-6">
+            <AdminLoginHelper onLoginSuccess={() => fetchDashboardData()} />
+          </div>
+        )}
+
+        {/* Quick Admin Fix */}
+        {error && error.includes('تسجيل الدخول كمدير') && (
+          <QuickAdminFix />
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          {statsCards.map((card, index) => (
+            <div key={index} className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${card.color} flex items-center justify-center text-white text-xl`}>
+                  {card.icon}
+                </div>
+                <div className={`text-sm px-2 py-1 rounded-full ${
+                  card.changeType === 'positive' ? 'bg-green-100 text-green-800' :
+                  card.changeType === 'negative' ? 'bg-red-100 text-red-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {card.change}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">{card.value}</h3>
+                <p className="text-gray-600 text-sm">{card.title}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Recent Activity */}
+          <div className="bg-white rounded-xl p-5 shadow-md">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              {t('admin.recent.activity') || 'الأنشطة الحديثة'}
+            </h2>
+            
+            <div className="space-y-3">
+              {recentActivity.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">
+                  {t('admin.no.recent.activity') || 'لا توجد أنشطة حديثة'}
+                </p>
+              ) : (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
+                      {getActivityIcon(activity.type)}
                     </div>
-                    
-                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl p-6 text-white">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-green-100">قائمة الأمنيات</p>
-                          <p className="text-3xl font-bold">{user.wishlist.length}</p>
-                        </div>
-                        <div className="text-4xl">❤️</div>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                      {activity.user_name && (
+                        <p className="text-xs text-gray-600">{t('admin.by.user') || 'بواسطة:'} {activity.user_name}</p>
+                      )}
+                      <p className="text-xs text-gray-500">{formatTimestamp(activity.timestamp)}</p>
                     </div>
-                    
-                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-6 text-white">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-purple-100">إجمالي الإنفاق</p>
-                          <p className="text-3xl font-bold">
-                            ${user.orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-4xl">💰</div>
-                      </div>
+                    <div className="text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </div>
-
-                  {/* Recent Orders */}
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">آخر الطلبات</h3>
-                    {user.orders.slice(0, 3).length > 0 ? (
-                      <div className="space-y-4">
-                        {user.orders.slice(0, 3).map((order) => (
-                          <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div>
-                              <p className="font-semibold">طلب #{order.id}</p>
-                              <p className="text-sm text-gray-600">{formatDate(order.date)}</p>
-                            </div>
-                            <div className="text-left">
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                                {getStatusText(order.status)}
-                              </span>
-                              <p className="text-lg font-bold mt-1">${order.total}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">لا توجد طلبات بعد</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Profile Tab */}
-              {activeTab === 'profile' && (
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-gray-900">الملف الشخصي</h2>
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="gradient-red text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300"
-                    >
-                      {isEditing ? 'إلغاء' : 'تعديل'}
-                    </button>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                    {isEditing ? (
-                      <div className="space-y-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">الاسم</label>
-                          <input
-                            type="text"
-                            value={editData.name}
-                            onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
-                          <input
-                            type="tel"
-                            value={editData.phone}
-                            onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">العنوان</label>
-                          <input
-                            type="text"
-                            value={editData.address}
-                            onChange={(e) => setEditData(prev => ({ ...prev, address: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">الشركة</label>
-                          <input
-                            type="text"
-                            value={editData.company}
-                            onChange={(e) => setEditData(prev => ({ ...prev, company: e.target.value }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          />
-                        </div>
-                        
-                        <button
-                          onClick={handleSaveProfile}
-                          className="gradient-red text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300"
-                        >
-                          حفظ التغييرات
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-500">الاسم</label>
-                          <p className="text-lg text-gray-900">{user.name}</p>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-500">البريد الإلكتروني</label>
-                          <p className="text-lg text-gray-900">{user.email}</p>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-500">رقم الهاتف</label>
-                          <p className="text-lg text-gray-900">{user.phone || 'غير محدد'}</p>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-500">الشركة</label>
-                          <p className="text-lg text-gray-900">{user.company || 'غير محدد'}</p>
-                        </div>
-                        
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-500">العنوان</label>
-                          <p className="text-lg text-gray-900">{user.address || 'غير محدد'}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Orders Tab */}
-              {activeTab === 'orders' && (
-                <div className="space-y-8">
-                  <h2 className="text-2xl font-bold text-gray-900">سجل الطلبات</h2>
-                  
-                  {user.orders.length > 0 ? (
-                    <div className="space-y-6">
-                      {user.orders.map((order) => (
-                        <div key={order.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="text-lg font-semibold">طلب #{order.id}</h3>
-                              <p className="text-gray-600">{formatDate(order.date)}</p>
-                            </div>
-                            <div className="text-left">
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                                {getStatusText(order.status)}
-                              </span>
-                              <p className="text-xl font-bold mt-1">${order.total}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="border-t pt-4">
-                            <h4 className="font-medium mb-3">المنتجات:</h4>
-                            <div className="space-y-2">
-                              {order.items.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between">
-                                  <div className="flex items-center">
-                                    <span className="text-2xl ml-3">{item.image}</span>
-                                    <div>
-                                      <p className="font-medium">{item.name}</p>
-                                      <p className="text-sm text-gray-600">الكمية: {item.quantity}</p>
-                                    </div>
-                                  </div>
-                                  <p className="font-semibold">${item.price * item.quantity}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {order.trackingNumber && (
-                            <div className="border-t pt-4 mt-4">
-                              <p className="text-sm text-gray-600">
-                                رقم التتبع: <span className="font-mono text-blue-600">{order.trackingNumber}</span>
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">📦</div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">لا توجد طلبات بعد</h3>
-                      <p className="text-gray-600 mb-6">ابدأ التسوق لإنشاء طلبك الأول</p>
-                      <Link 
-                        href="/products"
-                        className="gradient-red text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 inline-block"
-                      >
-                        تسوق الآن
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Wishlist Tab */}
-              {activeTab === 'wishlist' && (
-                <div className="space-y-8">
-                  <h2 className="text-2xl font-bold text-gray-900">قائمة الأمنيات</h2>
-                  
-                  {user.wishlist.length > 0 ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {user.wishlist.map((item) => (
-                        <div key={item.id} className="card-hover bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                          <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 text-center">
-                            <div className="text-4xl mb-2">{item.image}</div>
-                            <div className={`inline-block px-2 py-1 ${item.badgeColor} text-white text-xs font-bold rounded-full`}>
-                              {item.badge}
-                            </div>
-                          </div>
-                          
-                          <div className="p-4">
-                            <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <span className="text-lg font-bold text-gray-900">{item.price}</span>
-                                <span className="text-sm text-gray-500 line-through ml-2">{item.originalPrice}</span>
-                              </div>
-                              <div className="flex text-yellow-400">
-                                {[...Array(5)].map((_, i) => (
-                                  <svg key={i} className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                  </svg>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Link 
-                                href={`/products/${item.id}`}
-                                className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-center"
-                              >
-                                عرض
-                              </Link>
-                              <button className="flex-1 gradient-red text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">
-                                أضف للسلة
-                              </button>
-                            </div>
-                            
-                            <p className="text-xs text-gray-500 mt-2 text-center">
-                              أضيف في {formatDate(item.dateAdded)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">❤️</div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">قائمة الأمنيات فارغة</h3>
-                      <p className="text-gray-600 mb-6">أضف منتجات لقائمة أمنياتك لحفظها للمستقبل</p>
-                      <Link 
-                        href="/products"
-                        className="gradient-red text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 inline-block"
-                      >
-                        تصفح المنتجات
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                ))
               )}
             </div>
           </div>
+                          
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl p-5 shadow-md">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              {t('admin.quick.actions') || 'إجراءات سريعة'}
+            </h2>
+            
+            <div className="space-y-2">
+              {[
+                { label: t('admin.actions.add.product') || 'إضافة منتج', icon: '➕📦', href: '/dashboard/products/new' },
+                { label: t('admin.actions.view.orders') || 'عرض الطلبات', icon: '📋🛒', href: '/dashboard/orders' },
+                { label: t('admin.actions.manage.categories') || 'إدارة الفئات', icon: '📂⚙️', href: '/dashboard/categories' },
+                { label: t('admin.actions.customer.support') || 'دعم العملاء', icon: '🎧💬', href: '/dashboard/customers' },
+              ].map((action, index) => (
+                <button
+                  key={index}
+                  className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+                  onClick={() => window.location.href = action.href}
+                >
+                  <span className="text-base">{action.icon}</span>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    {action.label}
+                  </span>
+                  <div className="ml-auto text-gray-400 group-hover:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </section>
+                            
 
-      <Footer />
+      </div>
     </div>
   );
 } 

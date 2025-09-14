@@ -1,30 +1,53 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
 import { ApiService } from '../services/api';
-// import { Category } from '../types/api'; // Removed - using any for now
+import { Category } from '../types/api';
 
 export default function Categories() {
-  const { t, language } = useLanguage();
-  const [categories, setCategories] = useState<any[]>([]);
+  const { t, language, getLocalizedText } = useLanguage();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Default gradients for categories
+  const categoryGradients = [
+    'from-yellow-400 to-orange-500',
+    'from-blue-400 to-blue-600',
+    'from-green-400 to-green-600',
+    'from-purple-400 to-purple-600',
+    'from-red-400 to-red-600',
+    'from-gray-400 to-gray-600',
+    'from-indigo-400 to-indigo-600',
+    'from-pink-400 to-pink-600',
+  ];
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [language]);
 
   const fetchCategories = async () => {
     try {
-      const response = await ApiService.getCategories();
+      setLoading(true);
+      const response = await ApiService.getCategories({ 
+        per_page: 12, // Get more to filter and sort
+        status: 'active' 
+      });
       
       if (response.data && Array.isArray(response.data)) {
-        setCategories(response.data);
+        // Filter categories with products and sort by products_count descending
+        const categoriesWithProducts = response.data
+          .filter(category => category.products_count && category.products_count > 0)
+          .sort((a, b) => (b.products_count || 0) - (a.products_count || 0))
+          .slice(0, 4); // Take only top 4
+        
+        setCategories(categoriesWithProducts);
       } else {
         setCategories([]);
       }
     } catch (error) {
+      console.error('❌ فشل في جلب الفئات:', error);
       setCategories([]);
     } finally {
       setLoading(false);
@@ -33,107 +56,111 @@ export default function Categories() {
 
   if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <section className="section-modern">
+        <div className="container-modern">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading categories...</p>
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              <span>{t('categories.loading')}</span>
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-4">
-            🏗️ Product Categories
+    <section className="section-modern">
+      <div className="container-modern">
+        {/* Section Header */}
+        <div className="text-center mb-16 animate-slide-modern">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-medium mb-6">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            {t('categories.badge')}
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            {t('categories.home.title')}
+          <h2 className="text-modern-heading mb-4">
+            {t('categories.title')}
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            {t('categories.home.subtitle')}
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            {t('categories.description')}
           </p>
         </div>
 
         {/* Categories Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((category, index) => {
+            const gradient = categoryGradients[index % categoryGradients.length];
+            return (
             <Link
               key={category.id}
-              href={`/categories/${category.id}`}
-              className="card-hover group cursor-pointer rounded-2xl overflow-hidden shadow-lg border border-gray-200 bg-white hover:shadow-2xl transition-all duration-500 block"
-              style={{
-                animationDelay: `${index * 100}ms`
-              }}
+                href={`/products?category=${category.id}`}
+                className="group animate-slide-modern"
+                style={{animationDelay: `${index * 0.1}s`}}
             >
-              {/* Card Header */}
-              <div className="p-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-16 -translate-y-16"></div>
-                <div className="relative z-10">
-                  <div className="text-4xl mb-3">
-                    {category.image ? (
-                      <img src={category.image} alt={category.name} className="w-12 h-12 rounded-lg" />
-                    ) : (
-                      '📦'
-                    )}
+                <div className="card-floating p-8 text-center h-full relative overflow-hidden">
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{category.name}</h3>
-                  <p className="text-white/90 text-sm">{category.description || 'Browse our collection'}</p>
+                  
+                  {/* Image Only (if available) */}
+                  {category.image && (
+                    <div className="relative mb-6">
+                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
+                        <img 
+                          src={category.image} 
+                          alt={getLocalizedText(category, 'name')}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
                 </div>
               </div>
+                  )}
 
-              {/* Card Body */}
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">{category.products_count || 0}</span>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <span>{t('categories.view.all')}</span>
-                    <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {/* Content */}
+                  <div className="relative">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors">
+                      {getLocalizedText(category, 'name')}
+                    </h3>
+                    
+                    {/* Description */}
+                    {category.description && (
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {getLocalizedText(category, 'description')}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center justify-center gap-2 text-gray-600 mb-4">
+                      <div className="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                      <span className="text-sm font-medium">
+                        {category.products_count || 0} {t('categories.products.count')}
+                      </span>
+                      <div className="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                    </div>
+                    
+                    <div className="inline-flex items-center text-red-600 font-medium group-hover:gap-3 transition-all">
+                      <span>{t('common.browse.products')}</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
 
-                {/* Description */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600">
-                    {category.description || 'Explore quality products in this category'}
-                  </p>
-                </div>
-
-                {/* Action Button */}
-                <button className="w-full mt-6 bg-gradient-to-r from-red-500 to-orange-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-  {t('categories.browse')}
-                </button>
+                  {/* Hover Effect Line */}
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-16 text-center">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto border border-gray-200">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              {t('featured.cant.find')}
-            </h3>
-            <p className="text-gray-600 mb-6 text-lg">
-              {t('featured.expert.section')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="gradient-red text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold">
-                📞 {t('featured.contact.expert')}
-              </button>
-              <button className="border-2 border-red-500 text-red-600 px-8 py-3 rounded-xl hover:bg-red-50 transition-all duration-300 font-semibold">
-                📋 {t('featured.custom.quote')}
-              </button>
-            </div>
-          </div>
+        {/* View All Button */}
+        <div className="text-center mt-16 animate-slide-modern" style={{animationDelay: '0.8s'}}>
+          <Link href="/categories" className="btn-modern-outline inline-flex items-center gap-2">
+            <span>{t('categories.view.all')}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>

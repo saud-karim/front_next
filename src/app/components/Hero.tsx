@@ -3,106 +3,88 @@
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Hero() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   return (
-    <section className="relative pt-20 pb-16 gradient-bg overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-red-500/20 rounded-full blur-xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+    <section className="hero-modern relative pt-20">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-red-500 bg-opacity-5 rounded-full animate-float" />
+        <div className="absolute top-40 right-32 w-20 h-20 bg-red-500 bg-opacity-10 rounded-full animate-pulse-modern" />
+        <div className="absolute bottom-40 left-1/3 w-24 h-24 bg-gray-500 bg-opacity-5 rounded-full animate-float" style={{animationDelay: '1s'}} />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="text-center lg:text-left">
-            <div className="inline-block px-4 py-2 bg-white/20 rounded-full text-white text-sm font-medium mb-6 backdrop-blur-sm">
-              {t('hero.badge')}
-            </div>
-            
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+      <div className="container-modern relative z-10">
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Main Heading */}
+          <div className="animate-slide-modern">
+            <h1 className="text-modern-heading mb-6">
               {t('hero.title')} 
-              <span className="block text-transparent bg-gradient-to-r from-orange-300 to-yellow-300 bg-clip-text">
+              <span className="block text-modern-accent mt-2">
                 {t('hero.title.highlight')}
               </span>
             </h1>
+          </div>
             
-            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+          {/* Description */}
+          <div className="animate-slide-modern" style={{animationDelay: '0.2s'}}>
+            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
               {t('hero.description')}
             </p>
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <button className="gradient-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 shadow-md font-semibold text-lg">
-                {t('hero.explore.btn')}
+          {/* CTA Buttons */}
+          <div className="animate-slide-modern mb-20" style={{animationDelay: '0.4s'}}>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <button className="btn-modern-primary">
+                <span className="flex items-center gap-2">
+                  <span>{t('hero.explore.btn')}</span>
+                  <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </button>
-              <button className="border-2 border-white/30 text-white px-8 py-4 rounded-xl hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold text-lg">
-                {t('hero.quote.btn')}
+              <button className="btn-modern-outline">
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span>{t('hero.quote.btn')}</span>
+                </span>
               </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">500+</div>
-                <div className="text-white/80 text-sm">{t('hero.stats.tools')}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">50k+</div>
-                <div className="text-white/80 text-sm">{t('hero.stats.customers')}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">25+</div>
-                <div className="text-white/80 text-sm">{t('hero.stats.experience')}</div>
-              </div>
             </div>
           </div>
 
-          {/* Right Content - Interactive Tool Showcase */}
-          <div className="relative">
-            <div className="grid grid-cols-2 gap-6">
-              {/* Tool Cards */}
-              <div className="space-y-6">
-                <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="w-12 h-12 gradient-red rounded-xl flex items-center justify-center mb-4">
-                    <span className="text-2xl">🔨</span>
+          {/* Modern Stats */}
+          <div className="animate-slide-modern" style={{animationDelay: '0.6s'}}>
+            <div className="stats-modern">
+              <div className="stat-item-modern">
+                <div className="stat-number-modern">500+</div>
+                <div className="text-gray-600 font-medium">{t('hero.stats.tools')}</div>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity" />
                   </div>
-                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.power.title')}</h3>
-                  <p className="text-white/70 text-sm">{t('hero.tools.power.desc')}</p>
+              <div className="stat-item-modern">
+                <div className="stat-number-modern">1000+</div>
+                <div className="text-gray-600 font-medium">
+                  {language === 'ar' ? 'مشروع منجز' : 'Completed Projects'}
                 </div>
-                
-                <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="w-12 h-12 metallic-effect rounded-xl flex items-center justify-center mb-4">
-                    <span className="text-2xl">⚡</span>
-                  </div>
-                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.smart.title')}</h3>
-                  <p className="text-white/70 text-sm">{t('hero.tools.smart.desc')}</p>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity" />
               </div>
-
-              <div className="space-y-6 pt-12">
-                <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="w-12 h-12 metallic-effect rounded-xl flex items-center justify-center mb-4">
-                    <span className="text-2xl">🛡️</span>
-                  </div>
-                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.safety.title')}</h3>
-                  <p className="text-white/70 text-sm">{t('hero.tools.safety.desc')}</p>
+              <div className="stat-item-modern">
+                <div className="stat-number-modern">24/7</div>
+                <div className="text-gray-600 font-medium">
+                  {language === 'ar' ? 'دعم فني' : 'Technical Support'}
                 </div>
-                
-                <div className="card-hover bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="w-12 h-12 gradient-red rounded-xl flex items-center justify-center mb-4">
-                    <span className="text-2xl">📐</span>
-                  </div>
-                  <h3 className="text-white font-semibold mb-2">{t('hero.tools.precision.title')}</h3>
-                  <p className="text-white/70 text-sm">{t('hero.tools.precision.desc')}</p>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity" />
               </div>
             </div>
-
-            {/* Floating Elements */}
-            <div className="absolute -top-10 -right-10 w-20 h-20 bg-red-500/30 rounded-full blur-xl animate-pulse"></div>
-            <div className="absolute -bottom-10 -left-10 w-16 h-16 bg-gray-500/30 rounded-full blur-xl animate-pulse delay-1000"></div>
           </div>
+        </div>
+      </div>
+      
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 border-2 border-gray-300 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-red-500 rounded-full mt-2 animate-pulse" />
         </div>
       </div>
     </section>
