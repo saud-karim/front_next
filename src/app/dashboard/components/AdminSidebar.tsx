@@ -53,19 +53,6 @@ export default function AdminSidebar() {
       icon: '👥',
       href: '/dashboard/customers',
     },
-    {
-      id: 'reviews',
-      labelKey: 'admin.sidebar.reviews',
-      icon: '⭐',
-      href: '/dashboard/reviews',
-      badge: 3, // This would come from API
-    },
-    {
-      id: 'analytics',
-      labelKey: 'admin.sidebar.analytics',
-      icon: '📈',
-      href: '/dashboard/analytics',
-    },
   ];
 
   const handleLogout = async () => {
