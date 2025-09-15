@@ -1889,19 +1889,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [language, setLanguage] = useState('ar');
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'ar';
+    // Client-side only
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('language') || 'ar';
       setLanguage(savedLanguage);
-    document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = savedLanguage;
+      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = savedLanguage;
+    }
   }, []);
 
   const changeLanguage = (lang: string) => {
     console.log('🔄 Language changing from', language, 'to', lang);
     setLanguage(lang);
-    localStorage.setItem('language', lang);
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
-    console.log('✅ Language changed to', lang, '- localStorage:', localStorage.getItem('language'));
+    // Client-side only
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', lang);
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+      console.log('✅ Language changed to', lang, '- localStorage:', localStorage.getItem('language'));
+    }
   };
 
   const t = (key: string): string => {

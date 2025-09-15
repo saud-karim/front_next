@@ -50,6 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const checkAuth = async () => {
+    // Client-side only
+    if (typeof window === 'undefined') return;
+    
     const token = localStorage.getItem('auth_token')
     if (token) {
       // Skip Profile API for now - use stored user data or temporary user
@@ -82,8 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
                       } else {
           // No stored user data - remove token as it's invalid
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user_data');
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+          }
         }
       }
       setLoading(false)
