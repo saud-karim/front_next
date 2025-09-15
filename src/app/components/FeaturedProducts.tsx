@@ -23,10 +23,20 @@ export default function FeaturedProducts() {
   const fetchFeaturedProducts = async () => {
     try {
       setLoading(true);
-      const response = await ApiService.getProducts({ featured: true, per_page: 6 });
+      // ✅ الحل الآمن: إزالة معامل featured نهائياً وفلترة في Frontend
+      const response = await ApiService.getProducts({ per_page: 30 });
       
       if (response.data && Array.isArray(response.data)) {
-        setProducts(response.data);
+        // فلترة المنتجات المميزة فقط
+        const featuredProducts = response.data
+          .filter(product => 
+            product.is_featured === true || 
+            product.is_featured === 1 || 
+            product.featured === true ||
+            product.featured === 1
+          )
+          .slice(0, 6); // أخذ أول 6 منتجات مميزة
+        setProducts(featuredProducts);
       } else {
         setProducts([]);
       }

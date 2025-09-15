@@ -384,11 +384,11 @@ export default function ProductsPage() {
             {/* Modern Products Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {products.map((product, index) => (
-              <div 
+              <div
                 key={product.id}
                 onClick={() => window.location.href = `/products/${product.id}`}
                 className="card-modern-2030 group overflow-hidden animate-slide-modern cursor-pointer hover:shadow-2xl transition-all duration-300"
-                style={{animationDelay: `${index * 0.1}s`}}
+                  style={{animationDelay: `${index * 0.1}s`}}
               >
                   {/* Product Image & Badges */}
                   <div className="relative aspect-square overflow-hidden bg-gray-50">

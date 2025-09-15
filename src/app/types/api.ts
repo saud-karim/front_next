@@ -201,7 +201,7 @@ export interface ProductsQuery {
   category?: number;
   min_price?: number;
   max_price?: number;
-  featured?: number;
+  featured?: boolean | number;
   sort?: string;
   order?: string;
 }

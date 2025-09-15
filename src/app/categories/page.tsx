@@ -257,8 +257,8 @@ export default function CategoriesPage() {
                         </div>
                     <div className="grid gap-4">
                           {getCategoryProducts(category.id).map((product, productIndex) => (
-                            <div
-                              key={product.id}
+                            <div 
+                              key={product.id} 
                               onClick={() => window.location.href = `/products/${product.id}`}
                               className="card-floating p-4 group/product animate-slide-modern cursor-pointer hover:scale-105 transition-all"
                               style={{animationDelay: `${productIndex * 0.1}s`}}
