@@ -53,6 +53,12 @@ export default function AdminSidebar() {
       icon: '👥',
       href: '/dashboard/customers',
     },
+    {
+      id: 'contact-messages',
+      labelKey: 'admin.sidebar.contact_messages',
+      icon: '📧',
+      href: '/dashboard/contact-messages',
+    },
   ];
 
   const handleLogout = async () => {

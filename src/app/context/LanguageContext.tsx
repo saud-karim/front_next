@@ -129,6 +129,7 @@ const translations = {
     'admin.sidebar.categories': 'الفئات',
     'admin.sidebar.orders': 'الطلبات',
     'admin.sidebar.customers': 'العملاء',
+    'admin.sidebar.contact_messages': 'رسائل الاتصال',
     'admin.sidebar.view.site': 'عرض الموقع',
     'admin.sidebar.logout': 'تسجيل خروج',
 
@@ -1082,6 +1083,7 @@ const translations = {
     'admin.sidebar.categories': 'Categories',
     'admin.sidebar.orders': 'Orders',
     'admin.sidebar.customers': 'Customers',
+    'admin.sidebar.contact_messages': 'Contact Messages',
     'admin.sidebar.view.site': 'View Site',
     'admin.sidebar.logout': 'Logout',
 
