@@ -40,6 +40,7 @@ export default function ContactMessagesPage() {
   const { t, language } = useLanguage();
   
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [originalMessages, setOriginalMessages] = useState<ContactMessage[]>([]);
   const [stats, setStats] = useState<ContactStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
@@ -73,12 +74,19 @@ export default function ContactMessagesPage() {
     }
   };
 
+  // Filter messages whenever filters or originalMessages change
+  useEffect(() => {
+    if (originalMessages.length > 0) {
+      applyFilters();
+    }
+  }, [filters, originalMessages]);
+
   useEffect(() => {
     if (user?.role === 'admin') {
       fetchStats();
       fetchMessages();
     }
-  }, [user, filters]);
+  }, [user]);
 
   const fetchStats = async () => {
     try {
@@ -98,9 +106,34 @@ export default function ContactMessagesPage() {
     }
   };
 
+  const applyFilters = () => {
+    // Apply filters to originalMessages
+    let filteredMessages = originalMessages;
+    
+    if (filters.status !== 'all') {
+      filteredMessages = filteredMessages.filter(msg => msg.status === filters.status);
+    }
+    
+    if (filters.project_type !== 'all') {
+      filteredMessages = filteredMessages.filter(msg => msg.project_type === filters.project_type);
+    }
+    
+    if (filters.search) {
+      filteredMessages = filteredMessages.filter(msg => 
+        msg.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        msg.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+        msg.subject.toLowerCase().includes(filters.search.toLowerCase()) ||
+        msg.company?.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+    
+    setMessages(filteredMessages);
+  };
+
   const fetchMessages = async () => {
     try {
       setLoading(true);
+      
       // Mock data for now - replace with actual API call
       const mockMessages: ContactMessage[] = [
         {
@@ -138,27 +171,7 @@ export default function ContactMessagesPage() {
         }
       ];
       
-      // Apply filters
-      let filteredMessages = mockMessages;
-      
-      if (filters.status !== 'all') {
-        filteredMessages = filteredMessages.filter(msg => msg.status === filters.status);
-      }
-      
-      if (filters.project_type !== 'all') {
-        filteredMessages = filteredMessages.filter(msg => msg.project_type === filters.project_type);
-      }
-      
-      if (filters.search) {
-        filteredMessages = filteredMessages.filter(msg => 
-          msg.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          msg.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-          msg.subject.toLowerCase().includes(filters.search.toLowerCase()) ||
-          msg.company?.toLowerCase().includes(filters.search.toLowerCase())
-        );
-      }
-      
-      setMessages(filteredMessages);
+      setOriginalMessages(mockMessages);
     } catch (err) {
       console.error('❌ Error fetching messages:', err);
       error('فشل في جلب الرسائل');
@@ -169,10 +182,21 @@ export default function ContactMessagesPage() {
 
   const updateMessageStatus = async (messageId: string, newStatus: string, notes?: string) => {
     try {
-      // Mock update - replace with actual API call
-      setMessages(prev => prev.map(msg => 
+      // Get status name based on status
+      const getStatusName = (status: string) => {
+        switch (status) {
+          case 'new': return 'جديد';
+          case 'in_progress': return 'قيد المعالجة';
+          case 'resolved': return 'تم الحل';
+          case 'closed': return 'مغلق';
+          default: return status;
+        }
+      };
+
+      // Update originalMessages to persist changes
+      setOriginalMessages(prev => prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, status: newStatus, admin_notes: notes }
+          ? { ...msg, status: newStatus, status_name: getStatusName(newStatus), admin_notes: notes }
           : msg
       ));
       
@@ -189,8 +213,9 @@ export default function ContactMessagesPage() {
     if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
     
     try {
-      // Mock delete - replace with actual API call
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      // Update originalMessages to persist changes
+      setOriginalMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
       success('تم حذف الرسالة بنجاح');
     } catch (err) {
       console.error('❌ Error deleting message:', err);
