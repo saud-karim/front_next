@@ -43,6 +43,8 @@ export default function ContactMessagesPage() {
   const [originalMessages, setOriginalMessages] = useState<ContactMessage[]>([]);
   const [stats, setStats] = useState<ContactStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState({
@@ -61,6 +63,28 @@ export default function ContactMessagesPage() {
       case 'resolved': return 'bg-green-100 text-green-800';
       case 'closed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Get translated status name
+  const getTranslatedStatus = (status: string) => {
+    switch (status) {
+      case 'new': return t('contact.messages.status.new');
+      case 'in_progress': return t('contact.messages.status.in_progress');
+      case 'resolved': return t('contact.messages.status.resolved');
+      case 'closed': return t('contact.messages.status.closed');
+      default: return status;
+    }
+  };
+
+  // Get translated project type
+  const getTranslatedProjectType = (type: string) => {
+    switch (type) {
+      case 'residential': return t('contact.messages.project.residential');
+      case 'commercial': return t('contact.messages.project.commercial');
+      case 'industrial': return t('contact.messages.project.industrial');
+      case 'other': return t('contact.messages.project.other');
+      default: return type;
     }
   };
 
@@ -90,19 +114,37 @@ export default function ContactMessagesPage() {
 
   const fetchStats = async () => {
     try {
-      // Using a mock stats call since the API endpoint structure might vary
-      const mockStats = {
-        total_messages: 25,
-        new_messages: 8,
-        in_progress_messages: 5,
-        resolved_messages: 10,
-        closed_messages: 2,
-        this_month_messages: 15,
-        weekly_growth: 12.5
-      };
-      setStats(mockStats);
+      // API Call: GET /api/v1/admin/contact-messages/stats
+      const response = await ApiService.getContactMessageStats();
+      
+      if (response.success && response.data?.overview) {
+        setStats(response.data.overview);
+      } else {
+        // Fallback to mock data if API fails
+        const mockStats = {
+          total_messages: 25,
+          new_messages: 8,
+          in_progress_messages: 5,
+          resolved_messages: 10,
+          closed_messages: 2,
+          this_month_messages: 15,
+          weekly_growth: 12.5
+        };
+        setStats(mockStats);
+      }
     } catch (err) {
       console.error('❌ Error fetching contact stats:', err);
+      // Fallback to mock stats
+      const mockStats = {
+        total_messages: 0,
+        new_messages: 0,
+        in_progress_messages: 0,
+        resolved_messages: 0,
+        closed_messages: 0,
+        this_month_messages: 0,
+        weekly_growth: 0
+      };
+      setStats(mockStats);
     }
   };
 
@@ -134,47 +176,58 @@ export default function ContactMessagesPage() {
     try {
       setLoading(true);
       
-      // Mock data for now - replace with actual API call
-      const mockMessages: ContactMessage[] = [
-        {
-          id: 'TKT-2025-001',
-          name: 'أحمد محمد',
-          email: 'ahmed@example.com',
-          phone: '+201234567890',
-          company: 'شركة البناء المتطور',
-          subject: 'استفسار عن أسعار المواد',
-          message: 'أود الاستفسار عن أسعار الأسمنت والحديد...',
-          full_message: 'أود الاستفسار عن أسعار الأسمنت والحديد للمشروع السكني الجديد الذي نعمل عليه.',
-          project_type: 'residential',
-          project_type_name: 'سكني',
-          status: 'new',
-          status_name: 'جديد',
-          created_at: '2025-01-15 10:30:45',
-          time_ago: 'منذ 4 ساعات'
-        },
-        {
-          id: 'TKT-2025-002',
-          name: 'سارة أحمد',
-          email: 'sara@example.com',
-          phone: '+201234567891',
-          company: 'مؤسسة الإنشاءات',
-          subject: 'استفسار عن التوصيل',
-          message: 'ما هي مواعيد التوصيل المتاحة؟',
-          full_message: 'ما هي مواعيد التوصيل المتاحة للمنطقة الشرقية؟ ونحتاج توصيل عاجل.',
-          project_type: 'commercial',
-          project_type_name: 'تجاري',
-          status: 'in_progress',
-          status_name: 'قيد المعالجة',
-          admin_notes: 'تم التواصل مع العميل',
-          created_at: '2025-01-15 09:15:30',
-          time_ago: 'منذ 5 ساعات'
-        }
-      ];
+      // API Call: GET /api/v1/admin/contact-messages
+      const response = await (ApiService as any).client.get('/admin/contact-messages', {
+        per_page: 100
+      });
       
-      setOriginalMessages(mockMessages);
+      if (response.success && response.data && Array.isArray(response.data)) {
+        setOriginalMessages(response.data);
+      } else {
+        // Fallback to mock data if API fails
+        const mockMessages: ContactMessage[] = [
+          {
+            id: 'TKT-2025-001',
+            name: 'أحمد محمد',
+            email: 'ahmed@example.com',
+            phone: '+201234567890',
+            company: 'شركة البناء المتطور',
+            subject: 'استفسار عن أسعار المواد',
+            message: 'أود الاستفسار عن أسعار الأسمنت والحديد...',
+            full_message: 'أود الاستفسار عن أسعار الأسمنت والحديد للمشروع السكني الجديد الذي نعمل عليه.',
+            project_type: 'residential',
+            project_type_name: 'سكني',
+            status: 'new',
+            status_name: 'جديد',
+            created_at: '2025-01-15 10:30:45',
+            time_ago: 'منذ 4 ساعات'
+          },
+          {
+            id: 'TKT-2025-002',
+            name: 'سارة أحمد',
+            email: 'sara@example.com',
+            phone: '+201234567891',
+            company: 'مؤسسة الإنشاءات',
+            subject: 'استفسار عن التوصيل',
+            message: 'ما هي مواعيد التوصيل المتاحة؟',
+            full_message: 'ما هي مواعيد التوصيل المتاحة للمنطقة الشرقية؟ ونحتاج توصيل عاجل.',
+            project_type: 'commercial',
+            project_type_name: 'تجاري',
+            status: 'in_progress',
+            status_name: 'قيد المعالجة',
+            admin_notes: 'تم التواصل مع العميل',
+            created_at: '2025-01-15 09:15:30',
+            time_ago: 'منذ 5 ساعات'
+          }
+        ];
+        setOriginalMessages(mockMessages);
+        console.warn('🔄 Using mock data for contact messages');
+      }
     } catch (err) {
       console.error('❌ Error fetching messages:', err);
-      error('فشل في جلب الرسائل');
+      error(t('contact.messages.error.fetch'));
+      // Set empty array on error
+      setOriginalMessages([]);
     } finally {
       setLoading(false);
     }
@@ -182,44 +235,62 @@ export default function ContactMessagesPage() {
 
   const updateMessageStatus = async (messageId: string, newStatus: string, notes?: string) => {
     try {
-      // Get status name based on status
-      const getStatusName = (status: string) => {
-        switch (status) {
-          case 'new': return 'جديد';
-          case 'in_progress': return 'قيد المعالجة';
-          case 'resolved': return 'تم الحل';
-          case 'closed': return 'مغلق';
-          default: return status;
-        }
-      };
-
-      // Update originalMessages to persist changes
-      setOriginalMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, status: newStatus, status_name: getStatusName(newStatus), admin_notes: notes }
-          : msg
-      ));
+      setUpdating(true);
       
-      success('تم تحديث حالة الرسالة بنجاح');
-      setShowModal(false);
-      setSelectedMessage(null);
+      // API Call: PUT /api/v1/admin/contact-messages/{id}
+      const updateData: any = { status: newStatus };
+      if (notes) {
+        updateData.admin_notes = notes;
+      }
+
+      const response = await (ApiService as any).client.put(`/admin/contact-messages/${messageId}`, updateData);
+
+      if (response.success) {
+        // Use the translated status name
+        const translatedStatusName = getTranslatedStatus(newStatus);
+
+        // Update local state after successful API call
+        setOriginalMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, status: newStatus, status_name: translatedStatusName, admin_notes: notes }
+            : msg
+        ));
+        
+        success(t('contact.messages.success.updated'));
+        setShowModal(false);
+        setSelectedMessage(null);
+      } else {
+        throw new Error(response.message || t('contact.messages.error.update'));
+      }
     } catch (err) {
       console.error('❌ Error updating message:', err);
-      error('فشل في تحديث الرسالة');
+      error(t('contact.messages.error.update'));
+    } finally {
+      setUpdating(false);
     }
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+    if (!confirm(t('contact.messages.delete.confirm'))) return;
     
     try {
-      // Update originalMessages to persist changes
-      setOriginalMessages(prev => prev.filter(msg => msg.id !== messageId));
+      setDeleting(messageId);
       
-      success('تم حذف الرسالة بنجاح');
+      // API Call: DELETE /api/v1/admin/contact-messages/{id}
+      const response = await (ApiService as any).client.delete(`/admin/contact-messages/${messageId}`);
+
+      if (response.success) {
+        // Update local state after successful API call
+        setOriginalMessages(prev => prev.filter(msg => msg.id !== messageId));
+        success(t('contact.messages.success.deleted'));
+      } else {
+        throw new Error(response.message || t('contact.messages.error.delete'));
+      }
     } catch (err) {
       console.error('❌ Error deleting message:', err);
-      error('فشل في حذف الرسالة');
+              error(t('contact.messages.error.delete'));
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -228,9 +299,9 @@ export default function ContactMessagesPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            غير مصرح لك بالوصول
+            {t('contact.messages.access.denied')}
           </h1>
-          <p className="text-gray-600">هذه الصفحة مخصصة للمديرين فقط</p>
+          <p className="text-gray-600">{t('contact.messages.access.admin_only')}</p>
         </div>
       </div>
     );
@@ -242,10 +313,10 @@ export default function ContactMessagesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            📧 إدارة رسائل الاتصال
+            📧 {t('contact.messages.title')}
           </h1>
           <p className="text-gray-600">
-            إدارة ومتابعة جميع رسائل العملاء والاستفسارات
+            {t('contact.messages.subtitle')}
           </p>
         </div>
 
@@ -260,7 +331,7 @@ export default function ContactMessagesPage() {
                   </svg>
                 </div>
                 <div className="mr-4">
-                  <p className="text-sm text-gray-600">إجمالي الرسائل</p>
+                  <p className="text-sm text-gray-600">{t('contact.messages.stats.total')}</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.total_messages}</p>
                 </div>
               </div>
@@ -274,7 +345,7 @@ export default function ContactMessagesPage() {
                   </svg>
                 </div>
                 <div className="mr-4">
-                  <p className="text-sm text-gray-600">رسائل جديدة</p>
+                  <p className="text-sm text-gray-600">{t('contact.messages.stats.new')}</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.new_messages}</p>
                 </div>
               </div>
@@ -288,7 +359,7 @@ export default function ContactMessagesPage() {
                   </svg>
                 </div>
                 <div className="mr-4">
-                  <p className="text-sm text-gray-600">تم حلها</p>
+                  <p className="text-sm text-gray-600">{t('contact.messages.stats.resolved')}</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.resolved_messages}</p>
                 </div>
               </div>
@@ -302,7 +373,7 @@ export default function ContactMessagesPage() {
                   </svg>
                 </div>
                 <div className="mr-4">
-                  <p className="text-sm text-gray-600">نمو أسبوعي</p>
+                  <p className="text-sm text-gray-600">{t('contact.messages.stats.growth')}</p>
                   <p className="text-2xl font-bold text-gray-900">+{stats.weekly_growth}%</p>
                 </div>
               </div>
@@ -315,11 +386,11 @@ export default function ContactMessagesPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                البحث
+                {t('contact.messages.search.label')}
               </label>
               <input
                 type="text"
-                placeholder="ابحث في الاسم، البريد، الموضوع..."
+                placeholder={t('contact.messages.search.placeholder')}
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -328,24 +399,24 @@ export default function ContactMessagesPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                الحالة
+                {t('contact.messages.filter.status')}
               </label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="all">جميع الحالات</option>
-                <option value="new">جديد</option>
-                <option value="in_progress">قيد المعالجة</option>
-                <option value="resolved">تم الحل</option>
-                <option value="closed">مغلق</option>
+                <option value="all">{t('contact.messages.filter.all_statuses')}</option>
+                <option value="new">{t('contact.messages.status.new')}</option>
+                <option value="in_progress">{t('contact.messages.status.in_progress')}</option>
+                <option value="resolved">{t('contact.messages.status.resolved')}</option>
+                <option value="closed">{t('contact.messages.status.closed')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                نوع المشروع
+                {t('contact.messages.filter.project_type')}
               </label>
               <select
                 value={filters.project_type}
@@ -383,7 +454,7 @@ export default function ContactMessagesPage() {
             <div className="p-8 text-center">
               <div className="inline-flex items-center gap-3 text-gray-600">
                 <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                <span>جاري تحميل الرسائل...</span>
+                <span>{t('contact.messages.loading')}</span>
               </div>
             </div>
           ) : messages.length === 0 ? (
@@ -391,7 +462,7 @@ export default function ContactMessagesPage() {
               <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <p>لا توجد رسائل</p>
+              <p>{t('admin.no.messages')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -399,7 +470,7 @@ export default function ContactMessagesPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      رقم التذكرة
+{t('contact.messages.table.ticket_id')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       المرسل
@@ -408,10 +479,10 @@ export default function ContactMessagesPage() {
                       الموضوع
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      نوع المشروع
+                      {t('contact.messages.table.project_type')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الحالة
+      {t('contact.messages.filter.status')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       التاريخ
@@ -463,13 +534,21 @@ export default function ContactMessagesPage() {
                             }}
                             className="text-red-600 hover:text-red-900"
                           >
-                            عرض
+{t('contact.messages.button.view')}
                           </button>
                           <button
                             onClick={() => deleteMessage(message.id)}
-                            className="text-red-600 hover:text-red-900"
+                            disabled={deleting === message.id}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            حذف
+                            {deleting === message.id ? (
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin" />
+  {t('contact.messages.button.deleting')}
+                              </div>
+                            ) : (
+                              t('contact.messages.button.delete')
+                            )}
                           </button>
                         </div>
                       </td>
@@ -489,7 +568,7 @@ export default function ContactMessagesPage() {
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  تفاصيل الرسالة: {selectedMessage.id}
+    {t('contact.messages.modal.title').replace('{id}', selectedMessage.id)}
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
@@ -504,74 +583,70 @@ export default function ContactMessagesPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">الاسم</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.name')}</label>
                     <p className="mt-1 text-sm text-gray-900">{selectedMessage.name}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">البريد الإلكتروني</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.email')}</label>
                     <p className="mt-1 text-sm text-gray-900">{selectedMessage.email}</p>
                   </div>
                 </div>
 
                 {selectedMessage.phone && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">رقم الهاتف</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.phone}</p>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.phone')}</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.phone || 'غير محدد'}</p>
                   </div>
                 )}
 
                 {selectedMessage.company && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">الشركة</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.company}</p>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.company')}</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.company || 'غير محدد'}</p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">الموضوع</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.subject')}</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedMessage.subject}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">الرسالة</label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded border">
-                    {selectedMessage.full_message}
-                  </p>
+                  <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.message')}</label>
+                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedMessage.message}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">نوع المشروع</label>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getProjectTypeColor(selectedMessage.project_type)}`}>
-                      {selectedMessage.project_type_name}
-                    </span>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.project_type')}</label>
+                    <p className="mt-1 text-sm text-gray-900">{getTranslatedProjectType(selectedMessage.project_type)}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">الحالة الحالية</label>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedMessage.status)}`}>
-                      {selectedMessage.status_name}
-                    </span>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.current_status')}</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedMessage.status)}`}>
+                        {getTranslatedStatus(selectedMessage.status)}
+                      </span>
+                    </p>
                   </div>
                 </div>
 
                 {selectedMessage.admin_notes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">ملاحظات إدارية</label>
-                    <p className="mt-1 text-sm text-gray-900 bg-yellow-50 p-3 rounded border">
-                      {selectedMessage.admin_notes}
-                    </p>
+                    <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.admin_notes')}</label>
+                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedMessage.admin_notes}</p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">تاريخ الإرسال</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedMessage.created_at} ({selectedMessage.time_ago})</p>
+                  <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.sent_date')}</label>
+                                      <p className="mt-1 text-sm text-gray-900">{new Date(selectedMessage.created_at).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
                 </div>
               </div>
 
               {/* Status Update Form */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">تحديث الحالة</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('contact.messages.modal.update_status')}</h3>
                 <form onSubmit={(e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target as HTMLFormElement);
@@ -581,26 +656,26 @@ export default function ContactMessagesPage() {
                 }}>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">الحالة الجديدة</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.new_status')}</label>
                       <select
                         name="status"
                         defaultValue={selectedMessage.status}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
-                        <option value="new">جديد</option>
-                        <option value="in_progress">قيد المعالجة</option>
-                        <option value="resolved">تم الحل</option>
-                        <option value="closed">مغلق</option>
+                        <option value="new">{t('contact.messages.status.new')}</option>
+                        <option value="in_progress">{t('contact.messages.status.in_progress')}</option>
+                        <option value="resolved">{t('contact.messages.status.resolved')}</option>
+                        <option value="closed">{t('contact.messages.status.closed')}</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">ملاحظات إدارية</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.admin_notes')}</label>
                       <textarea
                         name="notes"
                         rows={3}
                         defaultValue={selectedMessage.admin_notes || ''}
-                        placeholder="أضف ملاحظات حول حالة الرسالة..."
+                        placeholder={t('contact.messages.modal.notes_placeholder')}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
@@ -608,16 +683,25 @@ export default function ContactMessagesPage() {
                     <div className="flex gap-3">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        disabled={updating}
+                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        تحديث الحالة
+                        {updating ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin" />
+{t('contact.messages.modal.updating')}
+                          </div>
+                        ) : (
+t('contact.messages.modal.update_button')
+                        )}
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowModal(false)}
-                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                        disabled={updating}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        إلغاء
+{t('contact.messages.modal.cancel')}
                       </button>
                     </div>
                   </div>

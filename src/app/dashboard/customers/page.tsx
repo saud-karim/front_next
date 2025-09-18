@@ -104,8 +104,8 @@ export default function CustomersPage() {
       if (err instanceof Error && err.message.includes('payment_method')) {
         console.warn('⚠️ Backend database missing payment_method column');
         error(
-          'خطأ في قاعدة البيانات', 
-          'يجب إضافة payment_method column في جدول payments. تواصل مع مطور الباك إند.'
+          t('admin.database.error.title'),
+          t('admin.database.payment.method.error')
         );
       } else {
       error(t('common.error'), t('admin.customers.error.fetch'));
@@ -249,23 +249,7 @@ export default function CustomersPage() {
           </button>
         </div>
 
-        {/* Success Notice */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center">
-            <div className="text-green-600 text-xl mr-3">✅</div>
-            <div>
-              <h3 className="text-green-800 font-medium">
-                {language === 'ar' ? 'إدارة العملاء متاحة' : 'Customer Management Ready'}
-              </h3>
-              <p className="text-green-700 text-sm mt-1">
-                {language === 'ar' 
-                  ? 'تم ربط صفحة العملاء بـ APIs الخادم الخلفي بنجاح. يمكنك الآن إدارة العملاء والاطلاع على الإحصائيات الحقيقية.'
-                  : 'Customer page is now connected to real backend APIs. You can manage customers and view real statistics.'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
+
 
         {/* Stats Cards */}
         {stats && (
@@ -405,7 +389,7 @@ export default function CustomersPage() {
                         <div className="text-sm font-bold text-green-600">{formatCurrency(customer.total_spent)}</div>
                         {customer.last_activity && (
                           <div className="text-xs text-gray-500">
-                            آخر نشاط: {formatDate(customer.last_activity)}
+            {t('admin.customer.last.activity')}: {formatDate(customer.last_activity)}
                           </div>
                         )}
                       </td>
@@ -556,9 +540,9 @@ export default function CustomersPage() {
               {/* Last Order */}
               {selectedCustomer.last_activity && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">آخر نشاط للعميل</h3>
+                  <h3 className="text-lg font-semibold mb-3">{t('admin.customer.last.activity.details')}</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p>تاريخ آخر نشاط: {formatDate(selectedCustomer.last_activity)}</p>
+                                          <p>{t('admin.customer.last.activity.date')}: {formatDate(selectedCustomer.last_activity)}</p>
                   </div>
                 </div>
               )}

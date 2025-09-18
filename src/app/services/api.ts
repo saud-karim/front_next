@@ -162,6 +162,13 @@ class ApiClient {
         
         console.error('💥 THROWING ERROR:', errorMessage);
         
+        // معالجة خطأ Rate Limiting (429)
+        if (response.status === 429) {
+          errorMessage = 'طلبات كثيرة جداً. يرجى الانتظار قليلاً والمحاولة مرة أخرى.';
+          // إضافة delay قبل إعادة المحاولة
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
         // معالجة أخطاء محددة من Backend
         if (errorMessage.includes('Attempt to read property') && errorMessage.includes('null')) {
           errorMessage = 'هذا المنتج غير متوفر حالياً. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
@@ -483,6 +490,21 @@ export class ApiService {
 
   static async getOrders(params?: OrdersQuery): Promise<APIResponse<Order[]>> {
     return this.client.get<Order[]>('/orders', params);
+  }
+
+  // Get user's orders
+  static async getUserOrders(params?: OrdersQuery): Promise<APIResponse<Order[]>> {
+    return this.client.get<Order[]>('/user/orders', params);
+  }
+
+  // Update user profile
+  static async updateUserProfile(profileData: {
+    name: string;
+    phone?: string;
+    address?: string;
+    company?: string;
+  }): Promise<APIResponse<User>> {
+    return this.client.put<User>('/user/profile', profileData);
   }
 
   static async getOrderDetails(orderId: string): Promise<APIResponse<OrderDetails>> {
@@ -1254,6 +1276,27 @@ export class ApiService {
     return this.client.get<any>('/admin/customers', params);
   }
 
+  // Admin Contact Messages APIs
+  static async getContactMessageStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/contact-messages/stats');
+  }
+
+  static async getContactMessages(params?: any): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/contact-messages', params);
+  }
+
+  static async getContactMessage(messageId: number): Promise<APIResponse<any>> {
+    return this.client.get<any>(`/admin/contact-messages/${messageId}`);
+  }
+
+  static async updateContactMessageStatus(messageId: number, status: string): Promise<APIResponse<any>> {
+    return this.client.patch<any>(`/admin/contact-messages/${messageId}/status`, { status });
+  }
+
+  static async deleteContactMessage(messageId: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/contact-messages/${messageId}`);
+  }
+
   // Addresses APIs
   static async getAddresses(): Promise<APIResponse<Address[]>> {
     return this.client.get<Address[]>('/addresses');
@@ -1526,6 +1569,427 @@ export class ApiService {
 
   static async toggleProductFeatured(id: number): Promise<APIResponse<any>> {
     return this.client.patch<any>(`/admin/products/${id}/toggle-featured`);
+  }
+
+  // ===================================
+  // CONTENT MANAGEMENT APIs
+  // ===================================
+
+  // 1. Company Information API
+  static async getCompanyInfo(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/company-info');
+  }
+
+  static async updateCompanyInfo(data: {
+    company_name_ar: string;
+    company_name_en: string;
+    company_description_ar?: string;
+    company_description_en?: string;
+    mission_ar?: string;
+    mission_en?: string;
+    vision_ar?: string;
+    vision_en?: string;
+    logo_text?: string;
+    founded_year?: string;
+    employees_count?: string;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>('/admin/company-info', data);
+  }
+
+  // 2. Company Statistics API
+  static async getCompanyStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/company-stats');
+  }
+
+  static async updateCompanyStats(data: {
+    years_experience: string;
+    total_customers: string;
+    completed_projects: string;
+    support_availability: string;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>('/admin/company-stats', data);
+  }
+
+  // 3. Contact Information API
+  static async getContactInfo(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/contact-info');
+  }
+
+  static async updateContactInfo(data: {
+    main_phone: string;
+    secondary_phone?: string;
+    toll_free?: string;
+    main_email: string;
+    sales_email?: string;
+    support_email?: string;
+    whatsapp?: string;
+    address: {
+      street_ar: string;
+      street_en: string;
+      district_ar: string;
+      district_en: string;
+      city_ar: string;
+      city_en: string;
+      country_ar: string;
+      country_en: string;
+    };
+    working_hours: {
+      weekdays_ar: string;
+      weekdays_en: string;
+      friday_ar: string;
+      friday_en: string;
+      saturday_ar: string;
+      saturday_en: string;
+    };
+    labels: {
+      emergency_ar: string;
+      emergency_en: string;
+      toll_free_ar: string;
+      toll_free_en: string;
+    };
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>('/admin/contact-info', data);
+  }
+
+  // 4. Departments API
+  static async getDepartments(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/departments');
+  }
+
+  static async createDepartment(data: {
+    name_ar: string;
+    name_en: string;
+    description_ar?: string;
+    description_en?: string;
+    phone?: string;
+    email?: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/departments', data);
+  }
+
+  static async updateDepartment(id: number, data: {
+    name_ar: string;
+    name_en: string;
+    description_ar?: string;
+    description_en?: string;
+    phone?: string;
+    email?: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/departments/${id}`, data);
+  }
+
+  static async deleteDepartment(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/departments/${id}`);
+  }
+
+  // 5. Social Links API
+  static async getSocialLinks(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/social-links');
+  }
+
+  static async createSocialLink(data: {
+    platform: string;
+    url: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/social-links', data);
+  }
+
+  static async updateSocialLink(id: number, data: {
+    platform: string;
+    url: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/social-links/${id}`, data);
+  }
+
+  static async deleteSocialLink(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/social-links/${id}`);
+  }
+
+  // 6. Team Members API
+  static async getTeamMembers(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/team-members');
+  }
+
+  static async createTeamMember(data: {
+    name_ar: string;
+    name_en: string;
+    role_ar?: string;
+    role_en?: string;
+    experience_ar?: string;
+    experience_en?: string;
+    specialty_ar?: string;
+    specialty_en?: string;
+    image?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/team-members', data);
+  }
+
+  static async updateTeamMember(id: number, data: {
+    name_ar: string;
+    name_en: string;
+    role_ar?: string;
+    role_en?: string;
+    experience_ar?: string;
+    experience_en?: string;
+    specialty_ar?: string;
+    specialty_en?: string;
+    image?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/team-members/${id}`, data);
+  }
+
+  static async deleteTeamMember(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/team-members/${id}`);
+  }
+
+  // 7. Company Values API
+  static async getCompanyValues(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/company-values');
+  }
+
+  static async createCompanyValue(data: {
+    title_ar: string;
+    title_en: string;
+    description_ar?: string;
+    description_en?: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/company-values', data);
+  }
+
+  static async updateCompanyValue(id: number, data: {
+    title_ar: string;
+    title_en: string;
+    description_ar?: string;
+    description_en?: string;
+    icon?: string;
+    color?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/company-values/${id}`, data);
+  }
+
+  static async deleteCompanyValue(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/company-values/${id}`);
+  }
+
+  // 8. Company Milestones API
+  static async getCompanyMilestones(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/company-milestones');
+  }
+
+  static async createMilestone(data: {
+    year: string;
+    event_ar: string;
+    event_en: string;
+    description_ar?: string;
+    description_en?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/company-milestones', data);
+  }
+
+  static async updateMilestone(id: number, data: {
+    year: string;
+    event_ar: string;
+    event_en: string;
+    description_ar?: string;
+    description_en?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/company-milestones/${id}`, data);
+  }
+
+  static async deleteMilestone(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/company-milestones/${id}`);
+  }
+
+  // 9. Company Story API
+  static async getCompanyStory(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/company-story');
+  }
+
+  static async updateCompanyStory(data: {
+    paragraph1_ar?: string;
+    paragraph1_en?: string;
+    paragraph2_ar?: string;
+    paragraph2_en?: string;
+    paragraph3_ar?: string;
+    paragraph3_en?: string;
+    features: Array<{
+      name_ar: string;
+      name_en: string;
+    }>;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>('/admin/company-story', data);
+  }
+
+  // 10. Page Content API (Static Texts)
+  static async getPageContent(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/admin/page-content');
+  }
+
+  static async updatePageContent(data: {
+    about_page?: any;
+    contact_page?: any;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>('/admin/page-content', data);
+  }
+
+  // 11. FAQ Content API
+  static async getFAQs(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/faqs');
+  }
+
+  static async createFAQ(data: {
+    question_ar: string;
+    question_en: string;
+    answer_ar: string;
+    answer_en: string;
+    category?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/faqs', data);
+  }
+
+  static async updateFAQ(id: number, data: {
+    question_ar: string;
+    question_en: string;
+    answer_ar: string;
+    answer_en: string;
+    category?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/faqs/${id}`, data);
+  }
+
+  static async deleteFAQ(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/faqs/${id}`);
+  }
+
+  // 12. Certifications API
+  static async getCertifications(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/admin/certifications');
+  }
+
+  static async createCertification(data: {
+    name_ar: string;
+    name_en: string;
+    description_ar?: string;
+    description_en?: string;
+    icon?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/certifications', data);
+  }
+
+  static async updateCertification(id: number, data: {
+    name_ar: string;
+    name_en: string;
+    description_ar?: string;
+    description_en?: string;
+    icon?: string;
+    order?: number;
+    is_active?: boolean;
+  }): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/certifications/${id}`, data);
+  }
+
+  static async deleteCertification(id: number): Promise<APIResponse<any>> {
+    return this.client.delete<any>(`/admin/certifications/${id}`);
+  }
+
+  // ===================================
+  // PUBLIC APIs (No Authentication Required)
+  // ===================================
+
+  // Public Company Information API
+  static async getPublicCompanyInfo(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/public/company-info');
+  }
+
+  // Public Company Statistics API
+  static async getPublicCompanyStats(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/public/company-stats');
+  }
+
+  // Public Contact Information API
+  static async getPublicContactInfo(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/public/contact-info');
+  }
+
+  // Public Social Links API
+  static async getPublicSocialLinks(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/social-links');
+  }
+
+  // Public Page Content API
+  static async getPublicPageContent(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/public/page-content');
+  }
+
+  // Public Company Values API
+  static async getPublicCompanyValues(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/company-values');
+  }
+
+  // Public Company Milestones API
+  static async getPublicCompanyMilestones(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/company-milestones');
+  }
+
+  // Public Company Story API
+  static async getPublicCompanyStory(): Promise<APIResponse<any>> {
+    return this.client.get<any>('/public/company-story');
+  }
+
+  // Public FAQ Content API
+  static async getPublicFAQs(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/faqs');
+  }
+
+  // Public Certifications API
+  static async getPublicCertifications(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/certifications');
+  }
+
+  // Public Team Members API (for About page)
+  static async getPublicTeamMembers(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/team-members');
+  }
+
+  // Public Departments API (for Contact page)
+  static async getPublicDepartments(): Promise<APIResponse<any[]>> {
+    return this.client.get<any[]>('/public/departments');
   }
 }
 

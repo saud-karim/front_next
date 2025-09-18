@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { ApiService } from '../../services/api';
 
 interface AdminLoginHelperProps {
@@ -14,12 +15,13 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
   const [loading, setLoading] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
   const { success, error } = useToast();
+  const { t } = useLanguage();
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      error('Error', 'يرجى إدخال البريد الإلكتروني وكلمة المرور');
+      error('Error', t('admin.login.error.fields'));
       return;
     }
 
@@ -36,7 +38,7 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
           localStorage.setItem('auth_token', response.data.token);
           localStorage.setItem('user', JSON.stringify(response.data.user));
           
-          success('Success', 'تم تسجيل الدخول كمدير بنجاح');
+          success('Success', t('admin.login.success'));
           setShowHelper(false);
           setEmail('');
           setPassword('');
@@ -45,14 +47,14 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
             onLoginSuccess();
           }
         } else {
-          error('Error', 'هذا الحساب ليس حساب مدير');
+          error('Error', t('admin.login.error.not_admin'));
         }
       } else {
-        error('Error', response.message || 'فشل في تسجيل الدخول');
+        error('Error', response.message || t('admin.login.error.failed'));
       }
     } catch (err) {
       console.error('❌ Admin login error:', err);
-      error('Error', 'خطأ في الاتصال بالخادم');
+      error('Error', t('admin.login.error.connection'));
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,7 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
           <div className="text-blue-600 text-xl mr-3">🔐</div>
           <div>
             <h3 className="text-blue-800 font-medium">تسجيل دخول المدير</h3>
-            <p className="text-blue-700 text-sm">الوصول لبيانات Dashboard يتطلب صلاحيات إدارة</p>
+            <p className="text-blue-700 text-sm">{t('admin.dashboard.access.required')}</p>
           </div>
         </div>
         <button
@@ -111,7 +113,7 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="admin@example.com"
+                placeholder={t('placeholder.admin.email')}
                 disabled={loading}
               />
             </div>
@@ -136,7 +138,7 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
                 disabled={loading}
                 className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
               >
-                {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+                {loading ? t('admin.login.loading') : t('admin.login.button')}
               </button>
               
               <button
@@ -144,15 +146,15 @@ export default function AdminLoginHelper({ onLoginSuccess }: AdminLoginHelperPro
                 onClick={handleQuickAdminAccess}
                 className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
               >
-                وضع الاختبار
+{t('admin.login.test.mode')}
               </button>
             </div>
           </form>
           
           <div className="mt-3 text-xs text-gray-600 space-y-1">
-            <p>💡 <strong>للمديرين:</strong> استخدم email يحتوي على "admin" (مثل: admin@example.com)</p>
-            <p>🚀 <strong>للتطوير:</strong> أي كلمة مرور ستعمل مع نظام Fallback</p>
-            <p>⚡ <strong>وضع الاختبار:</strong> ينشئ admin token فوراً</p>
+            <p>💡 <strong>{t('admin.login.help.admin').split(':')[0]}:</strong> {t('admin.login.help.admin').split(':')[1]}</p>
+            <p>🚀 <strong>{t('admin.login.help.dev').split(':')[0]}:</strong> {t('admin.login.help.dev').split(':')[1]}</p>
+            <p>⚡ <strong>{t('admin.login.help.test').split(':')[0]}:</strong> {t('admin.login.help.test').split(':')[1]}</p>
           </div>
         </div>
       )}

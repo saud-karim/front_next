@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     
     if (!adminToken) {
       console.warn('No admin token found, using fallback dashboard data');
-      setError('🔐 يرجى تسجيل الدخول كمدير للوصول لبيانات الداشبورد');
+      setError(`🔐 ${t('admin.login.required.dashboard')}`);
       
       // Use fallback data
       setStats({
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
       return;
     }
 
-      console.log('📊 جاري جلب بيانات الداشبورد من Admin APIs...');
+      console.log('📊 Loading Dashboard data from Admin APIs...');
 
     // محاولة استخدام Admin APIs مع fallback للمستخدم العادي
     try {
@@ -101,13 +101,13 @@ export default function AdminDashboard() {
           
           // استخدم customer APIs بدلاً من admin APIs
           const customerStats = {
-            total_products: 'محدود',
-            total_orders: 'محدود', 
-            total_customers: 'محدود',
-            total_revenue: 'محدود',
-            pending_orders: 'محدود',
-            low_stock_products: 'محدود',
-            new_customers_this_month: 'محدود',
+            total_products: t('admin.limited.access'),
+            total_orders: t('admin.limited.access'),
+            total_customers: t('admin.limited.access'),
+            total_revenue: t('admin.limited.access'),
+            pending_orders: t('admin.limited.access'),
+            low_stock_products: t('admin.limited.access'),
+            new_customers_this_month: t('admin.limited.access'),
             monthly_growth_percentage: 0
           };
           
@@ -116,13 +116,13 @@ export default function AdminDashboard() {
             {
               id: 1,
               type: 'info',
-              message: 'مرحباً بك في لوحة تحكم العملاء',
+              message: t('admin.welcome.customer.dashboard'),
               timestamp: new Date().toISOString(),
-              user_name: 'النظام'
+                              user_name: t('admin.system.user')
             }
           ]);
           
-          setError('📊 تم عرض لوحة التحكم للعملاء. للوصول للإحصائيات الكاملة، تحتاج صلاحيات إدارية في قاعدة البيانات.');
+          setError(`📊 ${t('admin.error.customer.dashboard')}`);
           
         } else if (statsResponse.success && statsResponse.data) {
           // Admin APIs تعمل بشكل طبيعي
@@ -139,13 +139,13 @@ export default function AdminDashboard() {
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : t('admin.error.loading.data') || 'Error loading dashboard data';
-      console.error('❌ خطأ في جلب بيانات الداشبورد:', err);
+      console.error('❌', t('admin.error.loading.data'), ':', err);
       
         // Handle authentication errors gracefully
       if (errorMessage.includes('Unauthenticated')) {
           console.warn('Authentication failed for dashboard APIs');
           localStorage.removeItem('admin_token');
-          setError('🔐 انتهت صلاحية جلسة الإدارة، يرجى تسجيل الدخول مرة أخرى');
+          setError(`🔐 ${t('admin.error.session.expired')}`);
           
           // Use fallback data when authentication fails
           setStats({
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
           setRecentActivity([]);
         } else if (errorMessage.includes('User does not have the right roles')) {
           console.warn('🚫 Role permission error - User is not admin in backend');
-          setError('⚠️ تحتاج إلى صلاحيات إدارية في قاعدة البيانات. يرجى إنشاء حساب admin حقيقي في Laravel Backend.');
+          setError(`⚠️ ${t('admin.error.permissions')}`);
           
           // Use fallback data for role errors
           setStats({
@@ -311,15 +311,17 @@ export default function AdminDashboard() {
       changeType: 'positive' as const,
     },
     {
-      title: 'الطلبات المعلقة',
+      title: t('admin.stats.pending.orders') || (language === 'ar' ? 'الطلبات المعلقة' : 'Pending Orders'),
       value: formatValue(stats.pending_orders),
       icon: '⏳',
       color: 'from-yellow-500 to-yellow-600',
-      change: (typeof stats.pending_orders === 'number' && stats.pending_orders > 0) ? 'يحتاج متابعة' : 'مُحدث',
+              change: (typeof stats.pending_orders === 'number' && stats.pending_orders > 0) ? 
+          (language === 'ar' ? 'يحتاج متابعة' : 'Needs Follow-up') : 
+          (language === 'ar' ? 'مُحدث' : 'Up to Date'),
       changeType: (typeof stats.pending_orders === 'number' && stats.pending_orders > 5) ? 'negative' as const : 'neutral' as const,
     },
     {
-      title: 'مخزون منخفض',
+      title: t('admin.alert.low.stock.title'),
       value: formatValue(stats.low_stock_products),
       icon: '📉',
       color: 'from-orange-500 to-orange-600',
@@ -342,7 +344,7 @@ export default function AdminDashboard() {
                 🔐 مطلوب تسجيل دخول الإدارة
               </h1>
               <p className="text-gray-600 mb-2">
-                مرحباً {user.name}، أنت مدير لكن تحتاج إلى تأكيد هويتك
+    {t('admin.identity.confirm').replace('{name}', user.name)}
               </p>
               <p className="text-gray-500 text-sm">
                 يرجى إدخال بيانات المدير للمتابعة
@@ -403,18 +405,18 @@ export default function AdminDashboard() {
             <div className="flex items-center">
               <div className="text-red-600 text-xl mr-3">⚠️</div>
               <div className="flex-1">
-                <h3 className="text-red-800 font-medium">خطأ في التحميل</h3>
+                <h3 className="text-red-800 font-medium">{language === 'ar' ? 'خطأ في التحميل' : 'Loading Error'}</h3>
                 <p className="text-red-700 text-sm mt-1">{error}</p>
                 
                 {/* Auth Help Message */}
                 {error.includes('تسجيل الدخول كمدير') && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="text-blue-800 text-sm">
-                      <p className="font-medium mb-1">📝 لتسجيل الدخول كمدير:</p>
+                      <p className="font-medium mb-1">📝 {language === 'ar' ? 'لتسجيل الدخول كمدير:' : 'To login as admin:'}</p>
                       <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>تأكد من وجود <code>admin_token</code> في localStorage</li>
-                        <li>أو قم بإضافة <code>role: 'admin'</code> لحسابك</li>
-                        <li>استخدم <code>/admin/login</code> API للحصول على admin token</li>
+                                        <li>{language === 'ar' ? 'تأكد من وجود' : 'Make sure'} <code>admin_token</code> {language === 'ar' ? 'في localStorage' : 'exists in localStorage'}</li>
+                <li>{language === 'ar' ? 'أو قم بإضافة' : 'Or add'} <code>role: 'admin'</code> {language === 'ar' ? 'لحسابك' : 'to your account'}</li>
+                                                  <li>{language === 'ar' ? 'استخدم' : 'Use'} <code>/admin/login</code> API {language === 'ar' ? 'للحصول على admin token' : 'to get admin token'}</li>
                       </ul>
                     </div>
                   </div>

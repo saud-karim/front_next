@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../components/Header';
@@ -13,7 +13,7 @@ import { ApiService } from '../services/api';
 import { Product, Category, WishlistItem } from '../types/api';
 import { getBestImageUrl, getImageFallbacks } from '../dashboard/utils/imageUtils';
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<number | 'all'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'created_at'>('name');
@@ -71,11 +71,11 @@ export default function ProductsPage() {
       const response = await ApiService.getCategories();
       console.log('📂 Categories response:', response);
       console.log('📂 Categories response.data:', response.data);
-      console.log('📂 هل categories array?', Array.isArray(response.data));
+              console.log('📂 Is categories array?', Array.isArray(response.data));
       
       // البيانات في response.data مباشرة (Array من الفئات)
       if (response.data && Array.isArray(response.data)) {
-        console.log('🎉 Categories نجح! عدد الفئات:', response.data.length);
+        console.log('🎉 Categories success! Count:', response.data.length);
         setCategories(response.data);
       } else {
         console.warn('⚠️ Categories response not as expected:', response);
@@ -156,11 +156,11 @@ export default function ProductsPage() {
       if (success_cart) {
         success(t('toast.cart.added'), t('toast.cart.added.desc'));
       } else {
-        error('فشل في إضافة المنتج', 'حدث خطأ أثناء إضافة المنتج للسلة. يرجى المحاولة مرة أخرى.');
+        error(t('toast.error'), t('products.out.of.stock'));
       }
     } catch (err) {
-      console.error('❌ خطأ في إضافة المنتج للسلة:', err);
-      error('خطأ في إضافة المنتج', 'هذا المنتج غير متوفر حالياً أو حدث خطأ في الشبكة.');
+              console.error('❌ Error adding product to cart:', err);
+      error(t('toast.error'), t('products.out.of.stock'));
     }
   };
 
@@ -337,11 +337,11 @@ export default function ProductsPage() {
                 onChange={(e) => handleSortChange(e.target.value)}
                   className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
               >
-                <option value="name-asc">{t('products.sort.name')} (A-Z)</option>
-                <option value="name-desc">{t('products.sort.name')} (Z-A)</option>
-                <option value="price-asc">{t('products.sort.price')} (Low)</option>
-                <option value="price-desc">{t('products.sort.price')} (High)</option>
-                <option value="created_at-desc">{t('products.sort.newest')}</option>
+                <option value="name-asc">{t('products.sort.name')} ({t('sort.asc')})</option>
+                <option value="name-desc">{t('products.sort.name')} ({t('sort.desc')})</option>
+                <option value="price-asc">{t('products.sort.price')} ({t('sort.low')})</option>
+                <option value="price-desc">{t('products.sort.price')} ({t('sort.high')})</option>
+                <option value="created_at-desc">{t('sort.newest')}</option>
               </select>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function ProductsPage() {
             <div className="text-center py-20">
                 <div className="inline-flex items-center gap-4 glass-modern px-8 py-6 rounded-2xl">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-red-500 border-t-transparent"></div>
-                  <span className="text-gray-600 font-medium">جاري تحميل المنتجات...</span>
+                  <span className="text-gray-600 font-medium">{t('loading.products')}</span>
                 </div>
             </div>
           ) : (
@@ -426,7 +426,7 @@ export default function ProductsPage() {
                     {/* Badges */}
                     <div className="absolute top-4 left-4">
                       <div className="px-3 py-1 bg-gradient-accent text-white text-xs font-medium rounded-full">
-                        جديد
+                        {language === 'ar' ? 'جديد' : 'New'}
                       </div>
                     </div>
                     
@@ -585,4 +585,16 @@ export default function ProductsPage() {
       <Footer />
     </div>
   );
-} 
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
+  );
+}

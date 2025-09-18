@@ -86,8 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       } else {
           // No stored user data - remove token as it's invalid
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_data');
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_data');
           }
         }
       }

@@ -59,6 +59,12 @@ export default function AdminSidebar() {
       icon: '📧',
       href: '/dashboard/contact-messages',
     },
+    {
+      id: 'content-management',
+      labelKey: 'admin.sidebar.content_management',
+      icon: '🎨',
+      href: '/dashboard/content-management',
+    },
   ];
 
   const handleLogout = async () => {
@@ -142,11 +148,11 @@ export default function AdminSidebar() {
 
         {/* Language Switcher */}
         <div className="p-3 border-b border-gray-200">
-          <div className="flex items-center justify-center space-x-2">
+          <div className="flex flex-col items-center justify-center space-y-2">
             <button
               onClick={() => setLanguage('ar')}
               className={`
-                flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                 ${language === 'ar' 
                   ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-md' 
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
@@ -161,7 +167,7 @@ export default function AdminSidebar() {
             <button
               onClick={() => setLanguage('en')}
               className={`
-                flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                 ${language === 'en' 
                   ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-md' 
                   : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'

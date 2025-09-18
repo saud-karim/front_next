@@ -65,7 +65,7 @@ export default function NewProductPage() {
           console.error('❌ Failed to fetch categories:', categoriesRes);
         }
       } catch (error) {
-        console.error('خطأ في جلب البيانات:', error);
+        console.error(t('admin.product.console.data.error'), ':', error);
       } finally {
         setLoading(false);
       }
@@ -101,7 +101,7 @@ export default function NewProductPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 5) {
-      alert('يمكن رفع 5 صور كحد أقصى');
+      alert(t('admin.product.image.max.limit'));
       return;
     }
 
@@ -168,23 +168,23 @@ export default function NewProductPage() {
   const validateForm = (): boolean => {
     const newErrors: any = {};
 
-    if (!form.name_ar.trim()) newErrors.name_ar = 'اسم المنتج بالعربية مطلوب';
-    if (!form.name_en.trim()) newErrors.name_en = 'اسم المنتج بالإنجليزية مطلوب';
-    if (!form.description_ar.trim()) newErrors.description_ar = 'وصف المنتج بالعربية مطلوب';
-    if (!form.description_en.trim()) newErrors.description_en = 'وصف المنتج بالإنجليزية مطلوب';
-    if (!form.price.trim()) newErrors.price = 'سعر المنتج مطلوب';
-    if (!form.stock.trim()) newErrors.stock = 'كمية المخزون مطلوبة';
-    if (!form.category_id) newErrors.category_id = 'فئة المنتج مطلوبة';
+    if (!form.name_ar.trim()) newErrors.name_ar = t('admin.product.validation.name.ar');
+    if (!form.name_en.trim()) newErrors.name_en = t('admin.product.validation.name.en');
+    if (!form.description_ar.trim()) newErrors.description_ar = t('admin.product.validation.desc.ar');
+    if (!form.description_en.trim()) newErrors.description_en = t('admin.product.validation.desc.en');
+    if (!form.price.trim()) newErrors.price = t('admin.product.validation.price');
+    if (!form.stock.trim()) newErrors.stock = t('admin.product.validation.stock');
+    if (!form.category_id) newErrors.category_id = t('admin.product.validation.category');
 
     // التحقق من الأرقام
     if (form.price && isNaN(Number(form.price))) {
-      newErrors.price = 'السعر يجب أن يكون رقماً';
+      newErrors.price = t('admin.product.validation.price.number');
     }
     if (form.sale_price && isNaN(Number(form.sale_price))) {
-              newErrors.sale_price = 'السعر قبل الخصم يجب أن يكون رقماً';
+              newErrors.sale_price = t('admin.product.error.sale.price');
     }
     if (form.stock && isNaN(Number(form.stock))) {
-      newErrors.stock = 'الكمية يجب أن تكون رقماً';
+              newErrors.stock = t('admin.product.validation.stock.number.new');
     }
 
     setErrors(newErrors);
@@ -239,7 +239,7 @@ export default function NewProductPage() {
           console.log('✅ FormData response:', response);
           
           if (response && response.success) {
-            alert('تم إضافة المنتج مع الصور بنجاح!');
+            alert(t('admin.product.success.add.with.images'));
             router.push('/dashboard/products');
             return;
           } else {
@@ -251,8 +251,8 @@ export default function NewProductPage() {
           
           // عرض تحذير وإكمال بدون صور
           const proceed = confirm(
-            'فشل رفع الصور. هل تريد حفظ المنتج بدون الصور؟\n' +
-            'يمكنك إضافة الصور لاحقاً عند تعديل المنتج.'
+            t('admin.product.image.upload.failed') + '\n' +
+            t('admin.product.images.later')
           );
           
           if (!proceed) {
@@ -291,14 +291,14 @@ export default function NewProductPage() {
       console.log('📥 Create product response:', response);
 
       if (response && response.success) {
-        alert('تم إضافة المنتج بنجاح!');
+        alert(t('admin.product.success.add'));
         router.push('/dashboard/products');
       } else {
-        alert('حدث خطأ في إضافة المنتج: ' + (response.message || 'خطأ غير معروف'));
+        alert(t('admin.product.error.add') + ': ' + (response.message || t('admin.product.error.unknown')));
       }
     } catch (error) {
-      console.error('خطأ في إضافة المنتج:', error);
-      alert('حدث خطأ في إضافة المنتج');
+      console.error('Error adding product:', error);
+      alert(t('admin.product.error.add'));
     } finally {
       setSubmitLoading(false);
     }
@@ -322,14 +322,14 @@ export default function NewProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">إضافة منتج جديد</h1>
-          <p className="text-gray-600 mt-1">إضافة منتج جديد إلى المتجر</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.product.add.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.product.add.subtitle')}</p>
         </div>
         <Link
           href="/dashboard/products"
           className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
-          ← العودة للمنتجات
+{t('admin.product.back')}
         </Link>
       </div>
 
@@ -337,14 +337,14 @@ export default function NewProductPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* المعلومات الأساسية */}
+          {/* Basic Information */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">المعلومات الأساسية</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.basic.info')}</h2>
             
             {/* اسم المنتج بالعربية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم المنتج بالعربية *
+                {t('admin.product.name.ar')} *
               </label>
               <input
                 type="text"
@@ -353,7 +353,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.name_ar ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="مثال: مثقاب كهربائي"
+                placeholder={t('admin.product.placeholder.name.ar.example')}
               />
               {errors.name_ar && <p className="text-red-500 text-sm mt-1">{errors.name_ar}</p>}
             </div>
@@ -361,7 +361,7 @@ export default function NewProductPage() {
             {/* اسم المنتج بالإنجليزية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم المنتج بالإنجليزية *
+                {t('admin.product.name.en')} *
               </label>
               <input
                 type="text"
@@ -370,7 +370,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.name_en ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Example: Electric Drill"
+                placeholder={t('admin.product.placeholder.name.en.example')}
               />
               {errors.name_en && <p className="text-red-500 text-sm mt-1">{errors.name_en}</p>}
             </div>
@@ -378,7 +378,7 @@ export default function NewProductPage() {
             {/* وصف المنتج بالعربية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                وصف المنتج بالعربية *
+                {t('admin.product.desc.ar')} *
               </label>
               <textarea
                 value={form.description_ar}
@@ -387,7 +387,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.description_ar ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="وصف تفصيلي للمنتج..."
+                placeholder={t('admin.product.placeholder.desc.detailed')}
               />
               {errors.description_ar && <p className="text-red-500 text-sm mt-1">{errors.description_ar}</p>}
             </div>
@@ -395,7 +395,7 @@ export default function NewProductPage() {
             {/* وصف المنتج بالإنجليزية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                وصف المنتج بالإنجليزية *
+                {t('admin.product.desc.en')} *
               </label>
               <textarea
                 value={form.description_en}
@@ -404,7 +404,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.description_en ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Detailed product description..."
+                placeholder={t('admin.product.placeholder.desc.detailed')}
               />
               {errors.description_en && <p className="text-red-500 text-sm mt-1">{errors.description_en}</p>}
             </div>
@@ -412,12 +412,12 @@ export default function NewProductPage() {
 
           {/* معلومات السعر والمخزون */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">السعر والمخزون</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.price.stock')}</h2>
             
             {/* السعر */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                السعر * (ج.م)
+{t('admin.product.field.price')} *
               </label>
               <input
                 type="number"
@@ -427,7 +427,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.price ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="مثال: 120.50"
+                placeholder={t('admin.product.placeholder.price')}
               />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
             </div>
@@ -435,7 +435,7 @@ export default function NewProductPage() {
             {/* سعر التخفيض */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                السعر قبل الخصم (ج.م) - اختياري
+                {t('admin.product.field.original.price')}
               </label>
               <input
                 type="number"
@@ -443,14 +443,14 @@ export default function NewProductPage() {
                 value={form.sale_price}
                 onChange={(e) => updateForm('sale_price', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="أعلى من السعر الحالي"
+                placeholder={t('admin.product.price.higher')}
               />
             </div>
 
             {/* الكمية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                الكمية *
+{t('admin.product.field.stock.quantity')} *
               </label>
               <input
                 type="number"
@@ -459,7 +459,7 @@ export default function NewProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.stock ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="مثال: 50"
+                placeholder={t('admin.product.placeholder.stock')}
               />
               {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
             </div>
@@ -467,15 +467,15 @@ export default function NewProductPage() {
             {/* الحالة */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                حالة المنتج
+{t('admin.product.field.status')}
               </label>
               <select
                 value={form.status}
                 onChange={(e) => updateForm('status', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
+                <option value="active">{t('admin.product.status.active')}</option>
+                <option value="inactive">{t('admin.product.status.inactive')}</option>
               </select>
             </div>
 
@@ -489,14 +489,14 @@ export default function NewProductPage() {
                 className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500"
               />
               <label htmlFor="featured" className="mr-2 text-sm font-medium text-gray-700">
-                منتج مميز
+{t('admin.product.field.featured')}
               </label>
             </div>
 
             {/* الفئة */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                الفئة *
+{t('admin.product.field.category')} *
               </label>
               <select
                 value={form.category_id}
@@ -505,7 +505,7 @@ export default function NewProductPage() {
                   errors.category_id ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">اختر الفئة</option>
+                <option value="">{t('admin.product.select.category')}</option>
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
                     {getLocalizedText(category, 'name')}
@@ -519,7 +519,7 @@ export default function NewProductPage() {
 
         {/* الصور */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">صور المنتج</h2>
+                      <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.images')}</h2>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -541,7 +541,7 @@ export default function NewProductPage() {
                 <div key={index} className="relative">
                   <img
                     src={src}
-                    alt={`معاينة ${index + 1}`}
+                                          alt={t('admin.product.preview.alt').replace('{number}', (index + 1).toString())}
                     className="w-full h-32 object-cover rounded-lg transition-opacity duration-300"
                     loading="lazy"
                     onError={(e) => {
@@ -562,8 +562,8 @@ export default function NewProductPage() {
                           <div class="w-full h-32 flex items-center justify-center bg-gray-100 text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
                             <div class="text-center p-4">
                               <div class="text-4xl mb-2">🖼️</div>
-                              <div class="text-sm font-medium text-gray-600">فشل تحميل المعاينة</div>
-                              <div class="text-xs text-gray-500 mt-1">Preview failed</div>
+                              <div className="text-sm font-medium text-gray-600">{t('admin.product.preview.failed')}</div>
+                              <div className="text-xs text-gray-500 mt-1">{language === 'ar' ? 'فشل في المعاينة' : 'Preview failed'}</div>
                             </div>
                           </div>
                         `;
@@ -602,13 +602,13 @@ export default function NewProductPage() {
         {/* المميزات */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">مميزات المنتج</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('admin.product.features.section')}</h2>
             <button
               type="button"
               onClick={addFeature}
               className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
             >
-              إضافة ميزة
+{t('admin.product.features.add')}
             </button>
           </div>
           
@@ -619,7 +619,7 @@ export default function NewProductPage() {
                   type="text"
                   value={feature}
                   onChange={(e) => updateFeature(index, e.target.value)}
-                  placeholder={`الميزة ${index + 1}`}
+                  placeholder={t('admin.product.feature.number').replace('{number}', (index + 1).toString())}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 {form.features.length > 1 && (
@@ -628,7 +628,7 @@ export default function NewProductPage() {
                     onClick={() => removeFeature(index)}
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg"
                   >
-                    حذف
+                    {language === 'ar' ? 'حذف' : 'Delete'}
                   </button>
                 )}
               </div>
@@ -639,13 +639,13 @@ export default function NewProductPage() {
         {/* المواصفات */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">مواصفات المنتج</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('admin.product.specs.section')}</h2>
             <button
               type="button"
               onClick={addSpecification}
               className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
             >
-              إضافة مواصفة
+{t('admin.product.specs.add')}
             </button>
           </div>
           
@@ -656,7 +656,7 @@ export default function NewProductPage() {
                   type="text"
                   value={spec.key}
                   onChange={(e) => updateSpecification(index, 'key', e.target.value)}
-                  placeholder="اسم المواصفة"
+                                      placeholder={t('admin.product.placeholder.spec.name.simple')}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <div className="flex gap-2">
@@ -664,7 +664,7 @@ export default function NewProductPage() {
                     type="text"
                     value={spec.value}
                     onChange={(e) => updateSpecification(index, 'value', e.target.value)}
-                    placeholder="قيمة المواصفة"
+                    placeholder={t('admin.product.placeholder.spec.value.simple')}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                   {form.specifications.length > 1 && (
@@ -673,7 +673,7 @@ export default function NewProductPage() {
                       onClick={() => removeSpecification(index)}
                       className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg"
                     >
-                      حذف
+                      {language === 'ar' ? 'حذف' : 'Delete'}
                     </button>
                   )}
                 </div>
@@ -688,7 +688,7 @@ export default function NewProductPage() {
             href="/dashboard/products"
             className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
-            إلغاء
+            {t('admin.button.cancel')}
           </Link>
           <button
             type="submit"
@@ -698,10 +698,10 @@ export default function NewProductPage() {
             {submitLoading ? (
               <>
                 <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-                جاري الحفظ...
+{t('admin.product.saving')}
               </>
             ) : (
-              '💾 حفظ المنتج'
+              `💾 ${t('admin.product.create')}`
             )}
           </button>
         </div>

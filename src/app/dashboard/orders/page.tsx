@@ -257,13 +257,10 @@ export default function OrdersPage() {
             <div className="text-yellow-600 text-xl mr-3">⚠️</div>
             <div>
               <h3 className="text-yellow-800 font-medium">
-                {language === 'ar' ? 'ملاحظة مهمة' : 'Important Note'}
+                {t('admin.notice.important')}
               </h3>
               <p className="text-yellow-700 text-sm mt-1">
-                {language === 'ar' 
-                  ? 'بعض وظائف إدارة الطلبات (مثل تحديث الحالة) غير متاحة حالياً في الخادم الخلفي. الصفحة تعرض الطلبات المتاحة للمستخدم الحالي.'
-                  : 'Some admin order features (like status updates) are not available in the current backend version. The page shows orders available to the current user.'
-                }
+                {t('admin.notice.orders.backend')}
               </p>
             </div>
           </div>

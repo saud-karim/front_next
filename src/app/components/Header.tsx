@@ -75,13 +75,13 @@ export default function Header() {
           <nav className="hidden md:block">
             <div className="flex items-center space-x-6">
               <Link href="/" className="text-gray-700 hover:text-red-500 transition-colors">
-                <span suppressHydrationWarning>{isHydrated ? t('nav.home') : 'الرئيسية'}</span>
+                <span suppressHydrationWarning>{isHydrated ? t('nav.home') : (language === 'ar' ? 'الرئيسية' : 'Home')}</span>
               </Link>
               <Link href="/products" className="text-gray-700 hover:text-red-500 transition-colors">
-                <span suppressHydrationWarning>{isHydrated ? t('nav.products') : 'المنتجات'}</span>
+                <span suppressHydrationWarning>{isHydrated ? t('nav.products') : (language === 'ar' ? 'المنتجات' : 'Products')}</span>
               </Link>
               <Link href="/categories" className="text-gray-700 hover:text-red-500 transition-colors">
-                <span suppressHydrationWarning>{isHydrated ? t('nav.categories') : 'الفئات'}</span>
+                <span suppressHydrationWarning>{isHydrated ? t('nav.categories') : (language === 'ar' ? 'الفئات' : 'Categories')}</span>
               </Link>
               <Link href="/about" className="text-gray-700 hover:text-red-500 transition-colors">
                 {t('nav.about')}
@@ -122,7 +122,7 @@ export default function Header() {
 
             <Link href="/cart" className="text-gray-700 hover:text-red-500 p-2 transition-colors relative">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 2.5M7 13l2.5 2.5m6 0L21 21H9l6-6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17"/>
               </svg>
               {itemsCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -145,11 +145,11 @@ export default function Header() {
 
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded border border-gray-200 py-1 z-10">
-                    <Link href="/profile" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsUserMenuOpen(false)}>
-                      {t('nav.profile')}
+                    <Link href="/account" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsUserMenuOpen(false)}>
+                      {t('account.title')}
                     </Link>
-                    <Link href="/orders" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsUserMenuOpen(false)}>
-                      {t('nav.orders')}
+                    <Link href="/account/orders" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsUserMenuOpen(false)}>
+                      {t('account.orders.title')}
                     </Link>
                     {user?.role === 'admin' && (
                       <Link href="/dashboard" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setIsUserMenuOpen(false)}>
@@ -157,8 +157,8 @@ export default function Header() {
                     </Link>
                     )}
                     <button onClick={handleLogout} className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                      تسجيل الخروج
-            </button>
+                      {t('account.logout')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -188,13 +188,13 @@ export default function Header() {
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-6 py-3 space-y-1">
             <Link href="/" className="block text-gray-700 hover:text-red-500 py-2 transition-colors">
-                <span suppressHydrationWarning>{isHydrated ? t('nav.home') : 'الرئيسية'}</span>
+                <span suppressHydrationWarning>{isHydrated ? t('nav.home') : (language === 'ar' ? 'الرئيسية' : 'Home')}</span>
               </Link>
             <Link href="/products" className="block text-gray-700 hover:text-red-500 py-2 transition-colors">
-              <span suppressHydrationWarning>{isHydrated ? t('nav.products') : 'المنتجات'}</span>
+              <span suppressHydrationWarning>{isHydrated ? t('nav.products') : (language === 'ar' ? 'المنتجات' : 'Products')}</span>
               </Link>
             <Link href="/categories" className="block text-gray-700 hover:text-red-500 py-2 transition-colors">
-              <span suppressHydrationWarning>{isHydrated ? t('nav.categories') : 'الفئات'}</span>
+              <span suppressHydrationWarning>{isHydrated ? t('nav.categories') : (language === 'ar' ? 'الفئات' : 'Categories')}</span>
               </Link>
             <Link href="/about" className="block text-gray-700 hover:text-red-500 py-2 transition-colors">
                 {t('nav.about')}
@@ -218,7 +218,7 @@ export default function Header() {
                     </Link>
                   )}
                   <button onClick={handleLogout} className="block w-full text-left text-gray-700 hover:text-red-500 py-2 transition-colors">
-                    تسجيل الخروج
+                    {t('account.logout')}
                   </button>
                 </div>
               ) : (

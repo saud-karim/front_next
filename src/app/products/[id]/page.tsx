@@ -292,7 +292,7 @@ export default function ProductDetailsPage() {
                 </h1>
                 <div className="flex items-center gap-4 mb-4">
                   <span className="text-3xl font-bold text-red-600">
-                    {product?.price ? `${product.price} ج.م` : 'سعر غير متوفر'}
+                    {product?.price ? `${product.price} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('products.out.of.stock')}
                   </span>
                   {product.category && (
                     <Link 

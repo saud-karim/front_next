@@ -1,120 +1,194 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
+import ApiService from '../services/api';
+
+interface CompanyInfo {
+  company_name_ar: string;
+  company_name_en: string;
+  company_description_ar: string;
+  company_description_en: string;
+}
+
+interface ContactInfo {
+  main_phone: string;
+  main_email: string;
+  address_ar?: string;
+  address_en?: string;
+}
+
+interface SocialLink {
+  id: number;
+  platform: string;
+  url: string;
+  icon: string;
+  is_active: boolean;
+  order_index: number;
+}
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const currentYear = new Date().getFullYear();
+  
+  // Dynamic content states
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
+    company_name_ar: 'بي إس تولز',
+    company_name_en: 'BS Tools',
+    company_description_ar: 'شركة رائدة في مجال أدوات ومواد البناء منذ أكثر من 15 عاماً',
+    company_description_en: 'Leading company in construction tools and materials for over 15 years'
+  });
+  
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    main_phone: '+20 123 456 7890',
+    main_email: 'info@bstools.com',
+    address_ar: '123 شارع الأهرام، الجيزة، مصر',
+    address_en: '123 Pyramids Street, Giza, Egypt'
+  });
 
-  const footerSections = [
-    {
-      title: t('footer.products'),
-      links: [
-        { name: t('categories.power.title'), href: "/products/power-tools" },
-        { name: t('categories.hand.title'), href: "/products/hand-tools" },
-        { name: t('categories.safety.title'), href: "/products/safety" },
-        { name: t('categories.measuring.title'), href: "/products/measuring" }
-      ]
-    },
-    {
-      title: t('footer.company'),
-      links: [
-        { name: t('footer.about.us'), href: "/about" },
-        { name: t('footer.contact.us'), href: "/contact" },
-        { name: t('footer.support.help'), href: "/help" },
-        { name: t('footer.support.returns'), href: "/returns" }
-      ]
-    }
-  ];
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        console.log('🏢 Footer: Loading company info...');
+        
+        // Load company info using public API
+        const companyResponse = await ApiService.getPublicCompanyInfo();
+        if (companyResponse.success && companyResponse.data) {
+          console.log('✅ Footer: Company info loaded:', companyResponse.data);
+          setCompanyInfo({
+            company_name_ar: companyResponse.data.company_name_ar || companyInfo.company_name_ar,
+            company_name_en: companyResponse.data.company_name_en || companyInfo.company_name_en,
+            company_description_ar: companyResponse.data.company_description_ar || companyInfo.company_description_ar,
+            company_description_en: companyResponse.data.company_description_en || companyInfo.company_description_en
+          });
+        } else {
+          console.log('❌ Footer: Failed to load company info:', companyResponse);
+        }
+
+        // Load contact info using public API
+        const contactResponse = await ApiService.getPublicContactInfo();
+        if (contactResponse.success && contactResponse.data) {
+          setContactInfo({
+            main_phone: contactResponse.data.main_phone || contactInfo.main_phone,
+            main_email: contactResponse.data.main_email || contactInfo.main_email,
+            address_ar: contactResponse.data.address_ar || contactInfo.address_ar,
+            address_en: contactResponse.data.address_en || contactInfo.address_en
+          });
+        }
+
+        // Load social links using public API
+        const socialResponse = await ApiService.getPublicSocialLinks();
+        if (socialResponse.success && socialResponse.data) {
+          const activeSocial = socialResponse.data
+            .filter(link => link.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setSocialLinks(activeSocial);
+        }
+
+      } catch (error) {
+        console.log('Footer: Using fallback data due to API error:', error);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
-    <footer className="bg-gray-50 text-black border-t border-gray-200">
-      {/* Newsletter Section */}
-      <div className="py-12">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <h3 className="text-2xl font-bold mb-4">{t('footer.newsletter')}</h3>
-          <p className="text-gray-600 mb-6">{t('footer.newsletter.desc')}</p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder={t('footer.email.placeholder')}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-500"
-              />
-            <button className="btn-primary">
-                {t('footer.subscribe')}
-              </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Footer Content */}
-      <div className="py-12 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Company Info */}
-            <div>
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white font-bold text-sm mr-3">
-                  BS
-                </div>
-                <span className="text-lg font-semibold">Construction Tools</span>
+    <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          
+          {/* Company Info */}
+          <div className="col-span-1 lg:col-span-2">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">BS</span>
               </div>
-              <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                {t('footer.company.desc')}
-              </p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span>📍</span>
-                  <span>{t('footer.address')}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span>📞</span>
-                  <span>{t('footer.phone')}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span>✉️</span>
-                  <span>{t('footer.email')}</span>
-                </div>
-              </div>
+              <span className="text-lg font-semibold">
+                {language === 'ar' ? companyInfo.company_name_ar : companyInfo.company_name_en}
+              </span>
             </div>
-
-            {/* Footer Links */}
-            {footerSections.map((section, index) => (
-              <div key={index}>
-                <h4 className="font-semibold text-black mb-3">{section.title}</h4>
-                <ul className="space-y-2">
-                  {section.links.map((link, linkIndex) => (
-                    <li key={linkIndex}>
-                      <Link href={link.href} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
-                        {link.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Footer */}
-      <div className="border-t border-gray-200 py-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <div className="text-gray-600">
-              © {currentYear} Construction Tools. {t('footer.rights')}
-            </div>
+            <p className="text-gray-300 text-sm leading-relaxed mb-4">
+              {language === 'ar' ? companyInfo.company_description_ar : companyInfo.company_description_en}
+            </p>
             
-            <div className="flex gap-4">
-              <Link href="/privacy" className="text-gray-600 hover:text-red-500 transition-colors">
-                {t('footer.privacy')}
-              </Link>
-              <Link href="/terms" className="text-gray-600 hover:text-red-500 transition-colors">
-                {t('footer.terms')}
-              </Link>
+            {/* Social Links */}
+            {socialLinks.length > 0 && (
+              <div className="flex space-x-4">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                    title={link.platform}
+                  >
+                    <span className="text-xs">{link.icon}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">{t('footer.quickLinks')}</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  {t('nav.home')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/products" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  {t('nav.products')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  {t('nav.about')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  {t('nav.contact')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">{t('footer.contact')}</h3>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-red-500">📞</span>
+                <span className="text-gray-300 text-sm">{contactInfo.main_phone}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-red-500">✉️</span>
+                <span className="text-gray-300 text-sm">{contactInfo.main_email}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-red-500">📍</span>
+                <span className="text-gray-300 text-sm">
+                  {language === 'ar' ? contactInfo.address_ar : contactInfo.address_en}
+                </span>
+              </div>
             </div>
           </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+          <p className="text-gray-400 text-sm">
+            © {currentYear} {language === 'ar' ? companyInfo.company_name_ar : companyInfo.company_name_en}. {t('footer.rights')}
+          </p>
         </div>
       </div>
     </footer>

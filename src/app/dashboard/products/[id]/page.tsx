@@ -219,7 +219,7 @@ export default function EditProductPage() {
           console.warn('⚠️ Categories failed to load or empty:', categoriesRes);
         }
       } catch (error) {
-        console.error('خطأ في جلب البيانات:', error);
+        console.error(t('admin.product.console.data.error'), ':', error);
         setNotFound(true);
       } finally {
         setLoading(false);
@@ -249,7 +249,7 @@ export default function EditProductPage() {
     const totalImages = currentImagesCount + files.length;
     
     if (totalImages > 5) {
-      alert('يمكن رفع 5 صور كحد أقصى');
+      alert(t('admin.product.image.max.limit'));
       return;
     }
 
@@ -324,23 +324,23 @@ export default function EditProductPage() {
     
     const newErrors: Record<string, string> = {};
 
-    if (!product.name_ar.trim()) newErrors.name_ar = 'اسم المنتج بالعربية مطلوب';
-    if (!product.name_en.trim()) newErrors.name_en = 'اسم المنتج بالإنجليزية مطلوب';
-    if (!product.description_ar.trim()) newErrors.description_ar = 'وصف المنتج بالعربية مطلوب';
-    if (!product.description_en.trim()) newErrors.description_en = 'وصف المنتج بالإنجليزية مطلوب';
-    if (!product.price.trim()) newErrors.price = 'سعر المنتج مطلوب';
-    if (!product.stock.toString().trim()) newErrors.stock = 'كمية المخزون مطلوبة';
-    if (!product.category_id) newErrors.category_id = 'فئة المنتج مطلوبة';
+    if (!product.name_ar.trim()) newErrors.name_ar = t('admin.product.validation.name.ar');
+    if (!product.name_en.trim()) newErrors.name_en = t('admin.product.validation.name.en');
+    if (!product.description_ar.trim()) newErrors.description_ar = t('admin.product.validation.desc.ar');
+    if (!product.description_en.trim()) newErrors.description_en = t('admin.product.validation.desc.en');
+    if (!product.price.trim()) newErrors.price = t('admin.product.validation.price');
+    if (!product.stock.toString().trim()) newErrors.stock = t('admin.product.validation.stock');
+    if (!product.category_id) newErrors.category_id = t('admin.product.validation.category');
 
     // التحقق من الأرقام
     if (product.price && isNaN(Number(product.price))) {
-      newErrors.price = 'السعر يجب أن يكون رقماً';
+      newErrors.price = t('admin.product.validation.price.number');
     }
     if (product.original_price && isNaN(Number(product.original_price))) {
-      newErrors.original_price = 'السعر الأصلي يجب أن يكون رقماً';
+              newErrors.original_price = t('admin.product.validation.original.price.number');
     }
     if (product.stock && isNaN(Number(product.stock))) {
-      newErrors.stock = 'المخزون يجب أن يكون رقماً';
+              newErrors.stock = t('admin.product.validation.stock.number');
     }
 
     setErrors(newErrors);
@@ -429,7 +429,7 @@ export default function EditProductPage() {
           const token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
           
           if (!token) {
-            throw new Error('لا يوجد token للمصادقة');
+            throw new Error(t('admin.product.no.auth.token'));
           }
           
           console.log('🚀 Sending FormData request to backend...');
@@ -476,13 +476,10 @@ export default function EditProductPage() {
           });
           
           // عرض رسالة خطأ مفصلة
-          const errorMessage = formDataError?.message || String(formDataError) || 'خطأ غير معروف';
+          const errorMessage = formDataError?.message || String(formDataError) || t('admin.product.error.unknown');
           
           const proceed = confirm(
-            `فشل رفع الصور الجديدة:\n${errorMessage}\n\n` +
-            'هل تريد حفظ التعديلات بدون الصور الجديدة؟\n' +
-            'ستحتفظ بالصور الموجودة، لكن الصور الجديدة لن ترفع.\n\n' +
-            '(اضغط Cancel لإلغاء التحديث تماماً)'
+                    t('admin.product.image.upload.failed.update').replace('{error}', errorMessage)
           );
           
           if (!proceed) {
@@ -526,7 +523,7 @@ export default function EditProductPage() {
       console.log('📦 Product updated:', response);
 
       if (response.success) {
-        alert('تم تحديث المنتج بنجاح!');
+        alert(t('admin.product.success.update'));
         
         // إعادة تحميل بيانات المنتج لعرض التحديثات
         console.log('🔄 Reloading product data...');
@@ -596,18 +593,18 @@ export default function EditProductPage() {
           console.log('🖼️ Updated images:', productData.images);
         }
       } else {
-        alert('حدث خطأ في تحديث المنتج: ' + (response.message || 'خطأ غير معروف'));
+        alert(t('admin.product.error.update') + ': ' + (response.message || t('admin.product.error.unknown')));
       }
       
     } catch (error: any) {
-      console.error('خطأ في تحديث المنتج:', error);
+      console.error('Error updating product:', error);
       
       // إذا كان في validation errors، عرضهم
-      if (error.message === 'بيانات غير صحيحة') {
+      if (error.message === 'بيانات غير صحيحة' || error.message.includes('Invalid data')) {
         console.error('🚫 Backend validation failed - check FormData format');
-        alert('خطأ في البيانات المرسلة. تحقق من Console للتفاصيل');
+        alert(t('admin.product.error.invalid.data'));
       } else {
-        alert('حدث خطأ في تحديث المنتج: ' + error.message);
+                  alert(t('admin.product.error.update') + ': ' + error.message);
       }
     } finally {
       setSubmitLoading(false);
@@ -618,18 +615,18 @@ export default function EditProductPage() {
   const handleDelete = async () => {
     if (!product) return;
     
-    const confirmed = confirm(`هل أنت متأكد من حذف المنتج "${product.name_ar}"؟ هذا الإجراء لا يمكن التراجع عنه.`);
+    const confirmed = confirm(t('admin.product.delete.confirm').replace('{name}', product.name_ar));
     if (!confirmed) return;
 
     try {
       // هنا يمكن إضافة API call لحذف المنتج
       // await ApiService.deleteProduct(product.id);
       
-      alert('تم حذف المنتج بنجاح!');
+      alert(t('admin.product.delete.success'));
       router.push('/dashboard/products');
     } catch (error) {
-      console.error('خطأ في حذف المنتج:', error);
-      alert('حدث خطأ في حذف المنتج');
+      console.error('Error deleting product:', error);
+      alert(t('admin.product.delete.error'));
     }
   };
 
@@ -650,13 +647,13 @@ export default function EditProductPage() {
     return (
       <div className="bg-white rounded-lg shadow-md p-12 text-center">
         <div className="text-6xl mb-4">❌</div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">منتج غير موجود</h3>
-        <p className="text-gray-600 mb-6">المنتج المطلوب غير موجود أو تم حذفه</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{t('admin.product.not.found.title')}</h3>
+                  <p className="text-gray-600 mb-6">{t('admin.product.not.found.desc')}</p>
         <Link
           href="/dashboard/products"
           className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
-          العودة للمنتجات
+          {t('admin.product.back.products')}
         </Link>
       </div>
     );
@@ -667,21 +664,21 @@ export default function EditProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">تعديل المنتج</h1>
-          <p className="text-gray-600 mt-1">تعديل بيانات المنتج: {product.name_ar}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.product.edit.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.product.edit.subtitle')}: {product.name_ar}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
-            🗑️ حذف المنتج
+🗑️ {t('admin.product.delete')}
           </button>
           <Link
             href="/dashboard/products"
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
-            ← العودة للمنتجات
+← {t('admin.product.back')}
           </Link>
         </div>
       </div>
@@ -692,10 +689,9 @@ export default function EditProductPage() {
           <div className="flex items-center">
             <div className="text-yellow-600 mr-3">⚠️</div>
             <div>
-              <h3 className="text-sm font-medium text-yellow-800">وضع الاسترداد النشط</h3>
+              <h3 className="text-sm font-medium text-yellow-800">{t('admin.product.fallback.title')}</h3>
               <p className="text-sm text-yellow-700 mt-1">
-                تم تحميل البيانات باستخدام API بديل بسبب مشكلة مؤقتة في الخادم.
-                جميع الوظائف تعمل بشكل طبيعي.
+                {t('admin.product.fallback.desc')}
               </p>
             </div>
           </div>
@@ -708,12 +704,12 @@ export default function EditProductPage() {
           
           {/* المعلومات الأساسية */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">المعلومات الأساسية</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.basic.info')}</h2>
             
             {/* اسم المنتج بالعربية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم المنتج (العربية) *
+  {t('admin.product.label.name.ar')} *
               </label>
               <input
                 type="text"
@@ -722,7 +718,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.name_ar ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="أدخل اسم المنتج بالعربية"
+                                  placeholder={t('admin.product.placeholder.name.ar')}
               />
               {errors.name_ar && <p className="text-red-500 text-sm mt-1">{errors.name_ar}</p>}
             </div>
@@ -730,7 +726,7 @@ export default function EditProductPage() {
             {/* اسم المنتج بالإنجليزية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم المنتج (English) *
+{t('admin.product.label.name.en')} *
               </label>
               <input
                 type="text"
@@ -739,7 +735,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.name_en ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Enter product name in English"
+                placeholder={t('admin.product.placeholder.name.en')}
               />
               {errors.name_en && <p className="text-red-500 text-sm mt-1">{errors.name_en}</p>}
             </div>
@@ -747,7 +743,7 @@ export default function EditProductPage() {
             {/* وصف المنتج بالعربية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                وصف المنتج (العربية) *
+{t('admin.product.label.desc.ar')} *
               </label>
               <textarea
                 value={product?.description_ar || ''}
@@ -756,7 +752,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.description_ar ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="أدخل وصف المنتج بالعربية"
+                                  placeholder={t('admin.product.placeholder.desc.ar')}
               />
               {errors.description_ar && <p className="text-red-500 text-sm mt-1">{errors.description_ar}</p>}
             </div>
@@ -764,7 +760,7 @@ export default function EditProductPage() {
             {/* وصف المنتج بالإنجليزية */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                وصف المنتج (English) *
+{t('admin.product.label.desc.en')} *
               </label>
               <textarea
                 value={product?.description_en || ''}
@@ -773,7 +769,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.description_en ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Enter product description in English"
+                placeholder={t('admin.product.placeholder.description.en')}
               />
               {errors.description_en && <p className="text-red-500 text-sm mt-1">{errors.description_en}</p>}
             </div>
@@ -781,12 +777,12 @@ export default function EditProductPage() {
 
           {/* الأسعار والمخزون */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">الأسعار والمخزون</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.section.pricing')}</h2>
             
             {/* السعر */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                السعر (ج.م) *
+                {t('admin.product.field.price')} *
               </label>
               <input
                 type="number"
@@ -804,7 +800,7 @@ export default function EditProductPage() {
             {/* سعر التخفيض */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                السعر قبل الخصم (ج.م) - اختياري
+                {t('admin.product.field.original.price')}
               </label>
               <input
                 type="number"
@@ -814,7 +810,7 @@ export default function EditProductPage() {
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   errors.sale_price ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="أعلى من السعر الحالي"
+                placeholder={t('admin.product.price.higher')}
               />
               {errors.sale_price && <p className="text-red-500 text-sm mt-1">{errors.sale_price}</p>}
             </div>
@@ -822,7 +818,7 @@ export default function EditProductPage() {
             {/* المخزون */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                كمية المخزون *
+                {t('admin.product.field.stock.quantity')} *
               </label>
               <input
                 type="number"
@@ -839,15 +835,15 @@ export default function EditProductPage() {
             {/* الحالة */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                حالة المنتج
+                {t('admin.product.field.status')}
               </label>
               <select
                 value={product?.status || 'active'}
                 onChange={(e) => updateProduct('status', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
+                <option value="active">{t('admin.product.status.active')}</option>
+                <option value="inactive">{t('admin.product.status.inactive')}</option>
               </select>
             </div>
 
@@ -861,19 +857,19 @@ export default function EditProductPage() {
                 className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
               />
               <label htmlFor="featured" className="text-sm font-medium text-gray-700">
-                منتج مميز
+                {t('admin.product.field.featured')}
               </label>
             </div>
           </div>
 
           {/* التصنيفات */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">التصنيفات</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.section.categories')}</h2>
             
             {/* الفئة */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                الفئة *
+                {t('admin.product.field.category')} *
               </label>
               <select
                 value={product?.category_id || ''}
@@ -882,7 +878,7 @@ export default function EditProductPage() {
                   errors.category_id ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">اختر الفئة</option>
+                <option value="">{t('admin.product.select.category.placeholder')}</option>
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
                     {getLocalizedText(category, 'name')}
@@ -895,7 +891,7 @@ export default function EditProductPage() {
             {/* المورد */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                المورد *
+                {t('admin.product.field.supplier')} *
               </label>
               <select
                 value={product?.supplier_id || ''}
@@ -904,7 +900,7 @@ export default function EditProductPage() {
                   errors.supplier_id ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">اختر المورد</option>
+                <option value="">{t('admin.product.option.select.supplier')}</option>
                 {suppliers.map(supplier => (
                   <option key={supplier.id} value={supplier.id}>
                     {getLocalizedText(supplier, 'name')}
@@ -918,19 +914,19 @@ export default function EditProductPage() {
 
           {/* الصور */}
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">صور المنتج</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('admin.product.section.images')}</h2>
             
             {/* الصور الموجودة */}
             {Array.isArray(existingImages) && existingImages.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  الصور الحالية ({existingImages.length})
+    {t('admin.product.images.current')} ({existingImages.length})
                   <button 
                     type="button"
                     onClick={() => console.log('🔍 Image paths:', existingImages)}
                     className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
                   >
-                    Debug مسارات
+    {t('admin.product.debug.paths')}
                   </button>
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -938,7 +934,7 @@ export default function EditProductPage() {
                     <div key={index} className="relative">
                       <img
                         src={src ? `http://localhost:8000${src}` : '/placeholder.svg'}
-                        alt={`صورة ${index + 1}`}
+                        alt={t('admin.product.image.alt').replace('{number}', (index + 1).toString())}
                         className="w-full h-32 object-cover rounded-lg"
                         onError={(e) => {
                           console.error('❌ Failed to load image:', src);
@@ -966,7 +962,7 @@ export default function EditProductPage() {
             {existingImages.length < 5 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  إضافة صور جديدة (حد أقصى {5 - existingImages.length} صور)
+    {t('admin.product.images.add.new').replace('5', (5 - existingImages.length).toString())}
                 </label>
                 <input
                   type="file"
@@ -981,13 +977,13 @@ export default function EditProductPage() {
             {/* معاينة الصور الجديدة */}
             {imagePreview.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">الصور الجديدة</h3>
+                                  <h3 className="text-sm font-medium text-gray-700 mb-2">{t('admin.product.images.new')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {imagePreview.map((src, index) => (
                     <div key={index} className="relative">
                       <img
                         src={src}
-                        alt={`معاينة ${index + 1}`}
+                        alt={t('admin.product.preview.alt').replace('{number}', (index + 1).toString())}
                         className="w-full h-32 object-cover rounded-lg"
                       />
                       <button
@@ -1013,13 +1009,13 @@ export default function EditProductPage() {
         {/* الميزات */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">ميزات المنتج</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('admin.product.features.section')}</h2>
             <button
               type="button"
               onClick={addFeature}
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
             >
-              + إضافة ميزة
++ {t('admin.product.features.add')}
             </button>
           </div>
           
@@ -1030,7 +1026,7 @@ export default function EditProductPage() {
                 value={feature}
                 onChange={(e) => updateFeature(index, e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="أدخل ميزة المنتج"
+                                    placeholder={t('admin.product.placeholder.feature')}
               />
               {product.features.length > 1 && (
                 <button
@@ -1038,7 +1034,7 @@ export default function EditProductPage() {
                   onClick={() => removeFeature(index)}
                   className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm transition-colors"
                 >
-                  حذف
+                  {language === 'ar' ? 'حذف' : 'Delete'}
                 </button>
               )}
             </div>
@@ -1048,13 +1044,13 @@ export default function EditProductPage() {
         {/* المواصفات */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">مواصفات المنتج</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('admin.product.specs.section')}</h2>
             <button
               type="button"
               onClick={addSpecification}
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"
             >
-              + إضافة مواصفة
++ {t('admin.product.specs.add')}
             </button>
           </div>
           
@@ -1065,14 +1061,14 @@ export default function EditProductPage() {
                 value={spec.key}
                 onChange={(e) => updateSpecification(index, 'key', e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="اسم المواصفة (مثل: الوزن)"
+                                    placeholder={t('admin.product.placeholder.spec.name')}
               />
               <input
                 type="text"
                 value={spec.value}
                 onChange={(e) => updateSpecification(index, 'value', e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                placeholder="قيمة المواصفة (مثل: 2 كيلو)"
+                                  placeholder={t('admin.product.placeholder.spec.value')}
               />
               {product.specifications.length > 1 && (
                 <button
@@ -1080,7 +1076,7 @@ export default function EditProductPage() {
                   onClick={() => removeSpecification(index)}
                   className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm transition-colors"
                 >
-                  حذف
+                  {language === 'ar' ? 'حذف' : 'Delete'}
                 </button>
               )}
             </div>
@@ -1093,7 +1089,7 @@ export default function EditProductPage() {
             href="/dashboard/products"
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            إلغاء
+            {t('admin.button.cancel')}
           </Link>
           <button
             type="submit"
@@ -1103,10 +1099,10 @@ export default function EditProductPage() {
             {submitLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                جاري الحفظ...
+{t('admin.product.saving')}
               </>
             ) : (
-              '💾 حفظ التغييرات'
+              `💾 ${t('admin.product.save')}`
             )}
           </button>
         </div>

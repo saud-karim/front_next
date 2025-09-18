@@ -173,7 +173,7 @@ export default function ProductsPage() {
             setTotalProducts(customerResponse.meta?.total || 0);
             
             // اعرض رسالة للمستخدم
-            error('ℹ️ عرض محدود', 'يتم عرض المنتجات بصلاحيات العملاء. للوصول الكامل، تحتاج صلاحيات إدارية.');
+            error(`ℹ️ ${t('admin.limited.view.title')}`, t('admin.limited.view.message'));
           } else {
             throw customerResponse.error || new Error('Failed to load products');
           }
@@ -239,7 +239,7 @@ export default function ProductsPage() {
       }
     } catch (err) {
       console.error('❌ خطأ في جلب إحصائيات المنتجات:', err);
-      setError('فشل في تحميل إحصائيات المنتجات');
+              setError(t('admin.product.stats.load.error'));
     }
   };
 
@@ -616,8 +616,8 @@ export default function ProductsPage() {
                                <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
                                  <div class="text-center p-4">
                                    <div class="text-5xl mb-2">📦</div>
-                                   <div class="text-sm font-medium text-gray-600">صورة غير متاحة</div>
-                                   <div class="text-xs text-gray-500 mt-1">Image not available</div>
+                                   <div class="text-sm font-medium text-gray-600">{t('admin.product.image.unavailable')}</div>
+                                   <div className="text-xs text-gray-500 mt-1">{language === 'ar' ? 'الصورة غير متوفرة' : 'Image not available'}</div>
                                  </div>
                                </div>
                              `;
@@ -641,7 +641,7 @@ export default function ProductsPage() {
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                           <div className="text-center">
                             <span className="text-4xl block">📦</span>
-                            <span className="text-xs">لا توجد صورة</span>
+                            <span className="text-xs">{t('admin.product.no.image')}</span>
                           </div>
                         </div>
                       );
@@ -737,7 +737,7 @@ export default function ProductsPage() {
                             }
                           }}
                           className="ml-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded"
-                          title="Debug صور المنتج"
+                          title={t('admin.product.images.debug.title')}
                         >
                           🔍
                         </button>

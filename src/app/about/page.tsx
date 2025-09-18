@@ -1,21 +1,305 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
+import ApiService from '../services/api';
+import { formatStat } from '../utils/statsFormatter';
+
+// Dynamic content interfaces
+interface PageContentData {
+  about_page: {
+    badge_ar: string;
+    badge_en: string;
+    title_ar: string;
+    title_en: string;
+    subtitle_ar: string;
+    subtitle_en: string;
+  };
+}
+
+interface CompanyStatsData {
+  years_experience: number;
+  happy_customers: number;
+  completed_projects: number;
+  support_available: boolean;
+}
+
+interface CompanyInfoData {
+  id?: number;
+  company_name_ar: string;
+  company_name_en: string;
+  company_description_ar: string;
+  company_description_en: string;
+  mission_ar: string;
+  mission_en: string;
+  vision_ar: string;
+  vision_en: string;
+  logo_text: string;
+  founded_year: string;
+  employees_count: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CompanyValue {
+  id: number;
+  title_ar: string;
+  title_en: string;
+  description_ar: string;
+  description_en: string;
+  icon: string;
+  order_index: number;
+}
+
+interface TeamMember {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  role_ar: string;
+  role_en: string;
+  experience_ar: string;
+  experience_en: string;
+  specialty_ar: string;
+  specialty_en: string;
+  image: string;
+  order_index: number;
+  is_active: boolean;
+}
+
+interface Milestone {
+  id: number;
+  year: string;
+  event_ar: string;
+  event_en: string;
+  description_ar: string;
+  description_en: string;
+  order_index: number;
+  is_active: boolean;
+}
+
+interface CompanyStory {
+  paragraph1_ar: string;
+  paragraph1_en: string;
+  paragraph2_ar: string;
+  paragraph2_en: string;
+  paragraph3_ar: string;
+  paragraph3_en: string;
+  features: Array<{
+    title_ar: string;
+    title_en: string;
+  }>;
+}
+
+interface Certification {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  description_ar: string;
+  description_en: string;
+  icon: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 export default function AboutPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
+  // Dynamic content states
+  const [pageContent, setPageContent] = useState<PageContentData>({
+    about_page: {
+      badge_ar: 'عن الشركة',
+      badge_en: 'About Company',
+      title_ar: 'نحن رواد في صناعة أدوات البناء',
+      title_en: 'We are pioneers in construction tools industry',
+      subtitle_ar: 'منذ أكثر من 15 عامًا ونحن نقدم أفضل الأدوات والحلول للبناء والإنشاءات',
+      subtitle_en: 'For over 15 years, we have been providing the best tools and solutions for construction'
+    }
+  });
+
+  const [companyStats, setCompanyStats] = useState<CompanyStatsData>({
+    years_experience: 15,
+    happy_customers: 50000,
+    completed_projects: 1000,
+    support_available: true
+  });
+
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfoData>({
+    company_name_ar: 'بي إس تولز',
+    company_name_en: 'BS Tools',
+    company_description_ar: 'شركة رائدة في مجال أدوات ومواد البناء منذ أكثر من 15 عاماً، تقدم حلولاً شاملة ومبتكرة لقطاع الإنشاءات والبناء',
+    company_description_en: 'Leading company in construction tools and materials for over 15 years, providing comprehensive and innovative solutions for the construction and building sector',
+    mission_ar: 'نسعى لتوفير أفضل أدوات ومواد البناء بأعلى جودة وأسعار تنافسية، مع تقديم خدمة عملاء استثنائية وحلول مبتكرة لجميع احتياجات البناء والتشييد',
+    mission_en: 'We strive to provide the best construction tools and materials with the highest quality and competitive prices, while delivering exceptional customer service and innovative solutions for all construction and building needs',
+    vision_ar: 'أن نكون الشركة الرائدة في منطقة الشرق الأوسط في توفير أدوات ومواد البناء عالية الجودة، والشريك المفضل لكل مقاول ومهندس',
+    vision_en: 'To be the leading company in the Middle East for providing high-quality construction tools and materials, and the preferred partner for every contractor and engineer',
+    logo_text: 'BS',
+    founded_year: '2009',
+    employees_count: '150+'
+  });
+
+  const [companyValues, setCompanyValues] = useState<CompanyValue[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [companyStory, setCompanyStory] = useState<CompanyStory>({
+    paragraph1_ar: 'بدأت شركتنا كحلم صغير في عام 2009، بهدف توفير أدوات البناء عالية الجودة للمقاولين والحرفيين.',
+    paragraph1_en: 'Our company started as a small dream in 2009, aiming to provide high-quality construction tools for contractors and craftsmen.',
+    paragraph2_ar: 'على مر السنين، نمت شركتنا لتصبح واحدة من أكثر الشركات الموثوقة في المنطقة.',
+    paragraph2_en: 'Over the years, our company has grown to become one of the most trusted companies in the region.',
+    paragraph3_ar: 'اليوم، نفخر بخدمة آلاف العملاء وتقديم أفضل الحلول لمشاريعهم.',
+    paragraph3_en: 'Today, we are proud to serve thousands of customers and provide the best solutions for their projects.',
+    features: [
+      { title_ar: 'أدوات عالية الجودة', title_en: 'Premium Tools' },
+      { title_ar: 'معايير السلامة', title_en: 'Safety Standards' },
+      { title_ar: 'الابتكار التقني', title_en: 'Technical Innovation' },
+      { title_ar: 'التميز في الخدمة', title_en: 'Service Excellence' }
+    ]
+  });
+
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load dynamic content using Public APIs
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load page content using public API
+        const pageResponse = await ApiService.getPublicPageContent();
+        if (pageResponse.success && pageResponse.data) {
+          setPageContent(pageResponse.data);
+        }
+
+        // Load company stats using public API
+        const statsResponse = await ApiService.getPublicCompanyStats();
+        if (statsResponse.success && statsResponse.data) {
+          console.log('🔍 About Page - Raw API data:', statsResponse.data);
+          
+          // تحويل أسماء الـ fields من API إلى Frontend format
+          const convertedStats = {
+            years_experience: parseInt(statsResponse.data.years_experience) || 15,
+            happy_customers: parseInt(statsResponse.data.total_customers || statsResponse.data.happy_customers) || 50000,
+            completed_projects: parseInt(statsResponse.data.completed_projects) || 1000,
+            support_available: statsResponse.data.support_availability === 'true' || statsResponse.data.support_availability === true || statsResponse.data.support_available === true
+          };
+          
+          console.log('✅ About Page - Converted stats:', convertedStats);
+          setCompanyStats(convertedStats);
+        } else {
+          console.log('❌ About Page - Failed to load stats:', statsResponse);
+        }
+
+        // Load company info using public API
+        const infoResponse = await ApiService.getPublicCompanyInfo();
+        if (infoResponse.success && infoResponse.data) {
+          console.log('🏢 About Page - Raw Company Info API data:', infoResponse.data);
+          
+          // تحديث companyInfo مع التأكد من field names صحيحة
+          const mappedInfo = {
+            company_name_ar: infoResponse.data.company_name_ar || companyInfo.company_name_ar,
+            company_name_en: infoResponse.data.company_name_en || companyInfo.company_name_en,
+            company_description_ar: infoResponse.data.company_description_ar || companyInfo.company_description_ar,
+            company_description_en: infoResponse.data.company_description_en || companyInfo.company_description_en,
+            mission_ar: infoResponse.data.mission_ar || companyInfo.mission_ar,
+            mission_en: infoResponse.data.mission_en || companyInfo.mission_en,
+            vision_ar: infoResponse.data.vision_ar || companyInfo.vision_ar,
+            vision_en: infoResponse.data.vision_en || companyInfo.vision_en,
+            logo_text: infoResponse.data.logo_text || companyInfo.logo_text,
+            founded_year: infoResponse.data.founded_year || companyInfo.founded_year,
+            employees_count: infoResponse.data.employees_count || companyInfo.employees_count,
+            id: infoResponse.data.id,
+            created_at: infoResponse.data.created_at,
+            updated_at: infoResponse.data.updated_at
+          };
+          
+          console.log('✅ About Page - Mapped Company Info:', mappedInfo);
+          setCompanyInfo(mappedInfo);
+        } else {
+          console.log('❌ About Page - Failed to load company info:', infoResponse);
+        }
+
+        // Load company values using public API
+        const valuesResponse = await ApiService.getPublicCompanyValues();
+        if (valuesResponse.success && valuesResponse.data) {
+          const activeValues = valuesResponse.data.sort((a, b) => a.order_index - b.order_index);
+          setCompanyValues(activeValues);
+        }
+
+        // Load team members using public API
+        const teamResponse = await ApiService.getPublicTeamMembers();
+        if (teamResponse.success && teamResponse.data) {
+          const activeTeam = teamResponse.data
+            .filter(member => member.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setTeamMembers(activeTeam);
+        }
+
+        // Load milestones using public API
+        const milestonesResponse = await ApiService.getPublicCompanyMilestones();
+        if (milestonesResponse.success && milestonesResponse.data) {
+          const activeMilestones = milestonesResponse.data
+            .filter(milestone => milestone.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setMilestones(activeMilestones);
+        }
+
+        // Load company story using public API
+        const storyResponse = await ApiService.getPublicCompanyStory();
+        if (storyResponse.success && storyResponse.data) {
+          setCompanyStory(storyResponse.data);
+        }
+
+        // Load certifications using public API
+        const certsResponse = await ApiService.getPublicCertifications();
+        if (certsResponse.success && certsResponse.data) {
+          const activeCerts = certsResponse.data
+            .filter(cert => cert.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setCertifications(activeCerts);
+        }
+
+      } catch (error) {
+        console.log('About page: Using fallback data due to API error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Prepare stats for display using unified formatter
   const stats = [
-    { value: '15+', label: t('about.stats.experience'), icon: '🏆' },
-    { value: '50K+', label: t('about.stats.customers'), icon: '👥' },
-    { value: '1000+', label: t('about.stats.projects'), icon: '🏗️' },
-    { value: '24/7', label: t('about.stats.support'), icon: '🛟' }
+    { 
+      value: formatStat('years_experience', companyStats.years_experience, language).formatted, 
+      label: t('about.stats.experience'), 
+      icon: '🏆' 
+    },
+    { 
+      value: formatStat('happy_customers', companyStats.happy_customers, language).formatted, 
+      label: t('about.stats.customers'), 
+      icon: '👥' 
+    },
+    { 
+      value: formatStat('completed_projects', companyStats.completed_projects, language).formatted, 
+      label: t('about.stats.projects'), 
+      icon: '🏗️' 
+    },
+    { 
+      value: formatStat('support_available', companyStats.support_available, language).formatted, 
+      label: t('about.stats.support'), 
+      icon: '🛟' 
+    }
   ];
 
-  const values = [
+  // Fallback values if empty arrays
+  const values = companyValues.length > 0 ? companyValues.map(value => ({
+    title: language === 'ar' ? value.title_ar : value.title_en,
+    description: language === 'ar' ? value.description_ar : value.description_en,
+    icon: value.icon,
+    color: getGradientColor(value.order_index)
+  })) : [
     {
       title: t('about.values.quality.title'),
       description: t('about.values.quality.desc'),
@@ -42,7 +326,13 @@ export default function AboutPage() {
     }
   ];
 
-  const team = [
+  const team = teamMembers.length > 0 ? teamMembers.map(member => ({
+    name: language === 'ar' ? member.name_ar : member.name_en,
+    role: language === 'ar' ? member.role_ar : member.role_en,
+    experience: language === 'ar' ? member.experience_ar : member.experience_en,
+    image: member.image || '👤',
+    specialty: language === 'ar' ? member.specialty_ar : member.specialty_en
+  })) : [
     {
       name: t('about.team.ahmed.name'),
       role: t('about.team.ahmed.role'),
@@ -73,7 +363,11 @@ export default function AboutPage() {
     }
   ];
 
-  const milestones = [
+  const milestonesData = milestones.length > 0 ? milestones.map(milestone => ({
+    year: milestone.year,
+    event: language === 'ar' ? milestone.event_ar : milestone.event_en,
+    description: language === 'ar' ? milestone.description_ar : milestone.description_en
+  })) : [
     { year: '2009', event: t('about.milestones.2009.event'), description: t('about.milestones.2009.desc') },
     { year: '2012', event: t('about.milestones.2012.event'), description: t('about.milestones.2012.desc') },
     { year: '2015', event: t('about.milestones.2015.event'), description: t('about.milestones.2015.desc') },
@@ -81,6 +375,30 @@ export default function AboutPage() {
     { year: '2021', event: t('about.milestones.2021.event'), description: t('about.milestones.2021.desc') },
     { year: '2024', event: t('about.milestones.2024.event'), description: t('about.milestones.2024.desc') }
   ];
+
+  const certificationsData = certifications.length > 0 ? certifications.map(cert => ({
+    name: language === 'ar' ? cert.name_ar : cert.name_en,
+    description: language === 'ar' ? cert.description_ar : cert.description_en,
+    icon: cert.icon
+  })) : [
+    { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
+    { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
+    { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
+    { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
+  ];
+
+  // Helper function for gradient colors
+  function getGradientColor(index: number): string {
+    const colors = [
+      'from-yellow-500 to-orange-500',
+      'from-blue-500 to-cyan-500',
+      'from-purple-500 to-pink-500',
+      'from-green-500 to-emerald-500',
+      'from-red-500 to-pink-500',
+      'from-indigo-500 to-purple-500'
+    ];
+    return colors[index % colors.length];
+  }
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -117,18 +435,18 @@ export default function AboutPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-8 0H3m2 0h6M9 7h6m-6 4h6m-6 4h6" />
                     </svg>
-                    {t('about.badge')}
+                    {language === 'ar' ? pageContent.about_page.badge_ar : pageContent.about_page.badge_en}
                   </span>
                 </div>
                 
                 {/* Main Heading */}
                 <h1 className="text-modern-heading mb-8">
-                  {t('about.title')}
+                  {language === 'ar' ? pageContent.about_page.title_ar : pageContent.about_page.title_en}
                 </h1>
                 
                 {/* Description */}
                 <p className="text-xl text-gray-600 mb-10 leading-relaxed">
-                  {t('about.subtitle')}
+                  {language === 'ar' ? companyInfo.company_description_ar : companyInfo.company_description_en}
                 </p>
                 
                 {/* Action Buttons */}
@@ -159,7 +477,7 @@ export default function AboutPage() {
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-6">{t('about.mission')}</h3>
                     <p className="text-gray-900 leading-relaxed text-2xl font-semibold mb-2">
-                      {t('about.mission.description')}
+                      {language === 'ar' ? companyInfo.mission_ar : companyInfo.mission_en}
                     </p>
                   </div>
                 </div>
@@ -200,37 +518,23 @@ export default function AboutPage() {
                   {t('about.story.title')} <span className="text-modern-accent">{t('about.story.highlight')}</span>
                 </h2>
                 <div className="space-y-6 text-gray-600 text-lg leading-relaxed">
-                  <p>{t('about.story.paragraph1')}</p>
-                  <p>{t('about.story.paragraph2')}</p>
-                  <p>{t('about.story.paragraph3')}</p>
+                  <p>{language === 'ar' ? companyStory.paragraph1_ar : companyStory.paragraph1_en}</p>
+                  <p>{language === 'ar' ? companyStory.paragraph2_ar : companyStory.paragraph2_en}</p>
+                  <p>{language === 'ar' ? companyStory.paragraph3_ar : companyStory.paragraph3_en}</p>
                 </div>
               </div>
               <div className="relative animate-slide-modern" style={{animationDelay: '0.2s'}}>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="card-modern-2030 group text-center p-6">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
-                      🔨
+                  {companyStory.features.map((feature, index) => (
+                    <div key={index} className="card-modern-2030 group text-center p-6">
+                      <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
+                        {['🔨', '🛡️', '⚡', '🎯'][index] || '⭐'}
+                      </div>
+                      <div className="font-semibold text-gray-900">
+                        {language === 'ar' ? feature.title_ar : feature.title_en}
+                      </div>
                     </div>
-                    <div className="font-semibold text-gray-900">{t('about.story.features.premium')}</div>
-                  </div>
-                  <div className="card-modern-2030 group text-center p-6">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
-                      🛡️
-                    </div>
-                    <div className="font-semibold text-gray-900">{t('about.story.features.safety')}</div>
-                  </div>
-                  <div className="card-modern-2030 group text-center p-6">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
-                      ⚡
-                    </div>
-                    <div className="font-semibold text-gray-900">{t('about.story.features.innovation')}</div>
-                  </div>
-                  <div className="card-modern-2030 group text-center p-6">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
-                      🎯
-                    </div>
-                    <div className="font-semibold text-gray-900">{t('about.story.features.excellence')}</div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -290,7 +594,7 @@ export default function AboutPage() {
             <div className="relative">
               <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-red-500 via-red-400 to-orange-500 rounded-full"></div>
               <div className="space-y-16">
-                {milestones.map((milestone, index) => (
+                {milestonesData.map((milestone, index) => (
                   <div 
                     key={index} 
                     className={`flex items-center animate-slide-modern ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
@@ -375,12 +679,7 @@ export default function AboutPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
-                { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
-                { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
-                { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
-              ].map((cert, index) => (
+              {certificationsData.map((cert, index) => (
                 <div 
                   key={index} 
                   className="card-social-modern group p-8 text-center backdrop-blur-lg animate-slide-modern"
@@ -435,6 +734,8 @@ export default function AboutPage() {
       </div>
 
       <Footer />
+
+      
     </div>
   );
 } 

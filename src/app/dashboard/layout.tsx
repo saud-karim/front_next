@@ -23,7 +23,7 @@ export default function AdminLayout({
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">جاري التحقق من الصلاحيات...</p>
+          <p className="mt-4 text-gray-600">{t('dashboard.checking.permissions')}</p>
         </div>
       </div>
     );
@@ -75,30 +75,30 @@ export default function AdminLayout({
                   لوحة التحكم مخصصة للمدراء فقط
                 </p>
                 <p className="text-red-700 text-sm">
-                  دورك الحالي: {user.role === 'customer' ? 'عميل' : user.role} - تحتاج دور "مدير"
+                  {t('dashboard.role.current')}: {user.role === 'customer' ? t('dashboard.role.customer') : user.role} - {t('dashboard.role.need.admin')}
                 </p>
               </div>
               <div className="space-y-4">
                 <p className="text-gray-600 mb-4">
-                  مرحباً {user.name}، ليس لديك صلاحية للوصول لهذا القسم
+                  {t('dashboard.access.denied').replace('{name}', user.name)}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => router.push('/')}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    🏠 الذهاب للصفحة الرئيسية
+                    🏠 {t('dashboard.go.home')}
                   </button>
                   <button
                     onClick={() => router.push('/products')}
                     className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
                   >
-                    🛍️ تصفح المنتجات
+                    🛍️ {t('dashboard.browse.products')}
                   </button>
                 </div>
                 <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-yellow-800 text-sm">
-                    💡 لتصبح مديراً، اتصل بمدير النظام لتحديث صلاحياتك في قاعدة البيانات
+                    💡 {t('admin.become.admin.tip')}
                   </p>
                 </div>
               </div>

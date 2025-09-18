@@ -284,10 +284,10 @@ export default function CartPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-xl font-bold text-gray-900">
-                                {item.product ? `${item.product.price} ج.م` : 'سعر غير متوفر'}
+                                {item.product ? `${item.product.price} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('products.out.of.stock')}
                               </span>
                               <span className="text-xs text-gray-600">
-                                × {item.quantity} = {item.product ? `${(parseFloat(item.product.price) * item.quantity).toFixed(2)} ج.م` : 'غير محسوب'}
+                                × {item.quantity} = {item.product ? `${(parseFloat(item.product.price) * item.quantity).toFixed(2)} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('products.out.of.stock')}
                               </span>
                             </div>
                             

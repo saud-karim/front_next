@@ -1,12 +1,68 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { ApiService } from '../services/api';
+
+// Dynamic content interfaces
+interface PageContentData {
+  contact_page: {
+    badge_ar: string;
+    badge_en: string;
+    title_ar: string;
+    title_en: string;
+    subtitle_ar: string;
+    subtitle_en: string;
+  };
+}
+
+interface ContactInfo {
+  main_phone: string;
+  secondary_phone?: string;
+  whatsapp?: string;
+  main_email: string;
+  support_email?: string;
+  address_ar?: string;
+  address_en?: string;
+  working_hours_ar?: string;
+  working_hours_en?: string;
+}
+
+interface Department {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  description_ar: string;
+  description_en: string;
+  phone: string;
+  email: string;
+  is_active: boolean;
+  order_index: number;
+}
+
+interface SocialLink {
+  id: number;
+  platform: string;
+  url: string;
+  icon: string;
+  is_active: boolean;
+  order_index: number;
+}
+
+interface FAQ {
+  id: number;
+  question_ar: string;
+  question_en: string;
+  answer_ar: string;
+  answer_en: string;
+  category: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 export default function ContactPage() {
   const { t, language } = useLanguage();
@@ -23,6 +79,88 @@ export default function ContactPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // Dynamic content states
+  const [pageContent, setPageContent] = useState<PageContentData>({
+    contact_page: {
+      badge_ar: 'تواصل معنا',
+      badge_en: 'Contact Us',
+      title_ar: 'نحن هنا لمساعدتك',
+      title_en: 'We are here to help you',
+      subtitle_ar: 'لا تتردد في التواصل معنا لأي استفسار أو مساعدة تحتاجها',
+      subtitle_en: 'Feel free to contact us for any inquiry or assistance you need'
+    }
+  });
+
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    main_phone: '+20 123 456 7890',
+    secondary_phone: '+20 987 654 3210',
+    whatsapp: '+20 123 456 7890',
+    main_email: 'info@bstools.com',
+    support_email: 'support@bstools.com',
+    address_ar: 'شارع التحرير، القاهرة الجديدة، مصر',
+    address_en: 'Tahrir Street, New Cairo, Egypt',
+    working_hours_ar: 'الأحد - الخميس: 9 صباحاً - 6 مساءً',
+    working_hours_en: 'Sunday - Thursday: 9 AM - 6 PM'
+  });
+
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load dynamic content
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load page content
+        const pageResponse = await ApiService.getPublicPageContent();
+        if (pageResponse.success && pageResponse.data) {
+          setPageContent(pageResponse.data);
+        }
+
+        // Load contact info
+        const contactResponse = await ApiService.getPublicContactInfo();
+        if (contactResponse.success && contactResponse.data) {
+          setContactInfo(contactResponse.data);
+        }
+
+        // Load departments
+        const deptResponse = await ApiService.getPublicDepartments();
+        if (deptResponse.success && deptResponse.data) {
+          const activeDepartments = deptResponse.data
+            .filter(dept => dept.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setDepartments(activeDepartments);
+        }
+
+        // Load social links
+        const socialResponse = await ApiService.getPublicSocialLinks();
+        if (socialResponse.success && socialResponse.data) {
+          const activeSocialLinks = socialResponse.data
+            .filter(link => link.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setSocialLinks(activeSocialLinks);
+        }
+
+        // Load FAQs
+        const faqResponse = await ApiService.getPublicFAQs();
+        if (faqResponse.success && faqResponse.data) {
+          const activeFaqs = faqResponse.data
+            .filter(faq => faq.is_active)
+            .sort((a, b) => a.order_index - b.order_index);
+          setFaqs(activeFaqs);
+        }
+
+      } catch (error) {
+        console.log('Contact page: Using fallback data due to API error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -105,50 +243,54 @@ export default function ContactPage() {
     }
   };
 
-  const contactInfo = [
+  // Prepare contact info for display
+  const contactInfoDisplay = [
     {
       title: t('contact.info.office.title'),
       details: [
-        t('contact.info.office.street'),
-        t('contact.info.office.district'),
-        t('contact.info.office.country')
-      ],
+        language === 'ar' ? contactInfo.address_ar : contactInfo.address_en,
+      ].filter(Boolean),
       icon: '📍',
       color: 'from-red-500 to-orange-500'
     },
     {
       title: t('contact.info.phone.title'),
       details: [
-        '+20 123 456 7890',
-        '+20 987 654 3210',
-        t('contact.info.phone.toll')
-      ],
+        contactInfo.main_phone,
+        contactInfo.secondary_phone,
+        contactInfo.whatsapp ? `WhatsApp: ${contactInfo.whatsapp}` : null
+      ].filter(Boolean),
       icon: '📞',
       color: 'from-blue-500 to-cyan-500'
     },
     {
       title: t('contact.info.email.title'),
       details: [
-        'info@bstools.com',
-        'sales@bstools.com',
-        'support@bstools.com'
-      ],
+        contactInfo.main_email,
+        contactInfo.support_email
+      ].filter(Boolean),
       icon: '✉️',
       color: 'from-green-500 to-emerald-500'
     },
     {
       title: t('contact.info.hours.title'),
       details: [
-        t('contact.info.hours.weekdays'),
-        t('contact.info.hours.saturday'),
-        t('contact.info.hours.sunday')
-      ],
+        language === 'ar' ? contactInfo.working_hours_ar : contactInfo.working_hours_en
+      ].filter(Boolean),
       icon: '🕒',
       color: 'from-purple-500 to-indigo-500'
     }
-  ];
+  ].filter(info => info.details.length > 0);
 
-  const departments = [
+  // Prepare departments for display
+  const departmentsDisplay = departments.length > 0 ? departments.map((dept, index) => ({
+    name: language === 'ar' ? dept.name_ar : dept.name_en,
+    description: language === 'ar' ? dept.description_ar : dept.description_en,
+    phone: dept.phone,
+    email: dept.email,
+    icon: getDepartmentIcon(index),
+    color: getDepartmentColor(index)
+  })) : [
     {
       name: t('contact.departments.sales.name'),
       description: t('contact.departments.sales.desc'),
@@ -183,7 +325,13 @@ export default function ContactPage() {
     }
   ];
 
-  const socialLinks = [
+  // Prepare social links for display
+  const socialLinksDisplay = socialLinks.length > 0 ? socialLinks.map(social => ({
+    name: social.platform,
+    icon: social.icon,
+    url: social.url,
+    color: getSocialColor(social.platform)
+  })) : [
     { name: 'Facebook', icon: '📘', url: '#', color: 'bg-blue-600' },
     { name: 'Twitter', icon: '🐦', url: '#', color: 'bg-sky-500' },
     { name: 'LinkedIn', icon: '💼', url: '#', color: 'bg-blue-700' },
@@ -191,6 +339,54 @@ export default function ContactPage() {
     { name: 'YouTube', icon: '📺', url: '#', color: 'bg-red-600' },
     { name: 'WhatsApp', icon: '💬', url: '#', color: 'bg-green-600' }
   ];
+
+  // Prepare FAQs for display
+  const faqsDisplay = faqs.length > 0 ? faqs.map(faq => ({
+    question: language === 'ar' ? faq.question_ar : faq.question_en,
+    answer: language === 'ar' ? faq.answer_ar : faq.answer_en
+  })) : [
+    {
+      question: t('contact.faq.return.question'),
+      answer: t('contact.faq.return.answer')
+    },
+    {
+      question: t('contact.faq.bulk.question'),
+      answer: t('contact.faq.bulk.answer')
+    },
+    {
+      question: t('contact.faq.shipping.question'),
+      answer: t('contact.faq.shipping.answer')
+    },
+    {
+      question: t('contact.faq.support.question'),
+      answer: t('contact.faq.support.answer')
+    }
+  ];
+
+  // Helper functions
+  function getDepartmentIcon(index: number): string {
+    const icons = ['💼', '🔧', '👥', '🤝', '📊', '⚙️'];
+    return icons[index % icons.length];
+  }
+
+  function getDepartmentColor(index: number): string {
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500', 'bg-indigo-500'];
+    return colors[index % colors.length];
+  }
+
+  function getSocialColor(platform: string): string {
+    const colorMap: Record<string, string> = {
+      'Facebook': 'bg-blue-600',
+      'Twitter': 'bg-sky-500',
+      'LinkedIn': 'bg-blue-700',
+      'Instagram': 'bg-pink-500',
+      'YouTube': 'bg-red-600',
+      'WhatsApp': 'bg-green-600',
+      'Telegram': 'bg-blue-500',
+      'TikTok': 'bg-black'
+    };
+    return colorMap[platform] || 'bg-gray-500';
+  }
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -228,7 +424,7 @@ export default function ContactPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
-                    {t('contact.badge')}
+                    {language === 'ar' ? pageContent.contact_page.badge_ar : pageContent.contact_page.badge_en}
                   </span>
                 </div>
               </div>
@@ -236,14 +432,14 @@ export default function ContactPage() {
               {/* Main Heading */}
               <div className="animate-slide-modern" style={{animationDelay: '0.2s'}}>
                 <h1 className="text-modern-heading mb-8">
-                  {t('contact.title')}
+                  {language === 'ar' ? pageContent.contact_page.title_ar : pageContent.contact_page.title_en}
                 </h1>
               </div>
               
               {/* Description */}
               <div className="animate-slide-modern" style={{animationDelay: '0.4s'}}>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-12">
-                  {t('contact.subtitle')}
+                  {language === 'ar' ? pageContent.contact_page.subtitle_ar : pageContent.contact_page.subtitle_en}
                 </p>
               </div>
 
@@ -254,23 +450,23 @@ export default function ContactPage() {
                     <div className="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white">
                       📞
                     </div>
-                    <div className="text-sm font-medium text-gray-600">اتصل الآن</div>
-                    <div className="text-red-600 font-bold">+20 123 456 7890</div>
+                    <div className="text-sm font-medium text-gray-600">{t('contact.cta.call')}</div>
+                    <div className="text-red-600 font-bold">{contactInfo.main_phone}</div>
                   </div>
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
                   <div className="text-center">
                     <div className="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white">
                       ✉️
                     </div>
-                    <div className="text-sm font-medium text-gray-600">راسلنا</div>
-                    <div className="text-red-600 font-bold">info@bstools.com</div>
+                    <div className="text-sm font-medium text-gray-600">{t('contact.info.email.title')}</div>
+                    <div className="text-red-600 font-bold">{contactInfo.main_email}</div>
                   </div>
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
                   <div className="text-center">
                     <div className="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white">
                       🕒
                     </div>
-                    <div className="text-sm font-medium text-gray-600">ساعات العمل</div>
+                    <div className="text-sm font-medium text-gray-600">{t('contact.info.hours.title')}</div>
                     <div className="text-red-600 font-bold">24/7</div>
                   </div>
                 </div>
@@ -311,7 +507,7 @@ export default function ContactPage() {
                         <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white mr-3">
                           ❌
                         </div>
-                        <span className="font-medium">فشل في إرسال الرسالة، حاول مرة أخرى</span>
+                        <span className="font-medium">{t('contact.send.failed')}</span>
                       </div>
                     </div>
                   )}
@@ -430,7 +626,7 @@ export default function ContactPage() {
                 </h2>
                 
                 <div className="space-y-6 mb-8">
-                  {contactInfo.map((info, index) => (
+                  {contactInfoDisplay.map((info, index) => (
                     <div 
                       key={index} 
                       className="card-modern-2030 group p-6"
@@ -484,7 +680,7 @@ export default function ContactPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {departments.map((dept, index) => (
+              {departmentsDisplay.map((dept, index) => (
                 <div 
                   key={index} 
                   className="card-modern-2030 group overflow-hidden animate-slide-modern"
@@ -542,24 +738,7 @@ export default function ContactPage() {
             </div>
 
             <div className="space-y-6">
-              {[
-                {
-                  question: t('contact.faq.return.question'),
-                  answer: t('contact.faq.return.answer')
-                },
-                {
-                  question: t('contact.faq.bulk.question'),
-                  answer: t('contact.faq.bulk.answer')
-                },
-                {
-                  question: t('contact.faq.shipping.question'),
-                  answer: t('contact.faq.shipping.answer')
-                },
-                {
-                  question: t('contact.faq.support.question'),
-                  answer: t('contact.faq.support.answer')
-                }
-              ].map((faq, index) => (
+              {faqsDisplay.map((faq, index) => (
                 <div 
                   key={index} 
                   className="card-modern-2030 group p-8 animate-slide-modern"
@@ -598,7 +777,7 @@ export default function ContactPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {socialLinks.map((social, index) => (
+              {socialLinksDisplay.map((social, index) => (
                 <a
                   key={index}
                   href={social.url}
@@ -622,22 +801,22 @@ export default function ContactPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center">
                   <a 
-                    href="tel:+201234567890"
+                    href={`tel:${contactInfo.main_phone}`}
                     className="btn-modern-primary inline-flex items-center gap-2 group/btn"
                   >
                     <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
-                    <span>{t('contact.cta.call')}: +20 123 456 7890</span>
+                    <span>{t('contact.cta.call')}: {contactInfo.main_phone}</span>
                   </a>
                   <a 
-                    href="mailto:info@bstools.com"
+                    href={`mailto:${contactInfo.main_email}`}
                     className="btn-modern-outline inline-flex items-center gap-2 group/btn text-white border-white hover:bg-white hover:text-gray-900"
                   >
                     <svg className="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span>{t('contact.cta.email')}: info@bstools.com</span>
+                    <span>{t('contact.cta.email')}: {contactInfo.main_email}</span>
                   </a>
                 </div>
               </div>
@@ -647,6 +826,13 @@ export default function ContactPage() {
       </div>
 
       <Footer />
+
+      {/* Loading indicator for development */}
+      {loading && (
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm">
+          🔄 Loading contact content...
+        </div>
+      )}
     </div>
   );
 } 

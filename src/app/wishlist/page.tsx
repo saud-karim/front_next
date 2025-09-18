@@ -314,7 +314,7 @@ export default function WishlistPage() {
                       <div className="relative aspect-square bg-gray-50">
                         <img 
                           src={productImage || '/placeholder.svg'}
-                          alt={item.product ? getLocalizedText(item.product, 'name') : 'Product Image'}
+                          alt={item.product ? getLocalizedText(item.product, 'name') : (language === 'ar' ? 'صورة المنتج' : 'Product Image')}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
                           onError={(e) => {
@@ -387,8 +387,8 @@ export default function WishlistPage() {
                             item.product.name_ar || 
                             item.product.name_en || 
                             item.product.name || 
-                            'منتج غير متوفر'
-                          ) : 'منتج غير متوفر'}
+                            t('wishlist.out.of.stock')
+                          ) : t('wishlist.out.of.stock')}
                         </h3>
                       
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -397,8 +397,8 @@ export default function WishlistPage() {
                             item.product.description_ar || 
                             item.product.description_en || 
                             item.product.description || 
-                            'وصف غير متوفر'
-                          ) : 'وصف غير متوفر'}
+                            t('wishlist.out.of.stock')
+                          ) : t('wishlist.out.of.stock')}
                         </p>
                       
                         {/* Supplier */}
@@ -416,15 +416,15 @@ export default function WishlistPage() {
                         
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-lg font-bold text-red-600">
-                            {item.product?.price ? `${item.product.price} ج.م` : 'سعر غير متوفر'}
+                            {item.product?.price ? `${item.product.price} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('wishlist.out.of.stock')}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {t('wishlist.stock')}: {item.product?.stock ?? 'غير متوفر'}
+                            {t('wishlist.stock')}: {item.product?.stock ?? t('wishlist.out.of.stock')}
                           </span>
                       </div>
                       
                         <div className="text-xs text-gray-500 mb-4">
-                          {t('wishlist.added.on')}: {(item.date_added || item.created_at) ? formatDate(item.date_added || item.created_at!) : 'تاريخ غير متوفر'}
+                          {t('wishlist.added.on')}: {(item.date_added || item.created_at) ? formatDate(item.date_added || item.created_at!) : t('wishlist.out.of.stock')}
                       </div>
                       
                         <div className="flex gap-2">
