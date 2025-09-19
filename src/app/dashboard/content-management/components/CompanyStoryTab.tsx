@@ -70,6 +70,8 @@ export default function CompanyStoryTab({ loading, setLoading }: Props) {
         if (response.data) {
           setData(response.data);
         }
+      } else {
+        throw new Error(response.message || 'Failed to save company story');
       }
     } catch (error: any) {
       toast.error('خطأ', error.message || 'خطأ في حفظ البيانات');

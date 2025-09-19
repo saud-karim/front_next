@@ -83,6 +83,8 @@ export default function PageContentTab({ loading, setLoading }: Props) {
         if (response.data) {
           setData(response.data);
         }
+      } else {
+        throw new Error(response.message || 'Failed to save page content');
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'خطأ في حفظ البيانات';

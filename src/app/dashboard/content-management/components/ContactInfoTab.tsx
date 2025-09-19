@@ -105,7 +105,42 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await ApiService.updateContactInfo(data);
+      // تحويل البيانات إلى التنسيق المُفلطح الذي يتوقعه الـ Backend
+      const flattenedData = {
+        main_phone: data.main_phone,
+        secondary_phone: data.secondary_phone || '',
+        toll_free: data.toll_free || '',
+        main_email: data.main_email,
+        sales_email: data.sales_email || '',
+        support_email: data.support_email || '',
+        whatsapp: data.whatsapp || '',
+        // Address fields (flattened)
+        address_street_ar: data.address.street_ar,
+        address_street_en: data.address.street_en,
+        address_district_ar: data.address.district_ar,
+        address_district_en: data.address.district_en,
+        address_city_ar: data.address.city_ar,
+        address_city_en: data.address.city_en,
+        address_country_ar: data.address.country_ar,
+        address_country_en: data.address.country_en,
+        // Working hours fields (flattened)
+        working_hours_weekdays_ar: data.working_hours.weekdays_ar,
+        working_hours_weekdays_en: data.working_hours.weekdays_en,
+        working_hours_friday_ar: data.working_hours.friday_ar,
+        working_hours_friday_en: data.working_hours.friday_en,
+        working_hours_saturday_ar: data.working_hours.saturday_ar,
+        working_hours_saturday_en: data.working_hours.saturday_en,
+        // Labels fields (flattened)
+        emergency_phone_label_ar: data.labels.emergency_ar,
+        emergency_phone_label_en: data.labels.emergency_en,
+        toll_free_label_ar: data.labels.toll_free_ar,
+        toll_free_label_en: data.labels.toll_free_en,
+      };
+      
+      console.log('🔄 Sending flattened data to Backend:', flattenedData);
+      
+      // استخدام الـ API client مع البيانات المُفلطحة
+      const response = await (ApiService as any).client.put('/admin/contact-info', flattenedData);
       
       if (response.success) {
         toast.success(
@@ -115,9 +150,12 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
         if (response.data) {
           setData(response.data);
         }
+      } else {
+        throw new Error(response.message || 'Failed to save contact information');
       }
-    } catch (error: any) {
-      toast.error(t('toast.error'), error.message || t('toast.saving.data'));
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('toast.saving.data');
+      toast.error(t('toast.error'), errorMessage);
     } finally {
       setSaving(false);
     }
@@ -131,7 +169,7 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
         return {
           ...prev,
           [parentKey]: {
-            ...(prev[parentKey as keyof ContactInfoData] as any),
+            ...(prev[parentKey as keyof ContactInfoData] as Record<string, string>),
             [childKey]: value
           }
         };

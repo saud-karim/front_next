@@ -1615,39 +1615,7 @@ export class ApiService {
     return this.client.get<any>('/admin/contact-info');
   }
 
-  static async updateContactInfo(data: {
-    main_phone: string;
-    secondary_phone?: string;
-    toll_free?: string;
-    main_email: string;
-    sales_email?: string;
-    support_email?: string;
-    whatsapp?: string;
-    address: {
-      street_ar: string;
-      street_en: string;
-      district_ar: string;
-      district_en: string;
-      city_ar: string;
-      city_en: string;
-      country_ar: string;
-      country_en: string;
-    };
-    working_hours: {
-      weekdays_ar: string;
-      weekdays_en: string;
-      friday_ar: string;
-      friday_en: string;
-      saturday_ar: string;
-      saturday_en: string;
-    };
-    labels: {
-      emergency_ar: string;
-      emergency_en: string;
-      toll_free_ar: string;
-      toll_free_en: string;
-    };
-  }): Promise<APIResponse<any>> {
+  static async updateContactInfo(data: any): Promise<APIResponse<any>> {
     return this.client.put<any>('/admin/contact-info', data);
   }
 
