@@ -33,7 +33,7 @@ interface Props {
 }
 
 export default function PageContentTab({ loading, setLoading }: Props) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const toast = useToast();
   const [data, setData] = useState<PageContentData>({
     about_page: {
@@ -118,14 +118,14 @@ export default function PageContentTab({ loading, setLoading }: Props) {
         <div className="bg-gray-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <span className="text-2xl mr-2">📄</span>
-            {language === 'ar' ? 'صفحة من نحن' : 'About Us Page'}
+            {t('dashboard.pages.about')}
           </h3>
           
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'شارة (عربي)' : 'Badge (Arabic)'}
+                  {t('dashboard.pages.badge.arabic')}
                 </label>
                 <input
                   type="text"
@@ -136,7 +136,7 @@ export default function PageContentTab({ loading, setLoading }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'شارة (انجليزي)' : 'Badge (English)'}
+                  {t('dashboard.pages.badge.english')}
                 </label>
                 <input
                   type="text"
@@ -210,7 +210,7 @@ export default function PageContentTab({ loading, setLoading }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'شارة (عربي)' : 'Badge (Arabic)'}
+                  {t('dashboard.pages.badge.arabic')}
                 </label>
                 <input
                   type="text"
@@ -221,7 +221,7 @@ export default function PageContentTab({ loading, setLoading }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'شارة (انجليزي)' : 'Badge (English)'}
+                  {t('dashboard.pages.badge.english')}
                 </label>
                 <input
                   type="text"

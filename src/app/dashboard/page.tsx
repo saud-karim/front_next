@@ -225,9 +225,9 @@ export default function AdminDashboard() {
 
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return t('admin.greeting.morning') || 'صباح الخير';
-    if (hour < 17) return t('admin.greeting.afternoon') || 'مساء الخير';
-    return t('admin.greeting.evening') || 'مساء الخير';
+    if (hour < 12) return t('dashboard.greeting.morning');
+    if (hour < 17) return t('dashboard.greeting.afternoon');
+    return t('dashboard.greeting.evening');
   };
 
   const getActivityIcon = (type: string) => {
@@ -316,8 +316,8 @@ export default function AdminDashboard() {
       icon: '⏳',
       color: 'from-yellow-500 to-yellow-600',
               change: (typeof stats.pending_orders === 'number' && stats.pending_orders > 0) ? 
-          (language === 'ar' ? 'يحتاج متابعة' : 'Needs Follow-up') : 
-          (language === 'ar' ? 'مُحدث' : 'Up to Date'),
+                  t('dashboard.stats.pending.orders.needs.followup') : 
+        t('dashboard.stats.pending.orders.uptodate'),
       changeType: (typeof stats.pending_orders === 'number' && stats.pending_orders > 5) ? 'negative' as const : 'neutral' as const,
     },
     {

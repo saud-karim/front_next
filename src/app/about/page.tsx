@@ -51,7 +51,7 @@ interface CompanyValue {
   description_ar: string;
   description_en: string;
   icon: string;
-  order_index: number;
+  order: number;
 }
 
 interface TeamMember {
@@ -89,8 +89,8 @@ interface CompanyStory {
   paragraph3_ar: string;
   paragraph3_en: string;
   features: Array<{
-    title_ar: string;
-    title_en: string;
+    name_ar: string;
+    name_en: string;
   }>;
 }
 
@@ -156,10 +156,10 @@ export default function AboutPage() {
     paragraph3_ar: 'اليوم، نفخر بخدمة آلاف العملاء وتقديم أفضل الحلول لمشاريعهم.',
     paragraph3_en: 'Today, we are proud to serve thousands of customers and provide the best solutions for their projects.',
     features: [
-      { title_ar: 'أدوات عالية الجودة', title_en: 'Premium Tools' },
-      { title_ar: 'معايير السلامة', title_en: 'Safety Standards' },
-      { title_ar: 'الابتكار التقني', title_en: 'Technical Innovation' },
-      { title_ar: 'التميز في الخدمة', title_en: 'Service Excellence' }
+      { name_ar: 'أدوات عالية الجودة', name_en: 'Premium Tools' },
+      { name_ar: 'معايير السلامة', name_en: 'Safety Standards' },
+      { name_ar: 'الابتكار التقني', name_en: 'Technical Innovation' },
+      { name_ar: 'التميز في الخدمة', name_en: 'Service Excellence' }
     ]
   });
 
@@ -303,7 +303,7 @@ export default function AboutPage() {
     title: language === 'ar' ? value.title_ar : value.title_en,
     description: language === 'ar' ? value.description_ar : value.description_en,
     icon: value.icon,
-    color: getGradientColor(value.order_index)
+    color: getGradientColor(value.order - 1)
   })) : [
     {
       title: t('about.values.quality.title'),
@@ -533,8 +533,8 @@ export default function AboutPage() {
                       <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform">
                         {['🔨', '🛡️', '⚡', '🎯'][index] || '⭐'}
                       </div>
-                      <div className="font-semibold text-gray-900">
-                        {language === 'ar' ? feature.title_ar : feature.title_en}
+                      <div className="font-semibold text-gray-900 text-base leading-relaxed">
+                        {language === 'ar' ? feature.name_ar : feature.name_en}
                       </div>
                     </div>
                   ))}
@@ -563,7 +563,7 @@ export default function AboutPage() {
                   className="card-modern-2030 group overflow-hidden animate-slide-modern"
                   style={{animationDelay: `${index * 0.1}s`}}
                 >
-                  <div className={`p-8 bg-gradient-to-r ${value.color} text-white text-center relative overflow-hidden`}>
+                  <div className={`p-8 bg-gradient-to-r ${value.color} text-gray-900 text-center relative overflow-hidden`}>
                     {/* Background pattern */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity">
                       <div className="absolute inset-0 bg-white" />

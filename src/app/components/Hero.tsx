@@ -1,9 +1,55 @@
 'use client';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { ApiService } from '../services/api';
 
 export default function Hero() {
   const { t, isRTL, language } = useLanguage();
+  const router = useRouter();
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+
+  // Load WhatsApp number from API
+  useEffect(() => {
+    const loadContactInfo = async () => {
+      try {
+        const response = await ApiService.getPublicContactInfo();
+        if (response.success && response.data?.whatsapp) {
+          setWhatsappNumber(response.data.whatsapp);
+        } else {
+          // Fallback WhatsApp number
+          setWhatsappNumber('+20 100 000 0001');
+        }
+      } catch (error) {
+        console.log('Using fallback WhatsApp number');
+        // Fallback WhatsApp number
+        setWhatsappNumber('+20 100 000 0001');
+      }
+    };
+    
+    loadContactInfo();
+  }, []);
+
+  const handleExploreProducts = () => {
+    router.push('/products');
+  };
+
+  const handleGetQuote = () => {
+    if (whatsappNumber) {
+      // Clean the phone number and create WhatsApp URL
+      const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
+      const message = encodeURIComponent(language === 'ar' ? 
+        'مرحباً، أود الحصول على عرض سعر لمنتجاتكم' : 
+        'Hello, I would like to get a quote for your products'
+      );
+      const whatsappUrl = `https://wa.me/${cleanNumber}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      // Fallback to contact page if no WhatsApp number
+      router.push('/contact');
+    }
+  };
   return (
     <section className="hero-modern relative pt-20">
       {/* Animated Background Elements */}
@@ -35,7 +81,10 @@ export default function Hero() {
           {/* CTA Buttons */}
           <div className="animate-slide-modern mb-20" style={{animationDelay: '0.4s'}}>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <button className="btn-modern-primary">
+              <button 
+                onClick={handleExploreProducts}
+                className="btn-modern-primary"
+              >
                 <span className="flex items-center gap-2">
                   <span>{t('hero.explore.btn')}</span>
                   <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +92,10 @@ export default function Hero() {
                   </svg>
                 </span>
               </button>
-              <button className="btn-modern-outline">
+              <button 
+                onClick={handleGetQuote}
+                className="btn-modern-outline"
+              >
                 <span className="flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -65,14 +117,14 @@ export default function Hero() {
               <div className="stat-item-modern">
                 <div className="stat-number-modern">1000+</div>
                 <div className="text-gray-600 font-medium">
-                  {language === 'ar' ? 'مشروع منجز' : 'Completed Projects'}
+                  {t('hero.stats.completed.projects')}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity" />
               </div>
               <div className="stat-item-modern">
                 <div className="stat-number-modern">24/7</div>
                 <div className="text-gray-600 font-medium">
-                  {language === 'ar' ? 'دعم فني' : 'Technical Support'}
+                  {t('hero.stats.technical.support')}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity" />
               </div>

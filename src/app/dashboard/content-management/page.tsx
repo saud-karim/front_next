@@ -26,7 +26,8 @@ interface Tab {
   nameAr: string;
   nameEn: string;
   icon: string;
-  description: string;
+  descriptionAr: string;
+  descriptionEn: string;
 }
 
 const TABS: Tab[] = [
@@ -35,84 +36,96 @@ const TABS: Tab[] = [
     nameAr: 'معلومات الشركة',
     nameEn: 'Company Info',
     icon: '🏢',
-    description: 'اسم الشركة، الوصف، الرسالة والرؤية'
+    descriptionAr: 'اسم الشركة، الوصف، الرسالة والرؤية',
+    descriptionEn: 'Company name, description, mission and vision'
   },
   {
     key: 'company-stats',
     nameAr: 'الإحصائيات',
     nameEn: 'Statistics',
     icon: '📊',
-    description: 'سنوات الخبرة، العملاء، المشاريع المكتملة'
+    descriptionAr: 'سنوات الخبرة، العملاء، المشاريع المكتملة',
+    descriptionEn: 'Years of experience, clients, completed projects'
   },
   {
     key: 'contact-info',
     nameAr: 'معلومات الاتصال',
     nameEn: 'Contact Info',
     icon: '📞',
-    description: 'الهواتف، الإيميلات، العنوان، ساعات العمل'
+    descriptionAr: 'الهواتف، الإيميلات، العنوان، ساعات العمل',
+    descriptionEn: 'Phones, emails, address, working hours'
   },
   {
     key: 'departments',
     nameAr: 'الأقسام',
     nameEn: 'Departments',
     icon: '🏢',
-    description: 'أقسام الشركة وتفاصيل الاتصال'
+    descriptionAr: 'أقسام الشركة وتفاصيل الاتصال',
+    descriptionEn: 'Company departments and contact details'
   },
   {
     key: 'social-links',
     nameAr: 'التواصل الاجتماعي',
     nameEn: 'Social Links',
     icon: '📱',
-    description: 'روابط منصات التواصل الاجتماعي'
+    descriptionAr: 'روابط منصات التواصل الاجتماعي',
+    descriptionEn: 'Social media platform links'
   },
   {
     key: 'team-members',
     nameAr: 'فريق العمل',
     nameEn: 'Team Members',
     icon: '👥',
-    description: 'أعضاء فريق العمل وتفاصيلهم'
+    descriptionAr: 'أعضاء فريق العمل وتفاصيلهم',
+    descriptionEn: 'Team members and their details'
   },
   {
     key: 'company-values',
     nameAr: 'القيم الأساسية',
     nameEn: 'Company Values',
     icon: '⭐',
-    description: 'قيم الشركة الأساسية'
+    descriptionAr: 'قيم الشركة الأساسية',
+    descriptionEn: 'Core company values'
   },
   {
     key: 'milestones',
     nameAr: 'المعالم التاريخية',
     nameEn: 'Milestones',
     icon: '📅',
-    description: 'المعالم والأحداث المهمة في تاريخ الشركة'
+    descriptionAr: 'المعالم والأحداث المهمة في تاريخ الشركة',
+    descriptionEn: 'Important milestones and events in company history'
   },
   {
     key: 'company-story',
     nameAr: 'قصة الشركة',
     nameEn: 'Company Story',
     icon: '📖',
-    description: 'قصة تأسيس الشركة ونموها'
+    descriptionAr: 'قصة تأسيس الشركة ونموها',
+    descriptionEn: 'Company founding story and growth'
   },
   {
     key: 'page-content',
     nameAr: 'محتوى الصفحات',
     nameEn: 'Page Content',
     icon: '📄',
-    description: 'النصوص الثابتة في صفحات About و Contact'
+    descriptionAr: 'النصوص الثابتة في صفحات About و Contact',
+    descriptionEn: 'Static content in About and Contact pages'
   },
   {
     key: 'faqs',
     nameAr: 'الأسئلة الشائعة',
     nameEn: 'FAQs',
     icon: '❓',
-    description: 'الأسئلة المتكررة وإجاباتها'
+    descriptionAr: 'الأسئلة المتكررة وإجاباتها',
+    descriptionEn: 'Frequently asked questions and answers'
   },
   {
     key: 'certifications',
     nameAr: 'الشهادات والشراكات',
     nameEn: 'Certifications',
     icon: '🏅',
-    description: 'شهادات الجودة والشراكات التجارية'
+    descriptionAr: 'شهادات الجودة والشراكات التجارية',
+    descriptionEn: 'Quality certificates and business partnerships'
   }
 ];
 
@@ -150,7 +163,7 @@ export default function ContentManagementPage() {
         <div className="p-6 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">
-            {language === 'ar' ? 'جاري تحضير التبويب...' : 'Preparing tab...'}
+            {t('dashboard.loading.tab')}
           </p>
         </div>
       );
@@ -216,7 +229,7 @@ export default function ContentManagementPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                 title={language === 'ar' ? 'إعادة تحميل الصفحة' : 'Refresh Page'}
               >
-                🔄 {language === 'ar' ? 'تحديث' : 'Refresh'}
+                🔄 {t('common.update')}
               </button>
               <div className="text-4xl">🎨</div>
             </div>
@@ -246,7 +259,7 @@ export default function ContentManagementPage() {
           {/* Sidebar Navigation */}
           <div className="w-80 bg-white rounded-lg shadow-sm border p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {language === 'ar' ? 'أقسام المحتوى' : 'Content Sections'}
+              {t('dashboard.content.sections')}
             </h3>
             <nav className="space-y-2">
               {TABS.map((tab) => (
@@ -266,7 +279,7 @@ export default function ContentManagementPage() {
                         {language === 'ar' ? tab.nameAr : tab.nameEn}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {tab.description}
+                        {language === 'ar' ? tab.descriptionAr : tab.descriptionEn}
                       </div>
                     </div>
                   </div>

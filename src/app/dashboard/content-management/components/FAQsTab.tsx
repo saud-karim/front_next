@@ -47,7 +47,7 @@ const DEFAULT_FAQ: Omit<FAQ, 'id'> = {
 };
 
 export default function FAQsTab({ loading, setLoading }: Props) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const toast = useToast();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -231,10 +231,10 @@ export default function FAQsTab({ loading, setLoading }: Props) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">
-            {language === 'ar' ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
+            {t('dashboard.faqs.title')}
           </h2>
           <p className="text-gray-600 text-sm mt-1">
-            {language === 'ar' ? 'إدارة الأسئلة والأجوبة الشائعة للعملاء' : 'Manage customer frequently asked questions and answers'}
+            {t('dashboard.faqs.description')}
           </p>
         </div>
         <div className="flex space-x-3">
@@ -243,13 +243,13 @@ export default function FAQsTab({ loading, setLoading }: Props) {
             className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
           >
             <span>👁️</span>
-            <span>{language === 'ar' ? 'معاينة مباشرة' : 'Live Preview'}</span>
+            <span>{t('dashboard.preview.live')}</span>
           </button>
         <button
             onClick={openAddForm}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          + {language === 'ar' ? 'إضافة سؤال' : 'Add FAQ'}
+          + {t('dashboard.faqs.add')}
         </button>
         </div>
       </div>
@@ -272,7 +272,7 @@ export default function FAQsTab({ loading, setLoading }: Props) {
           ))}
         </select>
         <span className="text-sm text-gray-500">
-          ({filteredFAQs.length} {language === 'ar' ? 'سؤال' : 'questions'})
+                        ({filteredFAQs.length} {t('dashboard.content.questions')})
         </span>
       </div>
 
@@ -290,7 +290,7 @@ export default function FAQsTab({ loading, setLoading }: Props) {
             {/* التصنيف والترتيب */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === 'ar' ? 'التصنيف' : 'Category'} *
+                {t('dashboard.field.category')} *
               </label>
               <select
                 value={formData.category}

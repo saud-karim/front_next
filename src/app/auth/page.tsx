@@ -69,7 +69,7 @@ export default function AuthPage() {
       
       const success = await login(loginData.email, loginData.password);
       if (success) {
-        setSuccess('تم تسجيل الدخول بنجاح!');
+        setSuccess(t('auth.login.success'));
         
         // Get user data to check role
         const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
@@ -90,7 +90,7 @@ export default function AuthPage() {
           }
         }, 1500);
       } else {
-        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        setError(t('auth.login.error.invalid'));
       }
     } catch (err: any) {
       console.error('Login error:', err);
@@ -99,7 +99,7 @@ export default function AuthPage() {
       } else if (err?.message) {
         setError(err.message);
       } else {
-      setError('حدث خطأ أثناء تسجيل الدخول');
+      setError(t('auth.login.error.general'));
       }
     } finally {
       setIsLoading(false);
@@ -118,13 +118,13 @@ export default function AuthPage() {
     });
 
     if (registerData.password !== registerData.confirmPassword) {
-      setError('كلمة المرور غير متطابقة');
+      setError(t('auth.register.error.password.mismatch'));
       setIsLoading(false);
       return;
     }
 
     if (registerData.password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      setError(t('auth.register.error.password.length'));
       setIsLoading(false);
       return;
     }
@@ -140,12 +140,12 @@ export default function AuthPage() {
       });
 
       if (success) {
-        setSuccess('تم إنشاء الحساب بنجاح!');
+        setSuccess(t('auth.register.success'));
         setTimeout(() => {
           router.push('/');
         }, 1500);
       } else {
-        setError('المستخدم موجود بالفعل');
+        setError(t('auth.register.error.user.exists'));
       }
     } catch (err: any) {
       console.error('Register error:', err);
@@ -245,7 +245,7 @@ export default function AuthPage() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  البريد الإلكتروني *
+                  {t('auth.email.label')}
                 </label>
                 <input
                   type="email"
@@ -261,7 +261,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  كلمة المرور *
+                  {t('auth.password.label')}
                 </label>
                 <div className="relative">
                   <input
@@ -302,11 +302,11 @@ export default function AuthPage() {
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember" className="mr-2 block text-sm text-gray-700">
-                    تذكرني
+                    {t('auth.remember.me')}
                   </label>
                 </div>
                 <button type="button" className="text-sm text-red-600 hover:text-red-700">
-                  نسيت كلمة المرور؟
+                  {t('auth.forgot.password')}
                 </button>
               </div>
 
@@ -322,10 +322,10 @@ export default function AuthPage() {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    جاري تسجيل الدخول...
+                    {t('auth.login.loading')}
                   </div>
                 ) : (
-                  'تسجيل الدخول'
+                  t('auth.login.submit')
                 )}
               </button>
             </form>
@@ -334,7 +334,7 @@ export default function AuthPage() {
             <form onSubmit={handleRegister} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  الاسم الكامل *
+                  {t('auth.name.label')}
                 </label>
                 <input
                   type="text"
@@ -350,7 +350,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  البريد الإلكتروني *
+                  {t('auth.email.label')}
                 </label>
                 <input
                   type="email"
@@ -366,7 +366,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رقم الهاتف
+                  {t('auth.phone.label')}
                 </label>
                 <input
                   type="tel"
@@ -381,7 +381,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  الشركة (اختياري)
+                  {t('auth.company.label')}
                 </label>
                 <input
                   type="text"
@@ -396,7 +396,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  كلمة المرور *
+                  {t('auth.password.label')}
                 </label>
                 <div className="relative">
                   <input
@@ -431,7 +431,7 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  تأكيد كلمة المرور *
+                  {t('auth.confirm.password.label')}
                 </label>
                 <div className="relative">
                   <input
@@ -488,10 +488,10 @@ export default function AuthPage() {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    جاري إنشاء الحساب...
+                    {t('auth.register.loading')}
                   </div>
                 ) : (
-                  'إنشاء حساب جديد'
+                  t('auth.register.submit')
                 )}
               </button>
             </form>

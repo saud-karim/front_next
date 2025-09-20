@@ -423,11 +423,11 @@ export default function ContactMessagesPage() {
                 onChange={(e) => setFilters(prev => ({ ...prev, project_type: e.target.value, page: 1 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                <option value="all">جميع الأنواع</option>
-                <option value="residential">سكني</option>
-                <option value="commercial">تجاري</option>
-                <option value="industrial">صناعي</option>
-                <option value="other">أخرى</option>
+                <option value="all">{t('contact.messages.filter.all_types')}</option>
+                <option value="residential">{t('contact.messages.project.residential')}</option>
+                <option value="commercial">{t('contact.messages.project.commercial')}</option>
+                <option value="industrial">{t('contact.messages.project.industrial')}</option>
+                <option value="other">{t('contact.messages.project.other')}</option>
               </select>
             </div>
 
@@ -436,7 +436,7 @@ export default function ContactMessagesPage() {
                 onClick={() => setFilters({ status: 'all', project_type: 'all', search: '', page: 1, per_page: 20 })}
                 className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
               >
-                إعادة تعيين
+                {t('contact.messages.filter.reset')}
               </button>
             </div>
           </div>
@@ -446,7 +446,7 @@ export default function ContactMessagesPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
-              الرسائل ({messages.length})
+              {t('contact.messages.count')} ({messages.length})
             </h2>
           </div>
 
@@ -473,10 +473,10 @@ export default function ContactMessagesPage() {
 {t('contact.messages.table.ticket_id')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      المرسل
+                      {t('contact.messages.table.sender')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الموضوع
+                      {t('contact.messages.table.subject')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {t('contact.messages.table.project_type')}
@@ -485,10 +485,10 @@ export default function ContactMessagesPage() {
       {t('contact.messages.filter.status')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      التاريخ
+                      {t('contact.messages.table.date')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      العمليات
+                      {t('contact.messages.table.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -595,14 +595,14 @@ export default function ContactMessagesPage() {
                 {selectedMessage.phone && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.phone')}</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.phone || 'غير محدد'}</p>
+                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.phone || t('admin.not.specified')}</p>
                   </div>
                 )}
 
                 {selectedMessage.company && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t('contact.messages.modal.company')}</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.company || 'غير محدد'}</p>
+                    <p className="mt-1 text-sm text-gray-900">{selectedMessage.company || t('admin.not.specified')}</p>
                   </div>
                 )}
 
