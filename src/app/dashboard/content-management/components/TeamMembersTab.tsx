@@ -504,7 +504,7 @@ export default function TeamMembersTab({ loading, setLoading }: Props) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">
-                        {language === 'ar' ? member.name_ar : member.name_en}
+                  {language === 'ar' ? member.name_ar : member.name_en}
                       </h3>
                       <p className="text-sm text-blue-600 font-medium">
                         {language === 'ar' ? member.role_ar : member.role_en}

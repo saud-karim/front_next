@@ -170,9 +170,9 @@ export default function DepartmentsTab({ loading, setLoading }: Props) {
       
       // إذا وصل هنا بدون error، فالعملية نجحت
       // الـ API لا يرجع success field، لكن إذا لم يرجع error فهو نجح
-      toast.success(language === 'ar' ? 'تم إضافة القسم بنجاح' : 'Department added successfully');
-      setShowForm(false);
-      setFormData(DEFAULT_DEPARTMENT);
+        toast.success(language === 'ar' ? 'تم إضافة القسم بنجاح' : 'Department added successfully');
+        setShowForm(false);
+        setFormData(DEFAULT_DEPARTMENT);
       await loadDepartments(); // انتظار تحميل البيانات الجديدة
     } catch (error: any) {
       console.error('Error creating department:', error);
@@ -194,9 +194,9 @@ export default function DepartmentsTab({ loading, setLoading }: Props) {
       console.log('🏢 Update Department Response:', response);
       
       // إذا وصل هنا بدون error، فالعملية نجحت
-      toast.success(language === 'ar' ? 'تم تحديث القسم بنجاح' : 'Department updated successfully');
-      setEditingDepartment(null);
-      setFormData(DEFAULT_DEPARTMENT);
+        toast.success(language === 'ar' ? 'تم تحديث القسم بنجاح' : 'Department updated successfully');
+        setEditingDepartment(null);
+        setFormData(DEFAULT_DEPARTMENT);
       await loadDepartments(); // انتظار تحميل البيانات المحدثة
     } catch (error: any) {
       console.error('Error updating department:', error);
@@ -219,7 +219,7 @@ export default function DepartmentsTab({ loading, setLoading }: Props) {
       console.log('🏢 Delete Department Response:', response);
       
       // إذا وصل هنا بدون error، فالعملية نجحت
-      toast.success(language === 'ar' ? 'تم حذف القسم بنجاح' : 'Department deleted successfully');
+        toast.success(language === 'ar' ? 'تم حذف القسم بنجاح' : 'Department deleted successfully');
       await loadDepartments(); // انتظار تحميل البيانات المحدثة
     } catch (error: any) {
       console.error('Error deleting department:', error);
@@ -291,15 +291,15 @@ export default function DepartmentsTab({ loading, setLoading }: Props) {
             <span>👁️</span>
             <span>{language === 'ar' ? 'معاينة' : 'Preview'}</span>
           </button>
-          <button
+        <button
             onClick={openAddForm}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <div className="flex items-center space-x-2">
-              <span>➕</span>
-              <span>{language === 'ar' ? 'إضافة قسم' : 'Add Department'}</span>
-            </div>
-          </button>
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <div className="flex items-center space-x-2">
+            <span>➕</span>
+            <span>{language === 'ar' ? 'إضافة قسم' : 'Add Department'}</span>
+          </div>
+        </button>
         </div>
       </div>
 
@@ -587,8 +587,8 @@ export default function DepartmentsTab({ loading, setLoading }: Props) {
                         {(language === 'ar' ? dept.description_ar : dept.description_en).substring(0, 80)}
                         {(language === 'ar' ? dept.description_ar : dept.description_en).length > 80 && '...'}
                       </p>
-                    </div>
                   </div>
+                </div>
                 
                 {/* معلومات القسم */}
                 <div className="pt-3 border-t border-gray-100">

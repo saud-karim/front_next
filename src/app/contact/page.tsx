@@ -23,13 +23,36 @@ interface PageContentData {
 interface ContactInfo {
   main_phone: string;
   secondary_phone?: string;
+  toll_free?: string;
   whatsapp?: string;
   main_email: string;
+  sales_email?: string;
   support_email?: string;
-  address_ar?: string;
-  address_en?: string;
-  working_hours_ar?: string;
-  working_hours_en?: string;
+  address: {
+    street_ar: string;
+    street_en: string;
+    district_ar: string;
+    district_en: string;
+    city_ar: string;
+    city_en: string;
+    country_ar: string;
+    country_en: string;
+  };
+  working_hours: {
+    weekdays_ar: string;
+    weekdays_en: string;
+    friday_ar: string;
+    friday_en: string;
+    saturday_ar: string;
+    saturday_en: string;
+  };
+  labels?: {
+    emergency_ar: string;
+    emergency_en: string;
+    toll_free_ar: string;
+    toll_free_en: string;
+  };
+  google_maps_url?: string;
 }
 
 interface Department {
@@ -95,13 +118,36 @@ export default function ContactPage() {
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     main_phone: '+20 123 456 7890',
     secondary_phone: '+20 987 654 3210',
-    whatsapp: '+20 123 456 7890',
+    toll_free: '+20 800 123 456',
+    whatsapp: '+20 100 000 0001',
     main_email: 'info@bstools.com',
+    sales_email: 'sales@bstools.com',
     support_email: 'support@bstools.com',
-    address_ar: 'شارع التحرير، القاهرة الجديدة، مصر',
-    address_en: 'Tahrir Street, New Cairo, Egypt',
-    working_hours_ar: 'الأحد - الخميس: 9 صباحاً - 6 مساءً',
-    working_hours_en: 'Sunday - Thursday: 9 AM - 6 PM'
+    address: {
+      street_ar: 'شارع التحرير، المعادي',
+      street_en: 'Tahrir Street, Maadi',
+      district_ar: 'المعادي',
+      district_en: 'Maadi',
+      city_ar: 'القاهرة',
+      city_en: 'Cairo',
+      country_ar: 'مصر',
+      country_en: 'Egypt'
+    },
+    working_hours: {
+      weekdays_ar: 'الأحد - الخميس: 9:00 ص - 6:00 م',
+      weekdays_en: 'Sunday - Thursday: 9:00 AM - 6:00 PM',
+      friday_ar: 'الجمعة: مغلق',
+      friday_en: 'Friday: Closed',
+      saturday_ar: 'السبت: 9:00 ص - 2:00 م',
+      saturday_en: 'Saturday: 9:00 AM - 2:00 PM'
+    },
+    labels: {
+      emergency_ar: 'الطوارئ',
+      emergency_en: 'Emergency',
+      toll_free_ar: 'الخط المجاني',
+      toll_free_en: 'Toll Free'
+    },
+    google_maps_url: 'https://maps.google.com/maps?q=30.0444196,31.2357116&z=15&output=embed'
   });
 
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -248,7 +294,9 @@ export default function ContactPage() {
     {
       title: t('contact.info.office.title'),
       details: [
-        language === 'ar' ? contactInfo.address_ar : contactInfo.address_en,
+        language === 'ar' 
+          ? `${contactInfo.address?.street_ar || ''}, ${contactInfo.address?.district_ar || ''}, ${contactInfo.address?.city_ar || ''}, ${contactInfo.address?.country_ar || ''}`.replace(/^,+|,+$/g, '').replace(/,\s*,/g, ',').trim()
+          : `${contactInfo.address?.street_en || ''}, ${contactInfo.address?.district_en || ''}, ${contactInfo.address?.city_en || ''}, ${contactInfo.address?.country_en || ''}`.replace(/^,+|,+$/g, '').replace(/,\s*,/g, ',').trim()
       ].filter(Boolean),
       icon: '📍',
       color: 'from-red-500 to-orange-500'
@@ -258,6 +306,7 @@ export default function ContactPage() {
       details: [
         contactInfo.main_phone,
         contactInfo.secondary_phone,
+        contactInfo.toll_free ? `${language === 'ar' ? contactInfo.labels?.toll_free_ar || 'الخط المجاني' : contactInfo.labels?.toll_free_en || 'Toll Free'}: ${contactInfo.toll_free}` : null,
         contactInfo.whatsapp ? `WhatsApp: ${contactInfo.whatsapp}` : null
       ].filter(Boolean),
       icon: '📞',
@@ -267,6 +316,7 @@ export default function ContactPage() {
       title: t('contact.info.email.title'),
       details: [
         contactInfo.main_email,
+        contactInfo.sales_email,
         contactInfo.support_email
       ].filter(Boolean),
       icon: '✉️',
@@ -275,7 +325,9 @@ export default function ContactPage() {
     {
       title: t('contact.info.hours.title'),
       details: [
-        language === 'ar' ? contactInfo.working_hours_ar : contactInfo.working_hours_en
+        language === 'ar' ? contactInfo.working_hours?.weekdays_ar : contactInfo.working_hours?.weekdays_en,
+        language === 'ar' ? contactInfo.working_hours?.friday_ar : contactInfo.working_hours?.friday_en,
+        language === 'ar' ? contactInfo.working_hours?.saturday_ar : contactInfo.working_hours?.saturday_en
       ].filter(Boolean),
       icon: '🕒',
       color: 'from-purple-500 to-indigo-500'
@@ -639,18 +691,34 @@ export default function ContactPage() {
                   ))}
                 </div>
 
-                {/* Enhanced Map Placeholder */}
+                {/* Enhanced Map Section */}
                 <div className="card-modern-2030 overflow-hidden">
-                  <div className="h-64 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent"></div>
-                    <div className="text-center relative z-10">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                        🗺️
-                      </div>
-                      <div className="text-gray-700 font-bold text-xl mb-2">{t('contact.map.title')}</div>
-                      <div className="text-gray-600">{t('contact.map.desc')}</div>
+                  {contactInfo.google_maps_url ? (
+                    <div className="h-80">
+                      <iframe
+                        src={contactInfo.google_maps_url}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title={language === 'ar' ? 'موقع الشركة على الخريطة' : 'Company Location on Map'}
+                        className="rounded-lg"
+                      />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="h-64 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent"></div>
+                      <div className="text-center relative z-10">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                          🗺️
+                        </div>
+                        <div className="text-gray-700 font-bold text-xl mb-2">{t('contact.map.title')}</div>
+                        <div className="text-gray-600">{t('contact.map.desc')}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

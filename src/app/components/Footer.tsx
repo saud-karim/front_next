@@ -15,8 +15,16 @@ interface CompanyInfo {
 interface ContactInfo {
   main_phone: string;
   main_email: string;
-  address_ar?: string;
-  address_en?: string;
+  address?: {
+    street_ar: string;
+    street_en: string;
+    district_ar: string;
+    district_en: string;
+    city_ar: string;
+    city_en: string;
+    country_ar: string;
+    country_en: string;
+  };
 }
 
 interface SocialLink {
@@ -43,8 +51,16 @@ export default function Footer() {
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     main_phone: '+20 123 456 7890',
     main_email: 'info@bstools.com',
-    address_ar: '123 شارع الأهرام، الجيزة، مصر',
-    address_en: '123 Pyramids Street, Giza, Egypt'
+    address: {
+      street_ar: 'شارع التحرير، المعادي',
+      street_en: 'Tahrir Street, Maadi',
+      district_ar: 'المعادي',
+      district_en: 'Maadi',
+      city_ar: 'القاهرة',
+      city_en: 'Cairo',
+      country_ar: 'مصر',
+      country_en: 'Egypt'
+    }
   });
 
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
@@ -74,8 +90,7 @@ export default function Footer() {
           setContactInfo({
             main_phone: contactResponse.data.main_phone || contactInfo.main_phone,
             main_email: contactResponse.data.main_email || contactInfo.main_email,
-            address_ar: contactResponse.data.address_ar || contactInfo.address_ar,
-            address_en: contactResponse.data.address_en || contactInfo.address_en
+            address: contactResponse.data.address || contactInfo.address
           });
         }
 
@@ -176,7 +191,10 @@ export default function Footer() {
               <div className="flex items-start space-x-2">
                 <span className="text-red-500">📍</span>
                 <span className="text-gray-300 text-sm">
-                  {language === 'ar' ? contactInfo.address_ar : contactInfo.address_en}
+                  {language === 'ar' 
+                  ? `${contactInfo.address?.street_ar || ''}, ${contactInfo.address?.district_ar || ''}, ${contactInfo.address?.city_ar || ''}, ${contactInfo.address?.country_ar || ''}`.replace(/^,+|,+$/g, '').replace(/,\s*,/g, ',').trim()
+                  : `${contactInfo.address?.street_en || ''}, ${contactInfo.address?.district_en || ''}, ${contactInfo.address?.city_en || ''}, ${contactInfo.address?.country_en || ''}`.replace(/^,+|,+$/g, '').replace(/,\s*,/g, ',').trim()
+                }
                 </span>
               </div>
             </div>

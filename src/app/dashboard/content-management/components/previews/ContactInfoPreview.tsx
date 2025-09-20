@@ -34,6 +34,7 @@ interface ContactInfoData {
     toll_free_ar: string;
     toll_free_en: string;
   };
+  google_maps_url?: string;
 }
 
 interface ContactInfoPreviewProps {

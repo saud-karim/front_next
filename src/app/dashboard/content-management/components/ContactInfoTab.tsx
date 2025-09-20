@@ -40,6 +40,7 @@ interface ContactInfoData {
     toll_free_ar: string;
     toll_free_en: string;
   };
+  google_maps_url?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -52,6 +53,59 @@ interface Props {
 export default function ContactInfoTab({ loading, setLoading }: Props) {
   const { language, t } = useLanguage();
   const toast = useToast();
+
+  // دالة للتحويل التلقائي لروابط Google Maps العادية إلى Embed URLs
+  const convertToEmbedUrl = (url: string): string => {
+    if (!url || url.trim() === '') return url;
+    
+    // إذا كان الرابط يحتوي على embed بالفعل، ارجعه كما هو
+    if (url.includes('embed') || url.includes('output=embed')) {
+      return url;
+    }
+    
+    try {
+      // استخراج الإحداثيات من الرابط (الطريقة الأكثر دقة)
+      const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordsMatch) {
+        const [, lat, lng] = coordsMatch;
+        console.log(`🔄 Converting coordinates: ${lat}, ${lng}`);
+        return `https://maps.google.com/maps?q=${lat},${lng}&output=embed`;
+      }
+      
+      // استخراج اسم المكان من رابط place
+      const placeMatch = url.match(/\/place\/([^\/\?@]+)/);
+      if (placeMatch) {
+        const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+        console.log(`🔄 Converting place: ${placeName}`);
+        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&output=embed`;
+      }
+      
+      // إذا كان رابط بحث عادي
+      const searchMatch = url.match(/\/search\/([^\/\?@]+)/);
+      if (searchMatch) {
+        const searchTerm = decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
+        console.log(`🔄 Converting search: ${searchTerm}`);
+        return `https://maps.google.com/maps?q=${encodeURIComponent(searchTerm)}&output=embed`;
+      }
+      
+      // كحل أخير، إذا كان الرابط يحتوي على Google Maps ولكن لا يحتوي على embed
+      if (url.includes('maps.google.com') || url.includes('www.google.com/maps')) {
+        console.log(`🔄 Converting generic Google Maps URL`);
+        // استخراج معامل q إذا وجد
+        const qMatch = url.match(/[?&]q=([^&]+)/);
+        if (qMatch) {
+          const query = decodeURIComponent(qMatch[1]);
+          return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+        }
+      }
+      
+    } catch (error) {
+      console.warn('Error converting URL:', error);
+    }
+    
+    // إذا فشل التحويل، ارجع الرابط الأصلي
+    return url;
+  };
   const [data, setData] = useState<ContactInfoData>({
     main_phone: '+20 123 456 7890',
     secondary_phone: '+20 987 654 3210',
@@ -83,7 +137,8 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
       emergency_en: 'Emergency',
       toll_free_ar: 'الخط المجاني',
       toll_free_en: 'Toll Free'
-    }
+    },
+    google_maps_url: 'https://maps.google.com/maps?q=30.0444196,31.2357116&z=15&output=embed'
   });
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -95,7 +150,15 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
       const response = await ApiService.getContactInfo();
       
       if (response.success && response.data) {
-        setData(response.data);
+        console.log('📥 Loaded data from API:', response.data);
+        console.log('📍 Loaded google_maps_url:', response.data.google_maps_url);
+        
+        // استخدام البيانات كما جاءت من API لأنها صحيحة
+        const processedData = { ...response.data };
+        console.log('✅ Using data from API as-is:', processedData.google_maps_url);
+        
+        console.log('📍 Final loaded data google_maps_url:', processedData.google_maps_url);
+        setData(processedData);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'خطأ في تحميل معلومات الاتصال';
@@ -138,20 +201,30 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
         emergency_phone_label_en: data.labels.emergency_en,
         toll_free_label_ar: data.labels.toll_free_ar,
         toll_free_label_en: data.labels.toll_free_en,
+        // Google Maps URL - تحويل قبل الإرسال للخادم
+        google_maps_url: convertToEmbedUrl(data.google_maps_url || ''),
       };
       
       console.log('🔄 Sending flattened data to Backend:', flattenedData);
+      console.log('📍 Google Maps URL being sent:', flattenedData.google_maps_url);
       
       // استخدام الـ API client مع البيانات المُفلطحة
-      const response = await (ApiService as any).client.put('/admin/contact-info', flattenedData);
+      const response = await ApiService.updateContactInfo(flattenedData);
+      
+      console.log('📥 Response from Backend:', response);
       
       if (response.success) {
         toast.success(
           language === 'ar' ? 'نجح الحفظ' : 'Success',
           language === 'ar' ? 'تم حفظ معلومات الاتصال بنجاح' : 'Contact information saved successfully'
         );
+        
+        // استخدام البيانات من response.data إذا وُجدت، وإلا استخدم البيانات الحالية
         if (response.data) {
+          console.log('✅ Using response.data from successful save');
           setData(response.data);
+        } else {
+          console.log('⚠️ No response.data, keeping current data');
         }
       } else {
         throw new Error(response.message || 'Failed to save contact information');
@@ -165,6 +238,19 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
   };
 
   const updateField = (field: string, value: string) => {
+    // التحويل التلقائي لروابط Google Maps
+    if (field === 'google_maps_url' && value && value.trim() !== '') {
+      const convertedUrl = convertToEmbedUrl(value);
+      if (convertedUrl && convertedUrl !== value) {
+        // إشعار المستخدم بالتحويل
+        toast.success(
+          language === 'ar' ? 'تم التحويل' : 'Converted',
+          language === 'ar' ? 'تم تحويل الرابط تلقائياً إلى Embed URL' : 'URL automatically converted to Embed format'
+        );
+        value = convertedUrl;
+      }
+    }
+
     setData(prev => {
       // Handle nested fields like 'address.street_ar' or 'working_hours.weekdays_ar'
       if (field.includes('.')) {
@@ -584,6 +670,71 @@ export default function ContactInfoTab({ loading, setLoading }: Props) {
             />
           </div>
         </div>
+      </div>
+
+      {/* Google Maps Location */}
+      <div className="mt-8 bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <span className="text-2xl mr-2">🗺️</span>
+          {language === 'ar' ? 'موقع الخريطة' : 'Map Location'}
+        </h3>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {language === 'ar' ? 'رابط Google Maps' : 'Google Maps URL'}
+          </label>
+          <input
+            type="url"
+            value={data.google_maps_url || ''}
+            onChange={(e) => updateField('google_maps_url', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://maps.google.com/maps?q=30.0444196,31.2357116&z=15&output=embed"
+          />
+          
+
+          
+          {/* حالة الرابط */}
+          {data.google_maps_url && (
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex items-center text-sm text-green-800">
+                <span className="text-green-600 mr-2">✅</span>
+                <span>
+                  {data.google_maps_url.includes('embed') || data.google_maps_url.includes('output=embed')
+                    ? (language === 'ar' ? 'رابط صالح للمعاينة - Embed URL' : 'Valid preview URL - Embed format')
+                    : (language === 'ar' ? 'سيتم تحويل الرابط تلقائياً عند الحفظ' : 'URL will be auto-converted on save')
+                  }
+                </span>
+              </div>
+            </div>
+          )}
+          
+          <p className="text-xs text-gray-500 mt-1">
+            {language === 'ar' 
+              ? 'الصق أي رابط من Google Maps - سيتم تحويله تلقائياً للمعاينة' 
+              : 'Paste any Google Maps URL - it will be auto-converted for preview'
+            }
+          </p>
+        </div>
+
+        {data.google_maps_url && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {language === 'ar' ? 'معاينة الخريطة' : 'Map Preview'}
+            </label>
+            <div className="w-full h-64 border border-gray-300 rounded-md overflow-hidden">
+              <iframe
+                src={data.google_maps_url}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title={language === 'ar' ? 'موقع الشركة' : 'Company Location'}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Save Button */}
