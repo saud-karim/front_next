@@ -38,10 +38,10 @@ interface Department {
   name_en: string;
   description_ar: string;
   description_en: string;
-  phone: string;
-  email: string;
+  icon?: string;
+  color?: string;
+  order: number;
   is_active: boolean;
-  order_index: number;
 }
 
 interface SocialLink {
@@ -130,7 +130,7 @@ export default function ContactPage() {
         if (deptResponse.success && deptResponse.data) {
           const activeDepartments = deptResponse.data
             .filter(dept => dept.is_active)
-            .sort((a, b) => a.order_index - b.order_index);
+            .sort((a, b) => a.order - b.order);
           setDepartments(activeDepartments);
         }
 
@@ -286,40 +286,30 @@ export default function ContactPage() {
   const departmentsDisplay = departments.length > 0 ? departments.map((dept, index) => ({
     name: language === 'ar' ? dept.name_ar : dept.name_en,
     description: language === 'ar' ? dept.description_ar : dept.description_en,
-    phone: dept.phone,
-    email: dept.email,
-    icon: getDepartmentIcon(index),
-    color: getDepartmentColor(index)
+    icon: dept.icon || getDepartmentIcon(index),
+    color: dept.color || getDepartmentColor(index)
   })) : [
     {
       name: t('contact.departments.sales.name'),
       description: t('contact.departments.sales.desc'),
-      phone: '+20 123 456 7891',
-      email: 'sales@bstools.com',
       icon: '💼',
       color: 'bg-blue-500'
     },
     {
       name: t('contact.departments.support.name'),
       description: t('contact.departments.support.desc'),
-      phone: '+20 123 456 7892',
-      email: 'support@bstools.com',
       icon: '🔧',
       color: 'bg-green-500'
     },
     {
       name: t('contact.departments.service.name'),
       description: t('contact.departments.service.desc'),
-      phone: '+20 123 456 7893',
-      email: 'service@bstools.com',
       icon: '👥',
       color: 'bg-purple-500'
     },
     {
       name: t('contact.departments.partnerships.name'),
       description: t('contact.departments.partnerships.desc'),
-      phone: '+20 123 456 7894',
-      email: 'partners@bstools.com',
       icon: '🤝',
       color: 'bg-orange-500'
     }
@@ -698,25 +688,10 @@ export default function ContactPage() {
                   </div>
                   <div className="p-6">
                     <p className="text-gray-600 text-sm mb-6 leading-relaxed">{dept.description}</p>
-                    <div className="space-y-3">
-                      <a 
-                        href={`tel:${dept.phone}`} 
-                        className="flex items-center text-sm text-gray-700 hover:text-red-600 transition-colors group/link"
-                      >
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover/link:bg-red-50 transition-colors">
-                          📞
-                        </div>
-                        <span className="font-medium">{dept.phone}</span>
-                      </a>
-                      <a 
-                        href={`mailto:${dept.email}`} 
-                        className="flex items-center text-sm text-gray-700 hover:text-red-600 transition-colors group/link"
-                      >
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover/link:bg-red-50 transition-colors">
-                          ✉️
-                        </div>
-                        <span className="font-medium">{dept.email}</span>
-                      </a>
+                    <div className="mt-auto pt-4">
+                      <p className="text-xs text-gray-500 text-center">
+                        {language === 'ar' ? 'للتواصل مع هذا القسم، يرجى استخدام النموذج أعلاه' : 'To contact this department, please use the form above'}
+                      </p>
                     </div>
                   </div>
                 </div>

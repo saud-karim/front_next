@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/app/context/LanguageContext';
 import { useToast } from '@/app/context/ToastContext';
 import ApiService from '@/app/services/api';
+import PreviewModal from './PreviewModal';
+import CompanyValuesPreview from './previews/CompanyValuesPreview';
 
 interface CompanyValue {
   id?: number;
@@ -12,7 +14,10 @@ interface CompanyValue {
   description_ar: string;
   description_en: string;
   icon: string;
-  order_index: number;
+  order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Props {
@@ -20,63 +25,119 @@ interface Props {
   setLoading: (loading: boolean) => void;
 }
 
+// نظام mapping بين الرموز القصيرة (للحفظ في قاعدة البيانات) والفونت أوسوم (للعرض)
+const ICON_MAPPING = {
+  'AW': 'fas fa-award',           // الجودة
+  'LB': 'fas fa-lightbulb',       // الابتكار
+  'HS': 'fas fa-handshake',       // الشراكة
+  'SH': 'fas fa-shield-alt',      // الموثوقية
+  'US': 'fas fa-users',           // العمل الجماعي
+  'ST': 'fas fa-star',            // التميز
+  'HE': 'fas fa-heart',           // العاطفة
+  'TA': 'fas fa-target',          // الهدف
+  'RO': 'fas fa-rocket',          // النمو
+  'CO': 'fas fa-compass',         // التوجيه
+  'EY': 'fas fa-eye',             // الرؤية
+  'CH': 'fas fa-chart-line',      // التطوير
+  'GL': 'fas fa-globe',           // العالمية
+  'CU': 'fas fa-question'         // مخصص
+};
+
+// دالة للحصول على فونت أوسوم من الرمز القصير
+const getFontAwesomeIcon = (shortCode: string): string => {
+  return ICON_MAPPING[shortCode as keyof typeof ICON_MAPPING] || 'fas fa-question';
+};
+
+// دالة للحصول على الرمز القصير من فونت أوسوم (للتوافق مع البيانات القديمة)
+const getShortCodeFromFontAwesome = (fontAwesome: string): string => {
+  const entry = Object.entries(ICON_MAPPING).find(([, fa]) => fa === fontAwesome);
+  return entry ? entry[0] : 'CU'; // افتراضي
+};
+
+const ICON_OPTIONS = Object.keys(ICON_MAPPING);
+
+const DEFAULT_VALUE: Omit<CompanyValue, 'id'> = {
+  title_ar: '',
+  title_en: '',
+  description_ar: '',
+  description_en: '',
+  icon: 'AW', // رمز قصير افتراضي
+  order: 1,
+  is_active: true
+};
+
 export default function CompanyValuesTab({ loading, setLoading }: Props) {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const toast = useToast();
   const [values, setValues] = useState<CompanyValue[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingValue, setEditingValue] = useState<CompanyValue | null>(null);
   const [saving, setSaving] = useState(false);
-  const [newValue, setNewValue] = useState<Partial<CompanyValue>>({
-    title_ar: '',
-    title_en: '',
-    description_ar: '',
-    description_en: '',
-    icon: '',
-    order_index: 0
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPreview, setShowPreview] = useState(false);
+  const [formData, setFormData] = useState<Omit<CompanyValue, 'id'>>(DEFAULT_VALUE);
 
   // تحميل قيم الشركة
   const loadCompanyValues = async () => {
     try {
       setLoading(true);
-      console.log('💎 Loading real Company Values data from API...');
       const response = await ApiService.getCompanyValues();
       
-      if (response.success && response.data) {
-        setValues(response.data);
+      if (response.data && Array.isArray(response.data)) {
+        // تحويل FontAwesome strings إلى short codes للتوافق مع النظام الجديد
+        const normalizedData = response.data.map(value => ({
+          ...value,
+          icon: value.icon.startsWith('fas ') ? getShortCodeFromFontAwesome(value.icon) : value.icon
+        }));
+        setValues(normalizedData);
+      } else {
+        setValues([]);
       }
-    } catch (error: unknown) {
+    } catch (error) {
+      console.error('Error loading company values:', error);
       const errorMessage = error instanceof Error ? error.message : 'خطأ في تحميل قيم الشركة';
       toast.error('خطأ', errorMessage);
+      setValues([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // إضافة قيمة جديدة
-  const handleAddValue = async () => {
+  // التحقق من صحة البيانات
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.title_ar.trim()) {
+      newErrors.title_ar = language === 'ar' ? 'العنوان باللغة العربية مطلوب' : 'Arabic title is required';
+    }
+    if (!formData.title_en.trim()) {
+      newErrors.title_en = language === 'ar' ? 'العنوان باللغة الإنجليزية مطلوب' : 'English title is required';
+    }
+    if (!formData.description_ar.trim()) {
+      newErrors.description_ar = language === 'ar' ? 'الوصف باللغة العربية مطلوب' : 'Arabic description is required';
+    }
+    if (!formData.description_en.trim()) {
+      newErrors.description_en = language === 'ar' ? 'الوصف باللغة الإنجليزية مطلوب' : 'English description is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // إنشاء قيمة جديدة
+  const handleCreate = async () => {
+    if (!validateForm()) return;
+
     try {
       setSaving(true);
-      const response = await ApiService.createCompanyValue(newValue as any);
+      await ApiService.createCompanyValue(formData);
       
-      if (response.success && response.data) {
-        setValues(prev => [...prev, response.data]);
-        setNewValue({
-          title_ar: '',
-          title_en: '',
-          description_ar: '',
-          description_en: '',
-          icon: '',
-          order_index: 0
-        });
-        setShowAddForm(false);
-        toast.success(
-          language === 'ar' ? 'نجح الإضافة' : 'Success',
-          language === 'ar' ? 'تم إضافة القيمة بنجاح' : 'Company value added successfully'
-        );
-      }
-    } catch (error: unknown) {
+      toast.success('نجح', language === 'ar' ? 'تم إضافة القيمة بنجاح' : 'Value added successfully');
+      setShowForm(false);
+      setFormData(DEFAULT_VALUE);
+      await loadCompanyValues();
+    } catch (error) {
+      console.error('Error creating value:', error);
       const errorMessage = error instanceof Error ? error.message : 'خطأ في إضافة القيمة';
       toast.error('خطأ', errorMessage);
     } finally {
@@ -85,20 +146,20 @@ export default function CompanyValuesTab({ loading, setLoading }: Props) {
   };
 
   // تحديث قيمة
-  const handleUpdateValue = async (value: CompanyValue) => {
+  const handleUpdate = async () => {
+    if (!validateForm() || !editingValue) return;
+
     try {
       setSaving(true);
-      const response = await ApiService.updateCompanyValue(value.id!, value);
+      await ApiService.updateCompanyValue(editingValue.id!, formData);
       
-      if (response.success && response.data) {
-        setValues(prev => prev.map(v => v.id === value.id ? response.data : v));
+      toast.success('نجح', language === 'ar' ? 'تم تحديث القيمة بنجاح' : 'Value updated successfully');
+      setShowForm(false);
         setEditingValue(null);
-        toast.success(
-          language === 'ar' ? 'نجح التحديث' : 'Success',
-          language === 'ar' ? 'تم تحديث القيمة بنجاح' : 'Company value updated successfully'
-        );
-      }
-    } catch (error: unknown) {
+      setFormData(DEFAULT_VALUE);
+      await loadCompanyValues();
+    } catch (error) {
+      console.error('Error updating value:', error);
       const errorMessage = error instanceof Error ? error.message : 'خطأ في تحديث القيمة';
       toast.error('خطأ', errorMessage);
     } finally {
@@ -107,27 +168,70 @@ export default function CompanyValuesTab({ loading, setLoading }: Props) {
   };
 
   // حذف قيمة
-  const handleDeleteValue = async (id: number) => {
+  const handleDelete = async (value: CompanyValue) => {
     if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه القيمة؟' : 'Are you sure you want to delete this value?')) {
       return;
     }
 
     try {
       setSaving(true);
-      const response = await ApiService.deleteCompanyValue(id);
+      await ApiService.deleteCompanyValue(value.id!);
       
-      if (response.success) {
-        setValues(prev => prev.filter(v => v.id !== id));
-        toast.success(
-          language === 'ar' ? 'نجح الحذف' : 'Success',
-          language === 'ar' ? 'تم حذف القيمة بنجاح' : 'Company value deleted successfully'
-        );
-      }
-    } catch (error: unknown) {
+      toast.success('نجح', language === 'ar' ? 'تم حذف القيمة بنجاح' : 'Value deleted successfully');
+      await loadCompanyValues();
+    } catch (error) {
+      console.error('Error deleting value:', error);
       const errorMessage = error instanceof Error ? error.message : 'خطأ في حذف القيمة';
       toast.error('خطأ', errorMessage);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // بدء التعديل
+  const startEdit = (value: CompanyValue) => {
+    setEditingValue(value);
+    // التأكد من أن الأيقونة short code وليس FontAwesome string
+    const normalizedValue = {
+      ...value,
+      icon: value.icon.startsWith('fas ') ? getShortCodeFromFontAwesome(value.icon) : value.icon
+    };
+    setFormData({ 
+      title_ar: normalizedValue.title_ar,
+      title_en: normalizedValue.title_en,
+      description_ar: normalizedValue.description_ar,
+      description_en: normalizedValue.description_en,
+      icon: normalizedValue.icon,
+      order: normalizedValue.order,
+      is_active: normalizedValue.is_active
+    });
+    setShowForm(true);
+  };
+
+  // فتح نموذج الإضافة
+  const openAddForm = () => {
+    setEditingValue(null);
+    setFormData({
+      ...DEFAULT_VALUE,
+      order: values.length + 1
+    });
+    setShowForm(true);
+  };
+
+  // إلغاء النموذج
+  const cancelForm = () => {
+    setShowForm(false);
+    setEditingValue(null);
+    setFormData(DEFAULT_VALUE);
+    setErrors({});
+  };
+
+  // تحديث حقل
+  const updateField = (field: keyof Omit<CompanyValue, 'id'>, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // إزالة الخطأ عند تحديث الحقل
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -147,239 +251,296 @@ export default function CompanyValuesTab({ loading, setLoading }: Props) {
             {language === 'ar' ? 'إدارة قيم ومبادئ الشركة' : 'Manage company values and principles'}
           </p>
         </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+          >
+            <span>👁️</span>
+            <span>{language === 'ar' ? 'معاينة مباشرة' : 'Live Preview'}</span>
+          </button>
         <button
-          onClick={() => setShowAddForm(true)}
+            onClick={openAddForm}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           + {language === 'ar' ? 'إضافة قيمة' : 'Add Value'}
         </button>
+        </div>
       </div>
 
-      {/* Add Form */}
-      {showAddForm && (
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            {language === 'ar' ? 'إضافة قيمة جديدة' : 'Add New Value'}
+      {/* Add/Edit Form */}
+      {showForm && (
+        <div className="bg-gray-50 rounded-lg p-6 mb-6 border">
+          <h3 className="text-lg font-medium text-gray-900 mb-6">
+            {editingValue ? 
+              (language === 'ar' ? 'تعديل القيمة' : 'Edit Value') : 
+              (language === 'ar' ? 'إضافة قيمة جديدة' : 'Add New Value')
+            }
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* العنوان */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}
+                {language === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'} *
               </label>
               <input
                 type="text"
-                value={newValue.title_ar || ''}
-                onChange={(e) => setNewValue(prev => ({ ...prev, title_ar: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.title_ar}
+                onChange={(e) => updateField('title_ar', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.title_ar ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder={language === 'ar' ? 'الجودة' : 'Quality'}
               />
+              {errors.title_ar && <p className="text-red-500 text-xs mt-1">{errors.title_ar}</p>}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === 'ar' ? 'العنوان (انجليزي)' : 'Title (English)'}
+                {language === 'ar' ? 'العنوان (إنجليزي)' : 'Title (English)'} *
               </label>
               <input
                 type="text"
-                value={newValue.title_en || ''}
-                onChange={(e) => setNewValue(prev => ({ ...prev, title_en: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.title_en}
+                onChange={(e) => updateField('title_en', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.title_en ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder={language === 'ar' ? 'Quality' : 'Quality'}
               />
+              {errors.title_en && <p className="text-red-500 text-xs mt-1">{errors.title_en}</p>}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === 'ar' ? 'الوصف (عربي)' : 'Description (Arabic)'}
-              </label>
-              <textarea
-                value={newValue.description_ar || ''}
-                onChange={(e) => setNewValue(prev => ({ ...prev, description_ar: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {language === 'ar' ? 'الوصف (انجليزي)' : 'Description (English)'}
-              </label>
-              <textarea
-                value={newValue.description_en || ''}
-                onChange={(e) => setNewValue(prev => ({ ...prev, description_en: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
+
+            {/* الأيقونة */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {language === 'ar' ? 'الأيقونة' : 'Icon'}
               </label>
-              <input
-                type="text"
-                value={newValue.icon || ''}
-                onChange={(e) => setNewValue(prev => ({ ...prev, icon: e.target.value }))}
-                placeholder={t('placeholder.icon')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="grid grid-cols-6 gap-2 mb-3">
+                {ICON_OPTIONS.map(icon => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => updateField('icon', icon)}
+                    className={`p-3 rounded-md border-2 hover:scale-105 transition-all ${
+                      formData.icon === icon 
+                        ? 'border-blue-500 bg-blue-50 text-blue-600' 
+                        : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                    }`}
+                    title={getFontAwesomeIcon(icon)}
+                  >
+                    <i className={`${getFontAwesomeIcon(icon)} text-xl`}></i>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <i className={`${getFontAwesomeIcon(formData.icon)} text-lg`}></i>
+                  <span className="text-sm text-gray-600">{formData.icon} → {getFontAwesomeIcon(formData.icon)}</span>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {language === 'ar' ? 'الأيقونة المحددة' : 'Selected icon'}
+                </span>
+              </div>
             </div>
+
+            {/* الترتيب والحالة */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {language === 'ar' ? 'الترتيب' : 'Order'}
               </label>
               <input
                 type="number"
-                value={newValue.order_index || 0}
-                onChange={(e) => setNewValue(prev => ({ ...prev, order_index: parseInt(e.target.value) }))}
+                min="1"
+                value={formData.order}
+                onChange={(e) => updateField('order', parseInt(e.target.value) || 1)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'الحالة' : 'Status'}
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => updateField('is_active', true)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-md border-2 transition-all ${
+                    formData.is_active 
+                      ? 'border-green-500 bg-green-50 text-green-700' 
+                      : 'border-gray-300 hover:border-green-400'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${formData.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  <span>{language === 'ar' ? 'نشط' : 'Active'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateField('is_active', false)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-md border-2 transition-all ${
+                    !formData.is_active 
+                      ? 'border-red-500 bg-red-50 text-red-700' 
+                      : 'border-gray-300 hover:border-red-400'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${!formData.is_active ? 'bg-red-500' : 'bg-gray-400'}`}></div>
+                  <span>{language === 'ar' ? 'غير نشط' : 'Inactive'}</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-end space-x-3 mt-6">
+
+          {/* الوصف */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'الوصف (عربي)' : 'Description (Arabic)'} *
+              </label>
+              <textarea
+                value={formData.description_ar}
+                onChange={(e) => updateField('description_ar', e.target.value)}
+                rows={4}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.description_ar ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder={language === 'ar' ? 'نضمن أعلى معايير الجودة في جميع منتجاتنا...' : 'We guarantee the highest quality...'}
+              />
+              {errors.description_ar && <p className="text-red-500 text-xs mt-1">{errors.description_ar}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'الوصف (إنجليزي)' : 'Description (English)'} *
+              </label>
+              <textarea
+                value={formData.description_en}
+                onChange={(e) => updateField('description_en', e.target.value)}
+                rows={4}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.description_en ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder={language === 'ar' ? 'We guarantee the highest quality...' : 'We guarantee the highest quality...'}
+              />
+              {errors.description_en && <p className="text-red-500 text-xs mt-1">{errors.description_en}</p>}
+            </div>
+          </div>
+
+          {/* أزرار النموذج */}
+          <div className="flex justify-end space-x-4 mt-6">
             <button
-              onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              onClick={cancelForm}
+              disabled={saving}
+              className="px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
             >
               {language === 'ar' ? 'إلغاء' : 'Cancel'}
             </button>
             <button
-              onClick={handleAddValue}
-              disabled={saving || !newValue.title_ar || !newValue.title_en}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={editingValue ? handleUpdate : handleCreate}
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {saving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (language === 'ar' ? 'حفظ' : 'Save')}
+              {saving ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {language === 'ar' ? 'جاري الحفظ...' : 'Saving...'}
+                </div>
+              ) : (
+                editingValue 
+                  ? (language === 'ar' ? 'تحديث القيمة' : 'Update Value')
+                  : (language === 'ar' ? 'إضافة القيمة' : 'Add Value')
+              )}
             </button>
           </div>
         </div>
       )}
 
-      {/* Values Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {values.map((value) => (
-          <div key={value.id} className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">{value.icon}</div>
-              <span className="text-xs text-gray-500">#{value.order_index}</span>
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">
-              {language === 'ar' ? value.title_ar : value.title_en}
-            </h4>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-4">
-              {language === 'ar' ? value.description_ar : value.description_en}
+      {/* قائمة قيم الشركة */}
+      <div className="bg-white rounded-lg border">
+        {values.length === 0 ? (
+          <div className="p-12 text-center">
+            <div className="text-6xl mb-6">💎</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              {language === 'ar' ? 'لا توجد قيم للشركة' : 'No Company Values'}
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              {language === 'ar' ? 'ابدأ بإضافة أول قيمة للشركة' : 'Start by adding your first company value'}
             </p>
-            <div className="flex items-center justify-end space-x-2">
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {values.sort((a, b) => a.order - b.order).map((value) => (
+              <div key={value.id} className={`border rounded-lg px-8 py-6 hover:shadow-lg transition-all duration-200 bg-white ${
+                value.is_active 
+                  ? 'border-gray-200 hover:border-blue-300' 
+                  : 'border-red-200 bg-red-50/30 opacity-75'
+              }`}>
+                <div className="flex items-center space-x-3 mb-3">
+                                        <div className="relative w-12 h-12 overflow-visible">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                        <i className={`${getFontAwesomeIcon(value.icon)} text-lg`}></i>
+                      </div>
+                      <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10">
+                        {value.order}
+      </div>
+        </div>
+              <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">
+                        {language === 'ar' ? value.title_ar : value.title_en}
+            </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {(language === 'ar' ? value.description_ar : value.description_en).substring(0, 60)}
+                        {(language === 'ar' ? value.description_ar : value.description_en).length > 60 && '...'}
+                      </p>
+              </div>
+            </div>
+
+                {/* حالة القيمة */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    value.is_active 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {value.is_active ? (language === 'ar' ? 'نشط' : 'Active') : (language === 'ar' ? 'غير نشط' : 'Inactive')}
+                  </span>
+                  <span className="text-xs text-gray-500">#{value.order}</span>
+                </div>
+
+                {/* أزرار التحكم - منفصلة في أسفل الكارد */}
+                <div className="bg-gray-50 border-t border-gray-200 p-3 flex justify-center gap-2 rounded-b-lg mt-3">
               <button
-                onClick={() => setEditingValue(value)}
-                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                      onClick={() => startEdit(value)}
+                      className="flex-1 max-w-24 flex items-center justify-center px-2 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded text-sm font-medium"
+                      title={language === 'ar' ? 'تعديل' : 'Edit'}
               >
-                {language === 'ar' ? 'تعديل' : 'Edit'}
+                      <span>✏️</span>
+                      <span className="ml-1 hidden sm:inline">{language === 'ar' ? 'تعديل' : 'Edit'}</span>
               </button>
               <button
-                onClick={() => handleDeleteValue(value.id!)}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
-              >
-                {language === 'ar' ? 'حذف' : 'Delete'}
+                      onClick={() => handleDelete(value)}
+                      className="flex-1 max-w-24 flex items-center justify-center px-2 py-2 bg-red-600 text-white hover:bg-red-700 rounded text-sm font-medium"
+                      title={language === 'ar' ? 'حذف' : 'Delete'}
+                  >
+                      <span>🗑️</span>
+                      <span className="ml-1 hidden sm:inline">{language === 'ar' ? 'حذف' : 'Delete'}</span>
               </button>
             </div>
           </div>
-        ))}
+            ))}
+        </div>
+      )}
       </div>
 
-      {values.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-4xl mb-4">💎</div>
-          <p>{language === 'ar' ? 'لا توجد قيم للشركة' : 'No company values found'}</p>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editingValue && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {language === 'ar' ? 'تعديل القيمة' : 'Edit Value'}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}
-                </label>
-                <input
-                  type="text"
-                  value={editingValue.title_ar}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, title_ar: e.target.value } : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'العنوان (انجليزي)' : 'Title (English)'}
-                </label>
-                <input
-                  type="text"
-                  value={editingValue.title_en}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, title_en: e.target.value } : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'الوصف (عربي)' : 'Description (Arabic)'}
-                </label>
-                <textarea
-                  value={editingValue.description_ar}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, description_ar: e.target.value } : null)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'الوصف (انجليزي)' : 'Description (English)'}
-                </label>
-                <textarea
-                  value={editingValue.description_en}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, description_en: e.target.value } : null)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'الأيقونة' : 'Icon'}
-                </label>
-                <input
-                  type="text"
-                  value={editingValue.icon}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, icon: e.target.value } : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'ar' ? 'الترتيب' : 'Order'}
-                </label>
-                <input
-                  type="number"
-                  value={editingValue.order_index}
-                  onChange={(e) => setEditingValue(prev => prev ? { ...prev, order_index: parseInt(e.target.value) } : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setEditingValue(null)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-              >
-                {language === 'ar' ? 'إلغاء' : 'Cancel'}
-              </button>
-              <button
-                onClick={() => handleUpdateValue(editingValue)}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {saving ? (language === 'ar' ? 'جاري التحديث...' : 'Updating...') : (language === 'ar' ? 'تحديث' : 'Update')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={language === 'ar' ? 'معاينة قيم الشركة' : 'Company Values Preview'}
+      >
+        <CompanyValuesPreview data={values} />
+      </PreviewModal>
     </div>
   );
 } 

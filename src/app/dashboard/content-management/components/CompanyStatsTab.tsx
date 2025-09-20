@@ -5,6 +5,8 @@ import { useLanguage } from '@/app/context/LanguageContext';
 import ApiService from '@/app/services/api';
 import { useToast } from '@/app/context/ToastContext';
 import { formatStat } from '@/app/utils/statsFormatter';
+import PreviewModal from './PreviewModal';
+import StatsPreview from './previews/StatsPreview';
 
 interface CompanyStatsData {
   id?: number;
@@ -70,6 +72,7 @@ export default function CompanyStatsTab({ loading, setLoading }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Cache variables
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -177,6 +180,28 @@ export default function CompanyStatsTab({ loading, setLoading }: Props) {
 
   return (
     <div className="p-6">
+      {/* Header with Preview Button */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {language === 'ar' ? 'إحصائيات الشركة' : 'Company Statistics'}
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {language === 'ar' 
+              ? 'إدارة الأرقام والإحصائيات المعروضة في الموقع'
+              : 'Manage numbers and statistics displayed on the website'
+            }
+          </p>
+        </div>
+        <button
+          onClick={() => setShowPreview(true)}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          <span>👁️</span>
+          <span>{language === 'ar' ? 'معاينة مباشرة' : 'Live Preview'}</span>
+        </button>
+      </div>
+
       {/* معاينة الإحصائيات */}
       <div className="mb-8">
         <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -289,6 +314,15 @@ export default function CompanyStatsTab({ loading, setLoading }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={language === 'ar' ? 'معاينة الإحصائيات' : 'Statistics Preview'}
+      >
+        <StatsPreview data={data} />
+      </PreviewModal>
     </div>
   );
 } 

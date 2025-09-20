@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/app/context/LanguageContext';
 import { useToast } from '@/app/context/ToastContext';
 import ApiService from '@/app/services/api';
+import PreviewModal from './PreviewModal';
+import PageContentPreview from './previews/PageContentPreview';
 
 interface PageContentData {
   id?: number;
@@ -52,6 +54,7 @@ export default function PageContentTab({ loading, setLoading }: Props) {
     }
   });
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const loadData = async () => {
     try {
@@ -282,8 +285,15 @@ export default function PageContentTab({ loading, setLoading }: Props) {
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="mt-8 flex justify-end">
+      {/* Action Buttons */}
+      <div className="mt-8 flex justify-end space-x-3">
+        <button
+          onClick={() => setShowPreview(true)}
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          <span>👁️</span>
+          <span>{language === 'ar' ? 'معاينة' : 'Preview'}</span>
+        </button>
         <button
           onClick={handleSave}
           disabled={saving || loading}
@@ -301,6 +311,15 @@ export default function PageContentTab({ loading, setLoading }: Props) {
           )}
         </button>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={language === 'ar' ? 'معاينة محتوى الصفحات' : 'Page Content Preview'}
+      >
+        <PageContentPreview data={[]} />
+      </PreviewModal>
     </div>
   );
 } 

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/app/context/LanguageContext';
 import ApiService from '@/app/services/api';
 import { useToast } from '@/app/context/ToastContext';
+import PreviewModal from './PreviewModal';
+import CompanyInfoPreview from './previews/CompanyInfoPreview';
 
 interface CompanyInfoData {
   id?: number;
@@ -18,6 +20,12 @@ interface CompanyInfoData {
   logo_text: string;
   founded_year: string;
   employees_count: string;
+  values: Array<{
+    title_ar: string;
+    title_en: string;
+    description_ar: string;
+    description_en: string;
+  }>;
   created_at?: string;
   updated_at?: string;
 }
@@ -46,11 +54,26 @@ export default function CompanyInfoTab({ loading, setLoading }: Props) {
     vision_en: 'To be the preferred partner for every contractor and engineer in the Middle East',
     logo_text: 'BS',
     founded_year: '2009',
-    employees_count: '150'
+    employees_count: '150',
+    values: [
+      {
+        title_ar: 'الجودة',
+        title_en: 'Quality',
+        description_ar: 'نلتزم بتقديم أعلى معايير الجودة في جميع منتجاتنا',
+        description_en: 'We are committed to providing the highest quality standards in all our products'
+      },
+      {
+        title_ar: 'الابتكار',
+        title_en: 'Innovation',
+        description_ar: 'نسعى دائماً لتطوير حلول مبتكرة في مجال البناء',
+        description_en: 'We always strive to develop innovative solutions in the construction field'
+      }
+    ]
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [retryCount, setRetryCount] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   // تحميل البيانات مع Cache و Retry Logic
   const loadData = async (forceRefresh = false) => {
@@ -162,6 +185,28 @@ export default function CompanyInfoTab({ loading, setLoading }: Props) {
 
   return (
     <div className="p-6">
+      {/* Header with Preview Button */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {language === 'ar' ? 'معلومات الشركة' : 'Company Information'}
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {language === 'ar' 
+              ? 'إدارة البيانات الأساسية للشركة'
+              : 'Manage basic company information'
+            }
+          </p>
+        </div>
+        <button
+          onClick={() => setShowPreview(true)}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          <span>👁️</span>
+          <span>{language === 'ar' ? 'معاينة مباشرة' : 'Live Preview'}</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* اسم الشركة بالعربية */}
         <div>
@@ -357,6 +402,15 @@ export default function CompanyInfoTab({ loading, setLoading }: Props) {
           )}
         </button>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={language === 'ar' ? 'معاينة معلومات الشركة' : 'Company Information Preview'}
+      >
+        <CompanyInfoPreview data={data} />
+      </PreviewModal>
     </div>
   );
 } 

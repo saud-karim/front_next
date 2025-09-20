@@ -1697,13 +1697,13 @@ export class ApiService {
   static async createTeamMember(data: {
     name_ar: string;
     name_en: string;
-    role_ar?: string;
-    role_en?: string;
+    role_ar: string;
+    role_en: string;
     experience_ar?: string;
     experience_en?: string;
-    specialty_ar?: string;
-    specialty_en?: string;
-    image?: string;
+    email: string;
+    phone?: string;
+    linkedin?: string;
     order?: number;
     is_active?: boolean;
   }): Promise<APIResponse<any>> {
@@ -1713,13 +1713,13 @@ export class ApiService {
   static async updateTeamMember(id: number, data: {
     name_ar: string;
     name_en: string;
-    role_ar?: string;
-    role_en?: string;
+    role_ar: string;
+    role_en: string;
     experience_ar?: string;
     experience_en?: string;
-    specialty_ar?: string;
-    specialty_en?: string;
-    image?: string;
+    email: string;
+    phone?: string;
+    linkedin?: string;
     order?: number;
     is_active?: boolean;
   }): Promise<APIResponse<any>> {
@@ -1868,28 +1868,12 @@ export class ApiService {
     return this.client.get<any[]>('/admin/certifications');
   }
 
-  static async createCertification(data: {
-    name_ar: string;
-    name_en: string;
-    description_ar?: string;
-    description_en?: string;
-    icon?: string;
-    order?: number;
-    is_active?: boolean;
-  }): Promise<APIResponse<any>> {
-    return this.client.post<any>('/admin/certifications', data);
+  static async createCertification(formData: FormData): Promise<APIResponse<any>> {
+    return this.client.post<any>('/admin/certifications', formData);
   }
 
-  static async updateCertification(id: number, data: {
-    name_ar: string;
-    name_en: string;
-    description_ar?: string;
-    description_en?: string;
-    icon?: string;
-    order?: number;
-    is_active?: boolean;
-  }): Promise<APIResponse<any>> {
-    return this.client.put<any>(`/admin/certifications/${id}`, data);
+  static async updateCertification(id: number, formData: FormData): Promise<APIResponse<any>> {
+    return this.client.put<any>(`/admin/certifications/${id}`, formData);
   }
 
   static async deleteCertification(id: number): Promise<APIResponse<any>> {

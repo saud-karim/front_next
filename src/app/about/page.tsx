@@ -62,10 +62,11 @@ interface TeamMember {
   role_en: string;
   experience_ar: string;
   experience_en: string;
-  specialty_ar: string;
-  specialty_en: string;
-  image: string;
-  order_index: number;
+  image?: string;
+  email?: string;
+  phone?: string;
+  linkedin?: string;
+  order: number;
   is_active: boolean;
 }
 
@@ -76,7 +77,7 @@ interface Milestone {
   event_en: string;
   description_ar: string;
   description_en: string;
-  order_index: number;
+  order: number;
   is_active: boolean;
 }
 
@@ -99,8 +100,12 @@ interface Certification {
   name_en: string;
   description_ar: string;
   description_en: string;
-  icon: string;
-  order_index: number;
+  issuer_ar: string;
+  issuer_en: string;
+  issue_date: string;
+  expiry_date?: string;
+  image?: string;
+  order: number;
   is_active: boolean;
 }
 
@@ -231,7 +236,7 @@ export default function AboutPage() {
         if (teamResponse.success && teamResponse.data) {
           const activeTeam = teamResponse.data
             .filter(member => member.is_active)
-            .sort((a, b) => a.order_index - b.order_index);
+            .sort((a, b) => a.order - b.order);
           setTeamMembers(activeTeam);
         }
 
@@ -240,7 +245,7 @@ export default function AboutPage() {
         if (milestonesResponse.success && milestonesResponse.data) {
           const activeMilestones = milestonesResponse.data
             .filter(milestone => milestone.is_active)
-            .sort((a, b) => a.order_index - b.order_index);
+            .sort((a, b) => a.order - b.order);
           setMilestones(activeMilestones);
         }
 
@@ -255,7 +260,7 @@ export default function AboutPage() {
         if (certsResponse.success && certsResponse.data) {
           const activeCerts = certsResponse.data
             .filter(cert => cert.is_active)
-            .sort((a, b) => a.order_index - b.order_index);
+            .sort((a, b) => a.order - b.order);
           setCertifications(activeCerts);
         }
 
@@ -330,36 +335,31 @@ export default function AboutPage() {
     name: language === 'ar' ? member.name_ar : member.name_en,
     role: language === 'ar' ? member.role_ar : member.role_en,
     experience: language === 'ar' ? member.experience_ar : member.experience_en,
-    image: member.image || '👤',
-    specialty: language === 'ar' ? member.specialty_ar : member.specialty_en
+    image: member.image || '👤'
   })) : [
     {
       name: t('about.team.ahmed.name'),
       role: t('about.team.ahmed.role'),
       experience: t('about.team.ahmed.experience'),
-      image: '👨‍💼',
-      specialty: t('about.team.ahmed.specialty')
+      image: '👨‍💼'
     },
     {
       name: t('about.team.sarah.name'),
       role: t('about.team.sarah.role'),
       experience: t('about.team.sarah.experience'),
-      image: '👩‍💼',
-      specialty: t('about.team.sarah.specialty')
+      image: '👩‍💼'
     },
     {
       name: t('about.team.omar.name'),
       role: t('about.team.omar.role'),
       experience: t('about.team.omar.experience'),
-      image: '👨‍🔧',
-      specialty: t('about.team.omar.specialty')
+      image: '👨‍🔧'
     },
     {
       name: t('about.team.fatima.name'),
       role: t('about.team.fatima.role'),
       experience: t('about.team.fatima.experience'),
-      image: '👩‍💻',
-      specialty: t('about.team.fatima.specialty')
+      image: '👩‍💻'
     }
   ];
 
@@ -379,12 +379,15 @@ export default function AboutPage() {
   const certificationsData = certifications.length > 0 ? certifications.map(cert => ({
     name: language === 'ar' ? cert.name_ar : cert.name_en,
     description: language === 'ar' ? cert.description_ar : cert.description_en,
-    icon: cert.icon
+    issuer: language === 'ar' ? cert.issuer_ar : cert.issuer_en,
+    issue_date: cert.issue_date,
+    expiry_date: cert.expiry_date,
+    image: cert.image
   })) : [
-    { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), icon: '🏅' },
-    { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), icon: '🛡️' },
-    { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), icon: '🤝' },
-    { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), icon: '⭐' }
+    { name: t('about.certifications.iso.name'), description: t('about.certifications.iso.desc'), issuer: 'ISO', issue_date: '2020-01-15', expiry_date: '2023-01-15' },
+    { name: t('about.certifications.osha.name'), description: t('about.certifications.osha.desc'), issuer: 'OSHA', issue_date: '2022-03-20', expiry_date: '2025-03-20' },
+    { name: t('about.certifications.dewalt.name'), description: t('about.certifications.dewalt.desc'), issuer: 'DeWalt', issue_date: '2021-06-10', expiry_date: '2024-06-10' },
+    { name: t('about.certifications.leader.name'), description: t('about.certifications.leader.desc'), issuer: 'Industry Leader', issue_date: '2023-01-01' }
   ];
 
   // Helper function for gradient colors
@@ -686,10 +689,17 @@ export default function AboutPage() {
                   style={{animationDelay: `${index * 0.1}s`}}
                 >
                   <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                    {cert.icon}
+                    {cert.image ? (
+                      <img src={cert.image} alt={cert.name} className="w-full h-full object-contain rounded-xl" />
+                    ) : (
+                      <span>📜</span>
+                    )}
                   </div>
                   <h3 className="text-lg font-bold mb-4 text-gray-800 group-hover:text-red-600 transition-colors">{cert.name}</h3>
-                  <p className="text-gray-600 leading-relaxed">{cert.description}</p>
+                  <p className="text-gray-600 leading-relaxed mb-3">{cert.description}</p>
+                  {cert.issuer && (
+                    <p className="text-sm text-gray-500 font-medium">{language === 'ar' ? 'من: ' : 'Issued by: '}{cert.issuer}</p>
+                  )}
                 </div>
               ))}
             </div>

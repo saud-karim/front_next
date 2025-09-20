@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/app/context/LanguageContext';
 import { useToast } from '@/app/context/ToastContext';
 import ApiService from '@/app/services/api';
+import PreviewModal from './PreviewModal';
+import CompanyStoryPreview from './previews/CompanyStoryPreview';
 
 interface CompanyStoryData {
   id?: number;
@@ -40,6 +42,7 @@ export default function CompanyStoryTab({ loading, setLoading }: Props) {
     ]
   });
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const loadData = async () => {
     try {
@@ -253,7 +256,14 @@ export default function CompanyStoryTab({ loading, setLoading }: Props) {
       </div>
 
       {/* Save Button */}
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-end space-x-3">
+        <button
+          onClick={() => setShowPreview(true)}
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          <span>👁️</span>
+          <span>{language === 'ar' ? 'معاينة' : 'Preview'}</span>
+        </button>
         <button
           onClick={handleSave}
           disabled={saving || loading}
@@ -271,6 +281,15 @@ export default function CompanyStoryTab({ loading, setLoading }: Props) {
           )}
         </button>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title={language === 'ar' ? 'معاينة قصة الشركة' : 'Company Story Preview'}
+      >
+        <CompanyStoryPreview data={[]} />
+      </PreviewModal>
     </div>
   );
 } 
