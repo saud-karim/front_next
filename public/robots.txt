@@ -1,0 +1,41 @@
+# BuildTools BS - Construction Tools & Materials Store
+# مواد البناء والأدوات الاحترافية
+
+User-agent: *
+Allow: /
+
+# Allow important pages
+Allow: /products
+Allow: /categories
+Allow: /about
+Allow: /contact
+Allow: /api/v1/public/
+
+# Disallow admin and dashboard areas
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /api/v1/admin/
+Disallow: /api/v1/auth/
+
+# Disallow development files
+Disallow: /*.json$
+Disallow: /*.log$
+Disallow: /node_modules/
+Disallow: /.next/
+Disallow: /build/
+
+# Allow search engines to crawl images
+Allow: /images/
+Allow: /public/images/
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://buildtools-bs.com/sitemap.xml
+Sitemap: https://buildtools-bs.com/sitemap-products.xml
+Sitemap: https://buildtools-bs.com/sitemap-categories.xml
+
+# Additional sitemaps for different content types
+Sitemap: https://buildtools-bs.com/sitemap-pages.xml 

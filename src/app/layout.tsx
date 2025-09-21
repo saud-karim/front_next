@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { headers } from "next/headers";
+import StructuredData from "./components/StructuredData";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -80,6 +81,28 @@ export async function generateMetadata(): Promise<Metadata> {
         'ar-EG': '/',
         'en-US': '/?lang=en'
       }
+    },
+    manifest: '/manifest.json',
+    viewport: {
+      width: 'device-width',
+      initialScale: 1,
+      maximumScale: 1,
+      userScalable: false,
+      themeColor: '#dc2626'
+    },
+    icons: {
+      icon: [
+        { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
+      ],
+      apple: [
+        { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' }
+      ]
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: content.title
     }
   };
 }
@@ -106,6 +129,27 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} antialiased font-sans`}
       >
+        <StructuredData 
+          type="website" 
+          data={{}} 
+          language={language} 
+        />
+        <StructuredData 
+          type="organization" 
+          data={{
+            name: "BuildTools BS",
+            telephone: "+20 123 456 7890",
+            address: {
+              street_ar: "شارع التحرير، المعادي",
+              street_en: "Tahrir Street, Maadi",
+              city_ar: "القاهرة",
+              city_en: "Cairo",
+              country_ar: "مصر",
+              country_en: "Egypt"
+            }
+          }} 
+          language={language} 
+        />
         <LanguageProvider>
           <ToastProvider>
             <AuthProvider>
