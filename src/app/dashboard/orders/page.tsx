@@ -251,20 +251,7 @@ export default function OrdersPage() {
           </button>
         </div>
 
-        {/* Backend Notice */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center">
-            <div className="text-yellow-600 text-xl mr-3">⚠️</div>
-            <div>
-              <h3 className="text-yellow-800 font-medium">
-                {t('admin.notice.important')}
-              </h3>
-              <p className="text-yellow-700 text-sm mt-1">
-                {t('admin.notice.orders.backend')}
-              </p>
-            </div>
-          </div>
-        </div>
+
 
         {/* Stats Cards */}
         {stats && (

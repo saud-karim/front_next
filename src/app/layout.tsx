@@ -83,13 +83,6 @@ export async function generateMetadata(): Promise<Metadata> {
       }
     },
     manifest: '/manifest.json',
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      maximumScale: 1,
-      userScalable: false,
-      themeColor: '#dc2626'
-    },
     icons: {
       icon: [
         { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -106,6 +99,15 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   };
 }
+
+// Viewport configuration (separate from metadata in Next.js 15+)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#dc2626'
+};
 
 export default async function RootLayout({
   children,

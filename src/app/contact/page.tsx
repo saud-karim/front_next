@@ -870,12 +870,7 @@ export default function ContactPage() {
 
       <Footer />
 
-      {/* Loading indicator for development */}
-      {loading && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm">
-          🔄 Loading contact content...
-        </div>
-      )}
+
     </div>
   );
 } 
