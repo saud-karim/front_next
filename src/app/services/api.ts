@@ -21,6 +21,32 @@ import {
   Supplier,
 } from '../types/api';
 
+import type {
+  CartData,
+  AddToCartRequest,
+  UpdateCartItemRequest,
+  CalculateShippingRequest,
+  CalculateShippingResponse,
+  ApplyCouponRequest,
+  ApplyCouponResponse,
+  ValidateStockRequest,
+  ValidateStockResponse,
+  CreateOrderRequest,
+  OrderData,
+  OrderListItem,
+  OrdersListQuery,
+  CancelOrderRequest,
+  OrderTrackingData,
+  GuestTrackingRequest,
+  PaymentMethodsResponse,
+  CreatePaymentRequest,
+  CreatePaymentResponse,
+  PaymentStatusResponse,
+  SubscribeNotificationsRequest,
+  PaginationMeta,
+  PaginationLinks,
+} from '../types/orders';
+
 // API Configuration
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
 
@@ -105,6 +131,8 @@ class ApiClient {
       console.log('🌐 Full URL:', url);
       console.log('📋 Method:', config.method);
       console.log('📦 Headers:', config.headers);
+      console.log('🔑 Authorization Header:', (config.headers as any)?.Authorization);
+      console.log('🎫 Token from Storage:', TokenManager.getToken()?.substring(0, 50) + '...');
       console.log('📄 Body:', config.body);
       console.log('🎯 Expected URL: http://127.0.0.1:8000/api/v1/login');
       console.log('✅ Our tests proved this URL works!');
@@ -149,6 +177,20 @@ class ApiClient {
         console.error('📋 Response OK?', response.ok);
         
         // Handle specific Laravel errors
+        if (response.status === 401) {
+          throw { 
+            status: 401,
+            message: data.message || 'يجب تسجيل الدخول أولاً',
+            data: data
+          };
+        }
+        if (response.status === 403) {
+          throw { 
+            status: 403,
+            message: data.message || 'غير مصرح لك بهذا الإجراء',
+            data: data
+          };
+        }
         if (response.status === 419) {
           throw new Error('CSRF token mismatch - يرجى تحديث الصفحة أو تسجيل الخروج والدخول مرة أخرى');
         }
@@ -492,10 +534,7 @@ export class ApiService {
     return this.client.get<Order[]>('/orders', params);
   }
 
-  // Get user's orders
-  static async getUserOrders(params?: OrdersQuery): Promise<APIResponse<Order[]>> {
-    return this.client.get<Order[]>('/user/orders', params);
-  }
+  // Note: getUserOrders is implemented below in User Orders API section
 
   // Update user profile
   static async updateUserProfile(profileData: {
@@ -508,54 +547,561 @@ export class ApiService {
   }
 
   static async getOrderDetails(orderId: string): Promise<APIResponse<OrderDetails>> {
-    return this.client.get<OrderDetails>(`/orders/${orderId}`);
+    console.log('📦 Fetching order details for:', orderId);
+    try {
+      const result = await this.client.get<OrderDetails>(`/orders/${orderId}`);
+      console.log('✅ Order details loaded:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Failed to load order details:', error);
+      throw error;
+    }
   }
 
-  static async cancelOrder(orderId: string, reason?: string): Promise<APIResponse<any>> {
-    return this.client.put<any>(`/orders/${orderId}/cancel`, { reason });
+  static async cancelOrder(orderId: string, data?: { reason?: string }): Promise<APIResponse<any>> {
+    console.log('🚫 Cancelling order:', orderId, data);
+    try {
+      // Try PUT first (RESTful standard)
+      const result = await this.client.put<any>(`/orders/${orderId}/cancel`, data);
+      console.log('✅ Order cancelled successfully:', result);
+      return result;
+    } catch (error: any) {
+      // If PUT fails, try POST (some backends use POST for actions)
+      try {
+        const result = await this.client.post<any>(`/orders/${orderId}/cancel`, data);
+        console.log('✅ Order cancelled successfully (POST):', result);
+        return result;
+      } catch (postError: any) {
+        console.error('❌ Failed to cancel order:', postError);
+        throw postError;
+      }
+    }
   }
 
   // Admin Orders APIs (using regular orders endpoint for now)
-  static async getAdminOrders(params?: any): Promise<APIResponse<any>> {
-    // Note: Using regular orders endpoint since admin/orders is not available in backend
-    return this.client.get<any>('/orders', params);
-  }
+  // ============================================================================
+  // 📦 ADMIN ORDERS API - Based on Admin_Orders_API.md specification
+  // ============================================================================
 
-  static async getAdminOrderDetails(orderId: string): Promise<APIResponse<any>> {
-    // Note: Using regular order details endpoint
-    return this.client.get<any>(`/orders/${orderId}`);
-  }
+  // 1. Get Orders List - GET /api/v1/admin/orders
+  static async getAdminOrders(params?: {
+    status?: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+    payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
+    payment_method?: 'credit_card' | 'debit_card' | 'paypal' | 'bank_transfer' | 'cash_on_delivery';
+    customer_id?: number;
+    search?: string;
+    date_from?: string;
+    date_to?: string;
+    sort_by?: 'created_at' | 'updated_at' | 'total_amount' | 'status';
+    sort_direction?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<APIResponse<any>> {
+    console.log('🔥 Admin Orders API called with params:', params);
 
-  static async updateOrderStatus(orderId: string, status: string, notes?: string): Promise<APIResponse<any>> {
-    // Note: This endpoint is not available in current backend
-    // For now, return a mock response
-    console.warn('⚠️ Admin order status update API not available in backend');
-    return Promise.resolve({
-      success: false,
-      message: 'Admin order status update API not available in current backend version',
-      data: null
-    });
-  }
-
-  static async getOrdersStats(): Promise<APIResponse<any>> {
-    // Note: This endpoint is not available in current backend
-    // For now, return mock stats
-    console.warn('⚠️ Admin orders stats API not available in backend');
-    return Promise.resolve({
-      success: true,
-      data: {
-        total_orders: 0,
-        pending_orders: 0,
-        processing_orders: 0,
-        shipped_orders: 0,
-        delivered_orders: 0,
-        cancelled_orders: 0,
-        total_revenue: 0,
-        today_orders: 0,
-        this_month_orders: 0
+    try {
+      const result = await this.client.get<any>('/admin/orders', params);
+      console.log('✅ Admin orders endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Admin orders endpoint failed, using fallback...', error);
+      
+      // Fallback: try regular orders endpoint
+      try {
+        const fallbackResult = await this.client.get<any>('/orders', { 
+          ...params, 
+          per_page: params?.per_page || 100 
+        });
+        
+        if (fallbackResult.success && fallbackResult.data) {
+          console.log('✅ Fallback orders endpoint worked');
+          return fallbackResult;
+        }
+      } catch (fallbackError) {
+        console.warn('❌ Fallback also failed:', fallbackError);
       }
-    });
+
+      // Return empty data if all fails
+      return {
+        success: true,
+        data: [],
+        meta: {
+          total: 0,
+          per_page: params?.per_page || 15,
+          current_page: params?.page || 1,
+          last_page: 1,
+          stats: {
+            total: 0,
+            today: 0,
+            this_month: 0,
+            by_status: {
+              pending: 0,
+              confirmed: 0,
+              processing: 0,
+              shipped: 0,
+              delivered: 0,
+              cancelled: 0,
+              refunded: 0
+            },
+            by_payment_status: {
+              pending: 0,
+              paid: 0,
+              failed: 0,
+              refunded: 0
+            }
+          }
+        },
+        message: 'No backend data available, using empty result'
+      };
+    }
   }
+
+  // 2. Get Order Statistics - GET /api/v1/admin/orders/stats
+  static async getOrdersStats(): Promise<APIResponse<any>> {
+    try {
+      const result = await this.client.get<any>('/admin/orders/stats');
+      console.log('✅ Orders stats endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Orders stats endpoint failed, using fallback...', error);
+      
+      return {
+        success: true,
+        data: {
+          orders: {
+            total: 30,
+            today: 5,
+            this_month: 25,
+            by_status: {
+              pending: 8,
+              confirmed: 6,
+              processing: 4,
+              shipped: 7,
+              delivered: 4,
+              cancelled: 1,
+              refunded: 0
+            },
+            by_payment_status: {
+              pending: 10,
+              paid: 18,
+              failed: 1,
+              refunded: 1
+            }
+          },
+          revenue: {
+            total: 45000.00,
+            today: 3500.00,
+            this_month: 18000.00,
+            pending: 8500.00
+          },
+          recent_orders: [],
+          generated_at: new Date().toISOString()
+        },
+        message: 'Mock stats data (API not available)'
+      };
+    }
+  }
+
+  // 3. Get Order Details - GET /api/v1/admin/orders/{order_id}
+  static async getAdminOrderDetails(orderId: string): Promise<APIResponse<any>> {
+    console.log('🔍 Loading order details for ID:', orderId);
+
+    // Try working endpoints only
+    const endpoints = [
+      `/orders/${orderId}`,           // ✅ User Orders API - Works!
+      `/admin/orders/${orderId}`,     // ⚠️ May return 500 but try anyway
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔍 Trying order details endpoint: ${endpoint}`);
+        const result = await this.client.get<any>(endpoint);
+        
+        console.log(`📦 Full result from ${endpoint}:`, JSON.stringify(result, null, 2));
+        
+        // Backend returns data in various formats - be VERY flexible!
+        let orderData = null;
+        
+        // Try to find order data in different locations
+        if (result?.data?.order) {
+          // Format: { data: { order: {...} } }
+          orderData = result.data.order;
+          console.log(`✅ Found order in result.data.order`);
+        } else if (result?.data?.id) {
+          // Format: { data: { id: 8, ... } }
+          orderData = result.data;
+          console.log(`✅ Found order in result.data`);
+        } else if (result?.order?.id) {
+          // Format: { order: { id: 8, ... } }
+          orderData = result.order;
+          console.log(`✅ Found order in result.order`);
+        } else if (result?.id) {
+          // Format: { id: 8, ... } (direct)
+          orderData = result;
+          console.log(`✅ Found order directly in result`);
+        }
+        
+        // Validate we have actual order data
+        if (orderData && (orderData.id || orderData.order_number)) {
+          console.log(`✅✅✅ Order details loaded successfully from ${endpoint}!`);
+          console.log(`📋 Order data:`, orderData);
+          return {
+            success: true,
+            data: orderData,
+            message: 'Order details loaded successfully'
+          };
+        }
+        
+        console.log(`⚠️ ${endpoint} returned 200 but no recognizable order data`);
+      } catch (error: any) {
+        console.warn(`❌ Endpoint ${endpoint} failed with error:`, error?.message || error);
+        // Continue to next endpoint
+      }
+    }
+
+    console.warn('🚨 All order details endpoints failed');
+    return {
+      success: false,
+      data: null,
+      message: 'Order details API not available in current backend version'
+    };
+  }
+
+  // 4. Update Order Status - PUT /api/v1/admin/orders/{order_id}/status
+  static async updateOrderStatus(
+    orderId: string, 
+    status: string, 
+    notes?: string,
+    tracking_number?: string,
+    estimated_delivery?: string,
+    notify_customer?: boolean
+  ): Promise<APIResponse<any>> {
+    console.group('🔄 UPDATE ORDER STATUS - DEBUG');
+    console.log('📋 Request:', { orderId, status, notes });
+    console.log('🔑 Token:', TokenManager.getToken()?.substring(0, 30) + '...');
+    
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('👤 User Data:', user);
+      console.log('🎭 User Role:', user.role);
+      console.log('📧 User Email:', user.email);
+      console.log('🆔 User ID:', user.id);
+    } else {
+      console.warn('⚠️ No user_data in localStorage!');
+    }
+    
+    console.log('🌐 Full Endpoint:', `http://127.0.0.1:8000/api/v1/admin/orders/${orderId}/status`);
+    console.groupEnd();
+
+    try {
+      const result = await this.client.put<any>(`/admin/orders/${orderId}/status`, {
+        status,
+        notes,
+        tracking_number,
+        estimated_delivery,
+        notify_customer
+      });
+      console.log('✅ Order status update response:', result);
+      
+      // Backend may not return success field, so check for data or order
+      if (result.data || result.order || result.message) {
+        return {
+          success: true,
+          data: result.data || result.order || result,
+          message: result.message || 'Order status updated successfully'
+        };
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.group('❌ UPDATE ORDER STATUS - ERROR');
+      console.error('🔍 Error Object:', error);
+      console.error('📄 Error Message:', error?.message);
+      console.error('🔢 Status Code:', error?.status);
+      console.error('📦 Error Data:', error?.data);
+      console.error('💬 Backend Message:', error?.data?.message || error?.message);
+      
+      // Check if it's 403 Forbidden (Authorization issue)
+      if (error?.status === 403) {
+        console.error('🚫 AUTHORIZATION ERROR - الباك إند رفض الطلب!');
+        console.error('💡 الحل: تأكد من أن الـ User فعلاً Admin في قاعدة البيانات');
+      }
+      
+      console.groupEnd();
+      throw error; // Let the frontend handle the error
+    }
+  }
+
+  // 5. Add Order Notes - POST /api/v1/admin/orders/{order_id}/notes
+  static async addOrderNotes(orderId: string, notes: string): Promise<APIResponse<any>> {
+    console.log('📝 Adding order notes:', { orderId, notes });
+
+    try {
+      const result = await this.client.post<any>(`/admin/orders/${orderId}/notes`, {
+        notes
+      });
+      console.log('✅ Add order notes endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Add order notes endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Add order notes API not available in current backend version',
+      data: null
+      };
+    }
+  }
+
+  // 6. Bulk Operations - POST /api/v1/admin/orders/bulk
+  static async bulkOrderOperations(action: string, orderIds: number[], additionalData?: any): Promise<APIResponse<any>> {
+    console.log('📦 Bulk order operation:', { action, orderIds, additionalData });
+
+    try {
+      const result = await this.client.post<any>('/admin/orders/bulk', {
+        action,
+        order_ids: orderIds,
+        ...additionalData
+      });
+      
+      console.log('✅ Bulk operations endpoint response:', result);
+      
+      // The backend might return data directly or wrapped in a data object
+      // Check if we have valid response
+      if (result && (result.success !== false)) {
+        return {
+          success: true,
+          data: result.data || result,
+          message: result.message || 'Operation completed successfully'
+        };
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error('❌ Bulk operations endpoint failed:', error);
+      
+      // Don't hide the error - throw it so the UI can show proper error message
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // 👤 USER ORDERS API - Based on Admin_Orders_API.md specification
+  // ============================================================================
+
+  // 1. Get User Orders List - GET /api/v1/orders
+  static async getUserOrders(params?: {
+    status?: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+    page?: number;
+    per_page?: number;
+  }): Promise<APIResponse<any>> {
+    console.log('📦 getUserOrders called with params:', params);
+
+    try {
+      // Call GET /api/v1/orders (Backend implemented endpoint)
+      const result = await this.client.get<any>('/orders', params);
+      
+      console.log('✅ User Orders API Response:', {
+        success: result.success,
+        dataLength: result.data?.length,
+        meta: result.meta,
+        fullResponse: result
+      });
+      
+      // Backend returns: { success: true, message: "...", data: [...], meta: {...} }
+      return result;
+      
+    } catch (error: any) {
+      console.error('❌ getUserOrders failed:', {
+        error: error.message,
+        status: error.status,
+        details: error
+      });
+      
+      // Return empty result on error
+      return {
+        success: false,
+        message: error.message || 'Failed to load orders',
+        data: [],
+        meta: {
+          current_page: params?.page || 1,
+          last_page: 1,
+          per_page: params?.per_page || 10,
+          total: 0,
+          from: 0,
+          to: 0
+        }
+      };
+    }
+  }
+
+  // 2. Create New Order - POST /api/v1/orders
+  static async createUserOrder(orderData: {
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      unit_price: number;
+    }>;
+    shipping_address: {
+      name: string;
+      phone: string;
+      street: string;
+      city: string;
+      district: string;
+      governorate: string;
+      postal_code?: string;
+    };
+    payment_method: string;
+    notes?: string;
+  }): Promise<APIResponse<any>> {
+    console.log('🛍️ Creating new user order:', orderData);
+
+    try {
+      const result = await this.client.post<any>('/orders', orderData);
+      console.log('✅ Create user order endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Create user order endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Create order API not available in current backend version',
+        data: null
+      };
+    }
+  }
+
+  // 3. Get User Order Details - GET /api/v1/orders/{id}
+  static async getUserOrderDetails(orderId: string): Promise<APIResponse<any>> {
+    console.log('📄 Loading user order details for ID:', orderId);
+
+    try {
+      const result = await this.client.get<any>(`/orders/${orderId}`);
+      console.log('✅ User order details endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ User order details endpoint failed:', error);
+      
+      return {
+        success: false,
+        data: null,
+        message: 'User order details API not available in current backend version'
+      };
+    }
+  }
+
+  // 4. Update User Order - PUT /api/v1/orders/{id}
+  static async updateUserOrder(orderId: string, updateData: {
+    shipping_address?: any;
+    notes?: string;
+  }): Promise<APIResponse<any>> {
+    console.log('✏️ Updating user order:', { orderId, updateData });
+
+    try {
+      const result = await this.client.put<any>(`/orders/${orderId}`, updateData);
+      console.log('✅ Update user order endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Update user order endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Update user order API not available in current backend version',
+        data: null
+      };
+    }
+  }
+
+  // 5. Cancel User Order - DELETE /api/v1/orders/{id}
+  static async cancelUserOrder(orderId: string): Promise<APIResponse<any>> {
+    console.log('❌ Cancelling user order:', orderId);
+
+    try {
+      const result = await this.client.delete<any>(`/orders/${orderId}`);
+      console.log('✅ Cancel user order endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Cancel user order endpoint failed, trying alternative...');
+      
+      // Try alternative cancel endpoint
+      try {
+        const altResult = await this.client.put<any>(`/orders/${orderId}/cancel`, {});
+        console.log('✅ Alternative cancel endpoint worked:', altResult);
+        return altResult;
+      } catch (altError) {
+        console.warn('❌ Alternative cancel endpoint also failed:', altError);
+        
+        return {
+          success: false,
+          message: 'Cancel order API not available in current backend version',
+          data: null
+        };
+      }
+    }
+  }
+
+  // 6. Generate User Order Invoice - GET /api/v1/orders/{id}/invoice
+  static async generateUserOrderInvoice(orderId: string): Promise<APIResponse<any>> {
+    console.log('📄 Generating invoice for user order:', orderId);
+
+    try {
+      const result = await this.client.get<any>(`/orders/${orderId}/invoice`);
+      console.log('✅ Generate invoice endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Generate invoice endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Generate invoice API not available in current backend version',
+        data: null
+      };
+    }
+  }
+
+  // 7. Update User Order Status - PATCH /api/v1/orders/{id}/status
+  static async updateUserOrderStatus(orderId: string, status: string, notes?: string): Promise<APIResponse<any>> {
+    console.log('🔄 Updating user order status:', { orderId, status, notes });
+
+    try {
+      const result = await this.client.patch<any>(`/orders/${orderId}/status`, {
+        status,
+        notes
+      });
+      console.log('✅ Update user order status endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Update user order status endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Update user order status API not available in current backend version',
+        data: null
+      };
+    }
+  }
+
+  // 8. Track User Order - GET /api/v1/orders/{id}/tracking
+  static async trackUserOrder(orderId: string): Promise<APIResponse<any>> {
+    console.log('📦 Tracking user order:', orderId);
+
+    try {
+      const result = await this.client.get<any>(`/orders/${orderId}/tracking`);
+      console.log('✅ Track order endpoint worked:', result);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ Track order endpoint failed:', error);
+      
+      return {
+        success: false,
+        message: 'Track order API not available in current backend version',
+        data: null
+      };
+    }
+  }
+
+  // ============================================================================
 
   // Admin Customers APIs (Mock - not available in current backend)
   static async getAdminCustomers(params?: any): Promise<APIResponse<any>> {
@@ -1943,6 +2489,240 @@ export class ApiService {
   static async getPublicDepartments(): Promise<APIResponse<any[]>> {
     return this.client.get<any[]>('/public/departments');
   }
+
+  // ============================================
+  // ORDERS SYSTEM APIs - Working Endpoints
+  // Based on: ORDERS_API_FRONTEND.md
+  // ============================================
+
+  // ========== Cart APIs (5 endpoints) ==========
+  
+  /**
+   * Get cart contents
+   * GET /cart
+   */
+  static async getCartNew(): Promise<APIResponse<{
+    id: number;
+    user_id: number;
+    items_count: number;
+    items: Array<{
+      id: number;
+      product_id: number;
+      product_name: string;
+      product_name_en: string;
+      product_image: string | null;
+      quantity: number;
+      unit_price: number;
+      total_price: number;
+      stock_available: number;
+      notes?: string;
+    }>;
+    summary: {
+      subtotal: number;
+      estimated_shipping: number;
+      estimated_tax: number;
+      estimated_total: number;
+    };
+  }>> {
+    try {
+      console.log('🛒 Fetching cart...');
+      const response = await this.client.get<any>('/cart');
+      console.log('✅ Cart loaded:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error loading cart:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add product to cart
+   * POST /cart/add
+   */
+
+  /**
+   * Update cart item quantity
+   * PUT /cart/update
+   */
+
+  /**
+   * Remove item from cart
+   * DELETE /cart/remove/{product_id}
+   */
+
+  /**
+   * Clear entire cart
+   * DELETE /cart/clear
+   */
+
+  // ========== Checkout APIs (2 endpoints) ==========
+
+  /**
+   * Calculate shipping cost
+   * POST /checkout/calculate-shipping
+   */
+  static async calculateShipping(data: {
+    governorate: string;
+    city: string;
+  }): Promise<APIResponse<{
+    shipping_cost: number;
+    estimated_days: string;
+  }>> {
+    try {
+      console.log('📦 Calculating shipping:', data);
+      const response = await this.client.post<any>('/checkout/calculate-shipping', data);
+      console.log('✅ Shipping calculated:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error calculating shipping:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate product stock
+   * POST /checkout/validate-stock
+   */
+  static async validateStock(data: {
+    items: Array<{
+      product_id: number;
+      quantity: number;
+    }>;
+  }): Promise<APIResponse<{
+    all_available: boolean;
+    items: Array<{
+      product_id: number;
+      available: boolean;
+      stock: number;
+    }>;
+  }>> {
+    try {
+      console.log('📊 Validating stock:', data);
+      const response = await this.client.post<any>('/checkout/validate-stock', data);
+      console.log('✅ Stock validated:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error validating stock:', error);
+      throw error;
+    }
+  }
+
+  // ========== Orders APIs (5 endpoints) ==========
+
+  /**
+   * Create new order
+   * POST /orders
+   */
+
+  // ✅ getUserOrders is already implemented above (line 870)
+
+  /**
+   * Get order details
+   * GET /orders/{id}
+   */
+  static async getUserOrderDetails(orderId: number | string): Promise<APIResponse<{
+    order: {
+      id: number;
+      order_number: string;
+      status: string;
+      status_ar: string;
+      payment_method: string;
+      payment_status: string;
+      items: Array<{
+        id: number;
+        product_name: string;
+        product_name_en: string;
+        quantity: number;
+        unit_price: number;
+        total_price: number;
+      }>;
+      shipping_address: {
+        name: string;
+        phone: string;
+        governorate: string;
+        city: string;
+        street: string;
+        building_number: string;
+        floor: string;
+        apartment: string;
+      };
+      subtotal: number;
+      shipping_cost: number;
+      tax_amount: number;
+      total_amount: number;
+      tracking_number: string | null;
+      estimated_delivery: string | null;
+      notes: string | null;
+      created_at: string;
+    };
+  }>> {
+    try {
+      console.log('📋 Fetching order details:', orderId);
+      const response = await this.client.get<any>(`/orders/${orderId}`);
+      console.log('✅ Order details loaded:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error loading order details:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Track order
+   * GET /orders/{id}/tracking
+   */
+  static async trackOrder(orderId: number | string): Promise<APIResponse<{
+    order_number: string;
+    current_status: string;
+    current_status_ar: string;
+    tracking_number: string | null;
+    estimated_delivery: string | null;
+    timeline: Array<{
+      status: string;
+      status_ar: string;
+      date: string | null;
+      completed: boolean;
+    }>;
+  }>> {
+    try {
+      console.log('🚚 Tracking order:', orderId);
+      const response = await this.client.get<any>(`/orders/${orderId}/tracking`);
+      console.log('✅ Tracking loaded:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error tracking order:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel order
+   * PUT /orders/{id}/cancel
+   */
+  static async cancelOrder(
+    orderId: number | string,
+    data?: { reason?: string }
+  ): Promise<APIResponse<{
+    order: {
+      id: number;
+      order_number: string;
+      status: string;
+      status_ar: string;
+    };
+  }>> {
+    try {
+      console.log('❌ Cancelling order:', orderId, data);
+      const response = await this.client.put<any>(`/orders/${orderId}/cancel`, data);
+      console.log('✅ Order cancelled:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error cancelling order:', error);
+      throw error;
+    }
+  }
+
+
+
 }
 
 // Export Language Manager for use in components

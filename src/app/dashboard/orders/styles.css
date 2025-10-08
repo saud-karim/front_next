@@ -1,0 +1,338 @@
+/* إصلاح مشاكل التصميم في صفحة الطلبات */
+
+/* منع الـ horizontal scroll */
+.orders-page {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* تحسين الـ container الرئيسي */
+.orders-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* إصلاح الـ table responsive */
+.orders-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.orders-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.orders-table-container::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 3px;
+}
+
+.orders-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.orders-table-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* إصلاح الـ actions buttons */
+.order-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+/* تحسين الـ responsive للـ actions */
+@media (max-width: 640px) {
+  .order-actions {
+    gap: 0.125rem;
+  }
+  
+  .order-actions button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .order-actions .button-text {
+    display: none;
+  }
+  
+  .order-actions .button-icon {
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .order-actions .hidden-mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .order-actions .hidden-tablet {
+    display: none;
+  }
+}
+
+/* إصلاح الـ stats cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* إصلاح الـ bulk actions */
+.bulk-actions-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bulk-actions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .bulk-actions-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.bulk-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: fit-content;
+}
+
+@media (max-width: 640px) {
+  .bulk-actions-buttons {
+    gap: 0.25rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* إصلاح الـ header */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* إصلاح الـ modals */
+.modal-container {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 768px) {
+  .modal-content {
+    max-width: 75vw;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modal-content {
+    max-width: 50vw;
+  }
+}
+
+/* إصلاح الـ filters */
+.filters-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .filters-container {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* إصلاح الـ pagination */
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: white;
+}
+
+@media (min-width: 640px) {
+  .pagination-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: between;
+  }
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .pagination-buttons {
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+}
+
+/* تحسينات عامة للـ responsive */
+* {
+  box-sizing: border-box;
+}
+
+.responsive-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.responsive-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* إصلاح الـ dropdown menus */
+.dropdown-menu {
+  position: absolute;
+  z-index: 10;
+  min-width: 12rem;
+  max-width: 90vw;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 640px) {
+  .dropdown-menu {
+    left: auto;
+    right: 0;
+    min-width: 10rem;
+  }
+}
+
+/* إصلاح العناصر الطويلة */
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+@media (min-width: 768px) {
+  .truncate-text {
+    max-width: 200px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .truncate-text {
+    max-width: 250px;
+  }
+}
+
+/* إصلاح الأرقام والمبالغ */
+.number-display {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* تحسين الـ loading states */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #f3f4f6;
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* تحسين الـ focus states للـ accessibility */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* إصلاح الـ RTL support */
+[dir="rtl"] .orders-table th,
+[dir="rtl"] .orders-table td {
+  text-align: right;
+}
+
+[dir="ltr"] .orders-table th,
+[dir="ltr"] .orders-table td {
+  text-align: left;
+}
+
+/* تحسين الـ mobile touch targets */
+@media (max-width: 768px) {
+  button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+} 

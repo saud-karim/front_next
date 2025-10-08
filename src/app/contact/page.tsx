@@ -708,16 +708,16 @@ export default function ContactPage() {
                       />
                     </div>
                   ) : (
-                    <div className="h-64 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent"></div>
-                      <div className="text-center relative z-10">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                          🗺️
-                        </div>
-                        <div className="text-gray-700 font-bold text-xl mb-2">{t('contact.map.title')}</div>
-                        <div className="text-gray-600">{t('contact.map.desc')}</div>
+                  <div className="h-64 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent"></div>
+                    <div className="text-center relative z-10">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                        🗺️
                       </div>
+                      <div className="text-gray-700 font-bold text-xl mb-2">{t('contact.map.title')}</div>
+                      <div className="text-gray-600">{t('contact.map.desc')}</div>
                     </div>
+                  </div>
                   )}
                 </div>
               </div>

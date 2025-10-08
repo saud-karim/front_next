@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
@@ -13,6 +14,7 @@ import { Product } from '../types/api';
 import { getBestImageUrl, getImageFallbacks } from '../dashboard/utils/imageUtils';
 
 export default function CartPage() {
+  const router = useRouter();
   const { cart, loading, updateCartItem, removeFromCart, applyCoupon, removeCoupon, refreshCart, addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { success, error, info } = useToast();
@@ -190,6 +192,17 @@ export default function CartPage() {
                             let productImage;
                             let originalImage = '';
                             
+                            // Check if product exists first
+                            if (!item.product) {
+                              return (
+                                <div className="w-12 h-12 flex items-center justify-center text-gray-400">
+                                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                              );
+                            }
+                            
                             // Handle different image formats
                             if (Array.isArray(item.product.images) && item.product.images.length > 0) {
                               originalImage = item.product.images[0];
@@ -212,7 +225,7 @@ export default function CartPage() {
                             return productImage ? (
                               <img 
                                 src={productImage} 
-                                alt={getLocalizedText(item.product, 'name')}
+                                alt={item.product ? getLocalizedText(item.product, 'name') : 'Product'}
                                 className="w-full h-full object-cover rounded-xl"
                                 loading="lazy"
                                 onError={(e) => {
@@ -254,24 +267,24 @@ export default function CartPage() {
                         {/* Product Info */}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {getLocalizedText(item.product, 'name')}
+                            {item.product ? getLocalizedText(item.product, 'name') : item.product_name || 'Product'}
                           </h3>
                           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
-                            {getLocalizedText(item.product, 'description')}
+                            {item.product ? getLocalizedText(item.product, 'description') : ''}
                           </p>
                           <div className="flex items-center gap-2 mb-2">
-                                                          {item.product.category && (
-                                <>
-                                  <Link 
-                                    href={`/categories/${item.product.category.id}`}
-                                    className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                                  >
-                                    📂 {getLocalizedText(item.product.category, 'name')}
-                                  </Link>
-                                </>
-                              )}
+                            {item.product?.category && (
+                              <>
+                                <Link 
+                                  href={`/categories/${item.product.category.id}`}
+                                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                >
+                                  📂 {getLocalizedText(item.product.category, 'name')}
+                                </Link>
+                              </>
+                            )}
                           </div>
-                          {item.product.supplier && (
+                          {item.product?.supplier && (
                             <p className="text-xs text-gray-500 mb-2">
                               {t('cart.supplier')}: {getLocalizedText(item.product.supplier, 'name')}
                               {item.product.supplier.rating && (
@@ -284,10 +297,10 @@ export default function CartPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-xl font-bold text-gray-900">
-                                {item.product ? `${item.product.price} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('products.out.of.stock')}
+                                {item.unit_price || item.product?.price ? `${item.unit_price || item.product?.price} ${language === 'ar' ? 'ج.م' : 'EGP'}` : 'N/A'}
                               </span>
                               <span className="text-xs text-gray-600">
-                                × {item.quantity} = {item.product ? `${(parseFloat(item.product.price) * item.quantity).toFixed(2)} ${language === 'ar' ? 'ج.م' : 'EGP'}` : t('products.out.of.stock')}
+                                × {item.quantity} = {item.total_price || (item.unit_price || item.product?.price) ? `${(item.total_price || ((item.unit_price || parseFloat(item.product?.price || '0')) * item.quantity)).toFixed(2)} ${language === 'ar' ? 'ج.م' : 'EGP'}` : 'N/A'}
                               </span>
                             </div>
                             
@@ -419,7 +432,10 @@ export default function CartPage() {
                   </div>
                   
                   {/* Checkout Button */}
-                  <button className="w-full bg-red-500 text-white py-4 rounded font-medium text-lg hover:bg-red-600 transition-colors mb-4">
+                  <button 
+                    onClick={() => router.push('/checkout')}
+                    className="w-full bg-red-500 text-white py-4 rounded font-medium text-lg hover:bg-red-600 transition-colors mb-4"
+                  >
                     {t('cart.checkout.button')}
                   </button>
                   
