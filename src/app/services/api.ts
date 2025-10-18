@@ -871,7 +871,7 @@ export class ApiService {
       // Check if we have valid response
       if (result && (result.success !== false)) {
         return {
-          success: true,
+      success: true,
           data: result.data || result,
           message: result.message || 'Operation completed successfully'
         };
@@ -882,6 +882,114 @@ export class ApiService {
       console.error('❌ Bulk operations endpoint failed:', error);
       
       // Don't hide the error - throw it so the UI can show proper error message
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // 🚚 SHIPPING INTEGRATION API
+  // ============================================================================
+
+  /**
+   * Preview shipping data before sending to shipping company
+   * POST /api/v1/admin/shipping/preview
+   */
+  static async previewShippingData(orderIds: number[]): Promise<APIResponse<any>> {
+    console.log('📋 Preview shipping data for orders:', orderIds);
+    
+    try {
+      const result = await this.client.post<any>('/admin/shipping/preview', {
+        order_ids: orderIds
+      });
+      
+      console.log('✅ Shipping preview loaded:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Failed to preview shipping data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send orders to shipping company
+   * POST /api/v1/admin/shipping/send
+   */
+  static async sendToShipping(
+    orderIds: number[], 
+    shippingCompany: string = 'bosta',
+    options?: {
+      field_mapping?: any; // Custom field configuration
+      custom_api_url?: string;
+      custom_api_key?: string;
+    }
+  ): Promise<APIResponse<any>> {
+    console.log('🚚 Sending orders to shipping:', { orderIds, shippingCompany, options });
+    
+    try {
+      const payload: any = {
+        order_ids: orderIds,
+        shipping_company: shippingCompany,
+      };
+
+      // Add optional fields only if provided
+      if (options?.field_mapping) {
+        payload.field_mapping = options.field_mapping;
+      }
+      if (options?.custom_api_url) {
+        payload.custom_api_url = options.custom_api_url;
+      }
+      if (options?.custom_api_key) {
+        payload.custom_api_key = options.custom_api_key;
+      }
+
+      const result = await this.client.post<any>('/admin/shipping/send', payload);
+      
+      console.log('✅ Orders sent to shipping:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Failed to send orders to shipping:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retry failed shipment
+   * POST /api/v1/admin/shipping/retry
+   */
+  static async retryShipment(
+    orderId: number,
+    shippingCompany?: string
+  ): Promise<APIResponse<any>> {
+    console.log('🔄 Retrying shipment for order:', orderId);
+    
+    try {
+      const result = await this.client.post<any>('/admin/shipping/retry', {
+        order_id: orderId,
+        shipping_company: shippingCompany
+      });
+      
+      console.log('✅ Shipment retry successful:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Failed to retry shipment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get shipping status for an order
+   * GET /api/v1/admin/shipping/status/{id}
+   */
+  static async getShippingStatus(orderId: number): Promise<APIResponse<any>> {
+    console.log('📦 Getting shipping status for order:', orderId);
+    
+    try {
+      const result = await this.client.get<any>(`/admin/shipping/status/${orderId}`);
+      
+      console.log('✅ Shipping status loaded:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Failed to get shipping status:', error);
       throw error;
     }
   }

@@ -6,6 +6,9 @@ import { useToast } from '../../context/ToastContext';
 import { ApiService } from '../../services/api';
 import './styles.css';
 import { ResponsiveFixes } from './responsive-fixes';
+import { ShippingPreviewModal, ShippingProgressModal } from './components/ShippingModals';
+import { BulkActionsBar } from './components/BulkActionsBar';
+import ShippingConfigModal, { ShippingConfiguration } from './components/ShippingConfigModal';
 
 // Types based on Admin Orders API
 interface Customer {
@@ -73,6 +76,9 @@ interface Order {
   status_history?: StatusHistory[];
   shipping_address: ShippingAddress;
   tracking_number?: string;
+  shipping_company?: string | null;
+  shipping_status?: 'not_sent' | 'sent' | 'failed' | 'picked_up' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'returned';
+  shipped_at?: string | null;
   estimated_delivery?: string;
   notes?: string;
   can_be_cancelled: boolean;
@@ -504,6 +510,15 @@ export default function OrdersPage() {
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({});
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   
+  // 🚚 Shipping State
+  const [showShippingPreview, setShowShippingPreview] = useState(false);
+  const [showShippingProgress, setShowShippingProgress] = useState(false);
+  const [showShippingConfig, setShowShippingConfig] = useState(false);
+  const [shippingPreviewData, setShippingPreviewData] = useState<any>(null);
+  const [shippingConfig, setShippingConfig] = useState<ShippingConfiguration | null>(null);
+  const [shippingResults, setShippingResults] = useState<Record<number, any>>({});
+  const [shippingLoading, setShippingLoading] = useState(false);
+  
   // Filters
   const [filters, setFilters] = useState({
     status: '',
@@ -537,6 +552,244 @@ export default function OrdersPage() {
     estimated_delivery: '',
     notify_customer: true
   });
+  
+  // ============================================================================
+  // 🚚 SHIPPING FUNCTIONS
+  // ============================================================================
+
+  const handlePreviewShipping = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error(
+        language === 'ar' ? 'خطأ' : 'Error',
+        language === 'ar' ? 'يرجى تحديد طلبات أولاً' : 'Please select orders first'
+      );
+      return;
+    }
+
+    try {
+      setShippingLoading(true);
+      console.log('📋 Previewing shipping data for:', selectedOrders);
+      
+      const response = await ApiService.previewShippingData(selectedOrders);
+      
+      if (response.success && response.data) {
+        setShippingPreviewData(response.data);
+        setShowShippingPreview(true);
+        
+        // Check for validation warnings
+        const invalidOrders = response.data.orders?.filter((o: any) => !o.validation.is_valid);
+        if (invalidOrders && invalidOrders.length > 0) {
+          toast.warning(
+            language === 'ar' ? 'تحذير' : 'Warning',
+            language === 'ar' 
+              ? `${invalidOrders.length} طلب يحتاج مراجعة قبل الإرسال`
+              : `${invalidOrders.length} orders need review before sending`
+          );
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Preview shipping failed:', error);
+      toast.error(
+        language === 'ar' ? 'خطأ' : 'Error',
+        error.message || (language === 'ar' ? 'فشل في معاينة بيانات الشحن' : 'Failed to preview shipping data')
+      );
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
+  const handleConfirmSendToShipping = async () => {
+    // Close preview modal
+    setShowShippingPreview(false);
+    
+    // Open progress modal
+    setShowShippingProgress(true);
+    
+    // Initialize results with pending status
+    const initialResults: Record<number, any> = {};
+    selectedOrders.forEach(orderId => {
+      const order = orders.find(o => o.id === orderId);
+      initialResults[orderId] = {
+        order_id: orderId,
+        order_number: order?.order_number,
+        status: 'pending'
+      };
+    });
+    setShippingResults(initialResults);
+    
+    // Send orders one by one for better UX
+    for (const orderId of selectedOrders) {
+      try {
+        const order = orders.find(o => o.id === orderId);
+        
+        // Update status to sending
+        setShippingResults(prev => ({
+          ...prev,
+          [orderId]: { 
+            ...prev[orderId], 
+            status: 'sending',
+            order_number: order?.order_number 
+          }
+        }));
+        
+        console.log(`🚚 Sending order ${orderId} to shipping...`);
+        
+        // Prepare shipping options with field mapping
+        const shippingCompany = shippingConfig?.company || 'bosta';
+        const shippingOptions = {
+          field_mapping: shippingConfig?.fields || undefined,
+          custom_api_url: shippingConfig?.custom_api_url,
+          custom_api_key: shippingConfig?.custom_api_key,
+        };
+        
+        // Send to shipping API
+        const response = await ApiService.sendToShipping(
+          [orderId], 
+          shippingCompany,
+          shippingOptions
+        );
+        
+        if (response.success && response.data?.results?.length > 0) {
+          const result = response.data.results[0];
+          
+          // Update with success or failed
+          setShippingResults(prev => ({
+            ...prev,
+            [orderId]: {
+              ...prev[orderId],
+              status: result.status === 'success' ? 'success' : 'failed',
+              tracking_number: result.tracking_number,
+              error: result.error,
+              message: result.message,
+              order_number: order?.order_number
+            }
+          }));
+          
+          // Update order in the list (to show shipping status)
+          if (result.status === 'success') {
+            setOrders(prevOrders => 
+              prevOrders.map(o => 
+                o.id === orderId 
+                  ? { 
+                      ...o, 
+                      tracking_number: result.tracking_number,
+                      shipping_company: result.shipping_company || shippingCompany,
+                      shipping_status: 'sent' as const
+                    }
+                  : o
+              )
+            );
+          } else {
+            // Update failed orders
+            setOrders(prevOrders => 
+              prevOrders.map(o => 
+                o.id === orderId 
+                  ? { 
+                      ...o, 
+                      shipping_status: 'failed' as const
+                    }
+                  : o
+              )
+            );
+          }
+        } else {
+          // Failed
+          setShippingResults(prev => ({
+            ...prev,
+            [orderId]: {
+              ...prev[orderId],
+              status: 'failed',
+              error: response.message || 'Unknown error',
+              order_number: order?.order_number
+            }
+          }));
+        }
+        
+      } catch (error: any) {
+        console.error(`❌ Failed to send order ${orderId}:`, error);
+        const order = orders.find(o => o.id === orderId);
+        
+        // Update with error
+        setShippingResults(prev => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            status: 'failed',
+            error: error.message || 'Network error',
+            order_number: order?.order_number
+          }
+        }));
+      }
+      
+      // Small delay between requests (to avoid rate limiting)
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    // Show summary toast
+    const results = Object.values(shippingResults);
+    const successCount = results.filter((r: any) => r.status === 'success').length;
+    const failedCount = results.filter((r: any) => r.status === 'failed').length;
+    
+    if (successCount > 0) {
+      toast.success(
+        language === 'ar' ? 'نجح' : 'Success',
+        language === 'ar'
+          ? `تم إرسال ${successCount} طلب بنجاح ${failedCount > 0 ? `(${failedCount} فشل)` : ''}`
+          : `${successCount} orders sent successfully ${failedCount > 0 ? `(${failedCount} failed)` : ''}`
+      );
+    }
+    
+    if (failedCount > 0 && successCount === 0) {
+      toast.error(
+        language === 'ar' ? 'خطأ' : 'Error',
+        language === 'ar'
+          ? `فشل إرسال ${failedCount} طلب`
+          : `Failed to send ${failedCount} orders`
+      );
+    }
+    
+    // Reload orders to get updated shipping status
+    await loadOrders();
+  };
+
+  const handleCloseShippingProgress = () => {
+    setShowShippingProgress(false);
+    setShippingResults({});
+    setSelectedOrders([]);
+  };
+
+  const handleOpenShippingConfig = () => {
+    setShowShippingConfig(true);
+  };
+
+  const handleSaveShippingConfig = (config: ShippingConfiguration) => {
+    setShippingConfig(config);
+    console.log('✅ Shipping configuration saved:', config);
+    toast.success(
+      language === 'ar' 
+        ? 'تم حفظ إعدادات الشحن بنجاح!' 
+        : 'Shipping configuration saved successfully!',
+      language === 'ar' ? 'نجح' : 'Success'
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === orders.length && orders.length > 0) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(orders.map(order => order.id));
+    }
+  };
+
+  const handleSelectOrder = (orderId: number) => {
+    setSelectedOrders(prev => {
+      if (prev.includes(orderId)) {
+        return prev.filter(id => id !== orderId);
+      } else {
+        return [...prev, orderId];
+      }
+    });
+  };
   
   // Bulk operations
   const handleBulkOperation = async (action: string, additionalData?: Record<string, string | number | boolean>) => {
@@ -1075,6 +1328,20 @@ export default function OrdersPage() {
     loadOrders(1);
   }, [filters.status, filters.payment_status]);
 
+  // Load shipping configuration from localStorage
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('shipping_config');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        setShippingConfig(config);
+        console.log('✅ Loaded shipping config from storage:', config);
+      } catch (error) {
+        console.error('❌ Failed to parse shipping config:', error);
+      }
+    }
+  }, []);
+
   // Debug: Current state
   console.log('🎯 RENDERING', orders.length, 'orders in table');
 
@@ -1236,7 +1503,7 @@ export default function OrdersPage() {
               onChange={(e) => setFilters(prev => ({ ...prev, date_from: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+            </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1251,130 +1518,47 @@ export default function OrdersPage() {
           </div>
 
           <div className="flex items-end">
-            <button
+              <button
               onClick={() => loadOrders(1)}
               disabled={loading}
               className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               🔍 {language === 'ar' ? 'بحث' : 'Search'}
-            </button>
-            </div>
-        </div>
-      </div>
-
-      {/* Enhanced Bulk Actions */}
-      {selectedOrders.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-blue-900">
-                  {language === 'ar' ? `تم اختيار ${selectedOrders.length} طلب` : `${selectedOrders.length} orders selected`}
-                </p>
-                <p className="text-xs text-blue-600">
-                  {language === 'ar' ? 'اختر إجراءً للتطبيق على الطلبات المحددة' : 'Choose an action to apply to selected orders'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {/* Status Update Dropdown */}
-              <div className="relative inline-block">
-              <button
-                  onClick={() => {
-                    const dropdown = document.getElementById('bulk-status-dropdown');
-                    dropdown!.style.display = dropdown!.style.display === 'block' ? 'none' : 'block';
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {language === 'ar' ? 'تحديث الحالة' : 'Update Status'}
-                  <svg className="w-3 h-3 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
               </button>
-                
-                <div id="bulk-status-dropdown" className="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200">
-                  <div className="py-1">
-                    {[
-                      { value: 'pending', label: language === 'ar' ? 'في الانتظار' : 'Pending', color: 'text-yellow-600' },
-                      { value: 'confirmed', label: language === 'ar' ? 'مؤكد' : 'Confirmed', color: 'text-blue-600' },
-                      { value: 'processing', label: language === 'ar' ? 'قيد التحضير' : 'Processing', color: 'text-purple-600' },
-                      { value: 'shipped', label: language === 'ar' ? 'تم الشحن' : 'Shipped', color: 'text-indigo-600' },
-                      { value: 'delivered', label: language === 'ar' ? 'تم التسليم' : 'Delivered', color: 'text-green-600' },
-                      { value: 'cancelled', label: language === 'ar' ? 'ملغي' : 'Cancelled', color: 'text-red-600' }
-                    ].map(status => (
-              <button
-                        key={status.value}
-                        onClick={() => {
-                          bulkUpdateStatus(status.value);
-                          document.getElementById('bulk-status-dropdown')!.style.display = 'none';
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${status.color}`}
-                      >
-                        <div className="flex items-center">
-                          <div className={`w-2 h-2 rounded-full mr-2 bg-current opacity-60`}></div>
-                          {status.label}
-                        </div>
-              </button>
-                    ))}
             </div>
           </div>
         </div>
 
-              {/* Export Button */}
-              <button
-                onClick={() => {
-                  handleBulkOperation('export', {
-                    format: 'excel'
-                  });
-                }}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                {language === 'ar' ? 'تصدير' : 'Export'}
-              </button>
-
-              {/* Print Button */}
-              <button
-                onClick={() => {
-                  handleBulkOperation('print', {
-                    print_type: 'detailed'
-                  });
-                }}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                {language === 'ar' ? 'طباعة' : 'Print'}
-              </button>
-
-              {/* Clear Selection */}
-              <button
-                onClick={() => setSelectedOrders([])}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                {language === 'ar' ? 'إلغاء التحديد' : 'Clear'}
-              </button>
-          </div>
-          </div>
-        </div>
-      )}
+        {/* 🚚 Bulk Actions Bar */}
+        <BulkActionsBar
+          selectedCount={selectedOrders.length}
+          onPreviewShipping={handlePreviewShipping}
+          onSendToShipping={() => {
+            if (confirm(language === 'ar' 
+              ? 'هل تريد إرسال الطلبات المحددة للشحن مباشرة؟' 
+              : 'Send selected orders to shipping directly?'
+            )) {
+              handleConfirmSendToShipping();
+            }
+          }}
+          onConfigureShipping={handleOpenShippingConfig}
+          onDeselectAll={() => setSelectedOrders([])}
+          onExport={() => handleBulkOperation('export', { format: 'csv' })}
+          onPrint={() => handleBulkOperation('print', { print_type: 'invoice' })}
+          onBulkDelete={() => {
+            if (confirm(language === 'ar' 
+              ? 'هل تريد حذف الطلبات المحددة؟' 
+              : 'Delete selected orders?'
+            )) {
+              handleBulkOperation('delete');
+            }
+          }}
+          onBulkStatusChange={(status: string) => {
+            bulkUpdateStatus(status);
+          }}
+          language={language}
+          loading={shippingLoading}
+        />
 
         {/* Orders Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -1415,6 +1599,9 @@ export default function OrdersPage() {
                   {language === 'ar' ? 'التاريخ' : 'Date'}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {language === 'ar' ? 'حالة الشحن' : 'Shipping'}
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {language === 'ar' ? 'إجراءات' : 'Actions'}
                     </th>
                   </tr>
@@ -1423,7 +1610,7 @@ export default function OrdersPage() {
               {loading ? (
                 <>
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center">
+                    <td colSpan={9} className="px-6 py-12 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         <span className="mr-2 text-gray-600">
@@ -1436,7 +1623,7 @@ export default function OrdersPage() {
               ) : orders.length === 0 ? (
                 <>
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                       {language === 'ar' ? 'لا توجد طلبات' : 'No orders found'}
                     </td>
                   </tr>
@@ -1490,6 +1677,84 @@ export default function OrdersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(order.created_at)}
                       </td>
+                      
+                      {/* 🚚 Shipping Status Cell */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          // Priority: shippingResults (during send) > shipping_status (from DB) > default
+                          const tempStatus = shippingResults[order.id]?.status;
+                          const dbStatus = order.shipping_status || 'not_sent';
+                          
+                          // During sending process
+                          if (tempStatus === 'sending') {
+                            return (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                <div className="w-3 h-3 mr-1 border-2 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+                                {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                              </span>
+                            );
+                          }
+                          
+                          // Use database shipping_status
+                          const statusConfig: Record<string, { bg: string, text: string, label_ar: string, label_en: string, icon: string }> = {
+                            'sent': { 
+                              bg: 'bg-green-100', text: 'text-green-800', 
+                              label_ar: 'تم الإرسال', label_en: 'Sent',
+                              icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+                            },
+                            'picked_up': { 
+                              bg: 'bg-blue-100', text: 'text-blue-800', 
+                              label_ar: 'تم الاستلام', label_en: 'Picked Up',
+                              icon: 'M5 8a1 1 0 011-1h8a1 1 0 011 1v10a1 1 0 01-1 1H6a1 1 0 01-1-1V8z'
+                            },
+                            'in_transit': { 
+                              bg: 'bg-indigo-100', text: 'text-indigo-800', 
+                              label_ar: 'قيد التوصيل', label_en: 'In Transit',
+                              icon: 'M13 7H7v6h6V7z M9 2.5A5.5 5.5 0 003.5 8H1l3 3 3-3H4.5A4.5 4.5 0 019 3.5z'
+                            },
+                            'out_for_delivery': { 
+                              bg: 'bg-purple-100', text: 'text-purple-800', 
+                              label_ar: 'خارج للتوصيل', label_en: 'Out for Delivery',
+                              icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1 1 0 11-3 0 1.5 1.5 0 013 0z'
+                            },
+                            'delivered': { 
+                              bg: 'bg-emerald-100', text: 'text-emerald-800', 
+                              label_ar: 'تم التسليم', label_en: 'Delivered',
+                              icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                            },
+                            'failed': { 
+                              bg: 'bg-red-100', text: 'text-red-800', 
+                              label_ar: 'فشل الإرسال', label_en: 'Failed',
+                              icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                            },
+                            'returned': { 
+                              bg: 'bg-orange-100', text: 'text-orange-800', 
+                              label_ar: 'تم الإرجاع', label_en: 'Returned',
+                              icon: 'M9 15l3-3m0 0l3 3m-3-3v12M3 9a9 9 0 0118 0'
+                            },
+                            'not_sent': { 
+                              bg: 'bg-gray-100', text: 'text-gray-600', 
+                              label_ar: 'لم يتم الإرسال', label_en: 'Not Sent',
+                              icon: 'M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z'
+                            },
+                          };
+                          
+                          const config = statusConfig[dbStatus] || statusConfig['not_sent'];
+                          
+                          return (
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} border border-current border-opacity-20`}>
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d={config.icon} clipRule="evenodd" />
+                              </svg>
+                              {language === 'ar' ? config.label_ar : config.label_en}
+                              {order.shipping_company && dbStatus !== 'not_sent' && (
+                                <span className="ml-1 opacity-75">({order.shipping_company})</span>
+                              )}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                              <div className="order-actions-fixed prevent-overflow">
                         {/* View Details Button */}
@@ -2141,6 +2406,29 @@ export default function OrdersPage() {
       )}
     </div>
       </div>
+      
+      {/* 🚚 Shipping Modals */}
+      <ShippingPreviewModal
+        isOpen={showShippingPreview}
+        onClose={() => setShowShippingPreview(false)}
+        previewData={shippingPreviewData}
+        onConfirm={handleConfirmSendToShipping}
+        language={language}
+      />
+      
+      <ShippingProgressModal
+        isOpen={showShippingProgress}
+        results={shippingResults}
+        language={language}
+        onClose={handleCloseShippingProgress}
+      />
+
+      <ShippingConfigModal
+        isOpen={showShippingConfig}
+        onClose={() => setShowShippingConfig(false)}
+        onSave={handleSaveShippingConfig}
+        currentConfig={shippingConfig || undefined}
+      />
     </>
   );
 } 
